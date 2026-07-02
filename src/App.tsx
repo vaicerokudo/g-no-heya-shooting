@@ -35,7 +35,7 @@ const enemyLabels: Record<EnemyKind, string> = {
 
 const assetPaths = {
   player: '/assets/tcg/chibi-socho.png',
-  boss: '/assets/tcg/boss-leviathan.png',
+  boss: '/assets/tcg/boss-bear.png',
   enemies: {
     small: '/assets/tcg/enemy-goblin.png',
     flying: '/assets/tcg/enemy-lesser-wyvern.png',
