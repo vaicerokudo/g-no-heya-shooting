@@ -20,6 +20,8 @@ type SupportCharacter = {
   image: string;
 };
 
+type SummonPhase = 'idle' | 'gate' | 'cards' | 'revealing' | 'done';
+
 const keyMap: Record<string, Vector> = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -36,14 +38,15 @@ const keyMap: Record<string, Vector> = {
 };
 
 const enemyLabels: Record<EnemyKind, string> = {
-  small: '小',
-  flying: '飛',
-  charger: '突',
+  small: '小型敵',
+  flying: '飛行敵',
+  charger: '突進敵',
 };
 
 const assetPaths = {
   player: '/assets/tcg/chibi-socho.png',
   boss: '/assets/tcg/boss-bear.png',
+  cardBack: '/assets/tcg/card-back-default.png',
   enemies: {
     small: '/assets/tcg/enemy-goblin.png',
     flying: '/assets/tcg/enemy-lesser-wyvern.png',
@@ -92,16 +95,13 @@ const supportCandidates: SupportCharacter[] = [
 function App() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
   const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(null);
-  const [isSummoning, setIsSummoning] = useState(false);
+  const [summonPhase, setSummonPhase] = useState<SummonPhase>('idle');
+  const [summonCards, setSummonCards] = useState<SupportCharacter[]>([]);
+  const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
   const lastFrame = useRef<number | null>(null);
-  const gameRef = useRef(game);
-
-  useEffect(() => {
-    gameRef.current = game;
-  }, [game]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -160,14 +160,24 @@ function App() {
   };
 
   const summonSupport = () => {
-    if (selectedSupport || isSummoning) return;
+    if (selectedSupport || summonPhase !== 'idle') return;
 
-    setIsSummoning(true);
+    setSummonPhase('gate');
     window.setTimeout(() => {
-      const result = supportCandidates[Math.floor(Math.random() * supportCandidates.length)];
-      setSelectedSupport(result);
-      setIsSummoning(false);
-    }, 900);
+      setSummonCards(shuffleSupports(supportCandidates));
+      setSummonPhase('cards');
+    }, 650);
+  };
+
+  const chooseSupportCard = (support: SupportCharacter) => {
+    if (summonPhase !== 'cards') return;
+
+    setRevealingCardId(support.id);
+    setSummonPhase('revealing');
+    window.setTimeout(() => {
+      setSelectedSupport(support);
+      setSummonPhase('done');
+    }, 760);
   };
 
   return (
@@ -185,7 +195,7 @@ function App() {
             <img src={assetPaths.player} alt="" />
           </div>
           <button className="primary-button" onClick={goToPrepare}>
-            出撃
+            出撃準備
           </button>
           <p className="control-note">PC: WASD / 矢印キー　スマホ: 画面ドラッグ　攻撃: 自動</p>
         </section>
@@ -209,7 +219,7 @@ function App() {
               </div>
             </article>
 
-            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}>
+            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''} summon-phase-${summonPhase}`}>
               <span className="slot-label">サポート</span>
               {selectedSupport ? (
                 <>
@@ -218,22 +228,26 @@ function App() {
                     <h2>{selectedSupport.name}</h2>
                     <strong>{selectedSupport.role}</strong>
                     <p>{selectedSupport.description}</p>
+                    <p className="summon-success">召喚成功</p>
                   </div>
                 </>
               ) : (
-                <div className={`summon-gate ${isSummoning ? 'is-summoning' : ''}`}>
-                  <img src="/assets/tcg/gate-white.png" alt="" />
-                  <p>{isSummoning ? '星門召喚中...' : '未召喚'}</p>
-                </div>
+                <SummonCardStage
+                  phase={summonPhase}
+                  cards={summonCards}
+                  revealingCardId={revealingCardId}
+                  cardBack={assetPaths.cardBack}
+                  onChoose={chooseSupportCard}
+                />
               )}
             </article>
           </div>
 
           <div className="prepare-actions">
-            <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || isSummoning}>
-              {selectedSupport ? '召喚済み' : isSummoning ? '召喚中...' : '初回無料サポート召喚'}
+            <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || summonPhase !== 'idle'}>
+              {selectedSupport ? '召喚済み' : summonPhase === 'idle' ? '初回無料サポート召喚' : 'カードを選択中'}
             </button>
-            <button className="primary-button" onClick={begin} disabled={!selectedSupport || isSummoning}>
+            <button className="primary-button" onClick={begin} disabled={!selectedSupport || summonPhase === 'gate' || summonPhase === 'revealing'}>
               出撃
             </button>
           </div>
@@ -326,7 +340,7 @@ function App() {
                 className={`boss ${(game.boss.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
                 style={place(game.boss.x, game.boss.y, game.boss.radius * 2)}
               >
-                魔獣
+                大型魔獣
               </div>
             )}
 
@@ -345,7 +359,7 @@ function App() {
               className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''}`}
               style={place(game.player.x, game.player.y, game.player.radius * 2)}
             >
-              総
+              総長
             </div>
           </div>
 
@@ -382,6 +396,78 @@ function App() {
       )}
     </main>
   );
+}
+
+function SummonCardStage({
+  phase,
+  cards,
+  revealingCardId,
+  cardBack,
+  onChoose,
+}: {
+  phase: SummonPhase;
+  cards: SupportCharacter[];
+  revealingCardId: string | null;
+  cardBack: string;
+  onChoose: (support: SupportCharacter) => void;
+}) {
+  if (phase === 'idle') {
+    return (
+      <div className="summon-gate">
+        <img src="/assets/tcg/gate-white.png" alt="" />
+        <p>未召喚</p>
+      </div>
+    );
+  }
+
+  if (phase === 'gate') {
+    return (
+      <div className="summon-gate is-summoning">
+        <img src="/assets/tcg/gate-white.png" alt="" />
+        <p>星門起動中...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`summon-card-stage is-${phase}`}>
+      <p className="summon-instruction">{phase === 'cards' ? '1枚選んでください' : 'カード開示中...'}</p>
+      <div className="summon-card-row">
+        {cards.map((card, index) => {
+          const isRevealing = revealingCardId === card.id;
+          const isDimmed = phase === 'revealing' && !isRevealing;
+
+          return (
+            <button
+              key={card.id}
+              className={`summon-card pick-${index} ${isRevealing ? 'is-revealing' : ''} ${isDimmed ? 'is-dimmed' : ''}`}
+              onClick={() => onChoose(card)}
+              disabled={phase !== 'cards'}
+              type="button"
+            >
+              <span className="card-inner">
+                <span className="card-face card-back">
+                  <img src={cardBack} alt="" />
+                </span>
+                <span className="card-face card-front">
+                  <img src={card.image} alt="" />
+                  <strong>{card.name}</strong>
+                  <em>{card.role}</em>
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function shuffleSupports(candidates: SupportCharacter[]) {
+  return [...candidates]
+    .map((candidate) => ({ candidate, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ candidate }) => candidate);
 }
 
 function getMoveVector(game: GameState, keys: Set<string>, target: Vector | null): Vector {
