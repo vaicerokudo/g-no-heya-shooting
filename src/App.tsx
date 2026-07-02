@@ -12,6 +12,14 @@ import {
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import type { EnemyKind, GameState, Vector } from './game/types';
 
+type SupportCharacter = {
+  id: string;
+  name: string;
+  role: string;
+  description: string;
+  image: string;
+};
+
 const keyMap: Record<string, Vector> = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -43,8 +51,48 @@ const assetPaths = {
   },
 };
 
+const supportCandidates: SupportCharacter[] = [
+  {
+    id: '7171',
+    name: '7171',
+    role: '収集＆金策',
+    description: 'コインやドロップを集める周回向きサポート。',
+    image: '/assets/tcg/support-7171.png',
+  },
+  {
+    id: 'yabuko',
+    name: 'やぶこ',
+    role: '回復',
+    description: '回復で総長の継戦を支えるサポート。',
+    image: '/assets/tcg/support-yabuko.png',
+  },
+  {
+    id: 'player',
+    name: 'Player',
+    role: '2丁拳銃で援護射撃',
+    description: '弾幕と援護射撃で前線を支えるサポート。',
+    image: '/assets/tcg/support-player.png',
+  },
+  {
+    id: 'hibiki',
+    name: 'hibiki',
+    role: '大盾で被弾軽減',
+    description: '大盾で被弾を抑える防御型サポート。',
+    image: '/assets/tcg/support-hibiki.png',
+  },
+  {
+    id: 'myouou',
+    name: '明王',
+    role: '迦楼羅で敵を一掃',
+    description: '神聖な範囲攻撃で戦場を切り開くサポート。',
+    image: '/assets/tcg/support-myouou.png',
+  },
+];
+
 function App() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
+  const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(null);
+  const [isSummoning, setIsSummoning] = useState(false);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
@@ -100,10 +148,26 @@ function App() {
   }, [game.status]);
 
   const begin = () => {
+    if (!selectedSupport) return;
     pressedKeys.current.clear();
     dragTarget.current = null;
     lastFrame.current = null;
     setGame(startGame());
+  };
+
+  const goToPrepare = () => {
+    setGame((current) => ({ ...current, status: 'prepare' }));
+  };
+
+  const summonSupport = () => {
+    if (selectedSupport || isSummoning) return;
+
+    setIsSummoning(true);
+    window.setTimeout(() => {
+      const result = supportCandidates[Math.floor(Math.random() * supportCandidates.length)];
+      setSelectedSupport(result);
+      setIsSummoning(false);
+    }, 900);
   };
 
   return (
@@ -120,10 +184,59 @@ function App() {
           <div className="title-visual" aria-hidden="true">
             <img src={assetPaths.player} alt="" />
           </div>
-          <button className="primary-button" onClick={begin}>
+          <button className="primary-button" onClick={goToPrepare}>
             出撃
           </button>
           <p className="control-note">PC: WASD / 矢印キー　スマホ: 画面ドラッグ　攻撃: 自動</p>
+        </section>
+      )}
+
+      {game.status === 'prepare' && (
+        <section className="menu-screen prepare-screen">
+          <div>
+            <p className="eyebrow">星門出撃準備</p>
+            <h1>編成確認</h1>
+            <p className="lead">初回無料サポート召喚で仲間を1人迎えてから、アストリア草原へ出撃します。</p>
+          </div>
+
+          <div className="formation-grid">
+            <article className="formation-card main-card">
+              <span className="slot-label">メイン</span>
+              <img src={assetPaths.player} alt="総長" />
+              <div>
+                <h2>総長</h2>
+                <p>前方半円斬撃で前線を切り開く近接メイン。</p>
+              </div>
+            </article>
+
+            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}>
+              <span className="slot-label">サポート</span>
+              {selectedSupport ? (
+                <>
+                  <img src={selectedSupport.image} alt={selectedSupport.name} />
+                  <div>
+                    <h2>{selectedSupport.name}</h2>
+                    <strong>{selectedSupport.role}</strong>
+                    <p>{selectedSupport.description}</p>
+                  </div>
+                </>
+              ) : (
+                <div className={`summon-gate ${isSummoning ? 'is-summoning' : ''}`}>
+                  <img src="/assets/tcg/gate-white.png" alt="" />
+                  <p>{isSummoning ? '星門召喚中...' : '未召喚'}</p>
+                </div>
+              )}
+            </article>
+          </div>
+
+          <div className="prepare-actions">
+            <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || isSummoning}>
+              {selectedSupport ? '召喚済み' : isSummoning ? '召喚中...' : '初回無料サポート召喚'}
+            </button>
+            <button className="primary-button" onClick={begin} disabled={!selectedSupport || isSummoning}>
+              出撃
+            </button>
+          </div>
         </section>
       )}
 
@@ -139,6 +252,7 @@ function App() {
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{STAGE_NAME}</div>
+            <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}</div>
           </div>
 
           {game.boss && (
