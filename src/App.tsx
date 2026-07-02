@@ -33,6 +33,16 @@ const enemyLabels: Record<EnemyKind, string> = {
   charger: '突',
 };
 
+const assetPaths = {
+  player: '/assets/tcg/chibi-socho.png',
+  boss: '/assets/tcg/boss-leviathan.png',
+  enemies: {
+    small: '/assets/tcg/enemy-goblin.png',
+    flying: '/assets/tcg/enemy-lesser-wyvern.png',
+    charger: '/assets/tcg/enemy-boar.png',
+  },
+};
+
 function App() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
   const pressedKeys = useRef(new Set<string>());
@@ -106,6 +116,9 @@ function App() {
             <p className="lead">
               総長を操作し、前方半円斬撃で敵を倒し、コインを拾い、大型魔獣を撃破する最小体験です。
             </p>
+          </div>
+          <div className="title-visual" aria-hidden="true">
+            <img src={assetPaths.player} alt="" />
           </div>
           <button className="primary-button" onClick={begin}>
             出撃
@@ -186,7 +199,7 @@ function App() {
                 className={`enemy enemy-${enemy.kind} ${(enemy.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
                 style={place(enemy.x, enemy.y, enemy.radius * 2)}
               >
-                {enemyLabels[enemy.kind]}
+                <img src={assetPaths.enemies[enemy.kind]} alt={enemyLabels[enemy.kind]} />
               </div>
             ))}
 
