@@ -1,0 +1,606 @@
+:root {
+  font-family:
+    Inter, "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #f7fbff;
+  background: #142019;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at 15% 12%, rgba(255, 209, 102, 0.26), transparent 26%),
+    linear-gradient(135deg, #142019 0%, #204531 48%, #182736 100%);
+}
+
+.menu-screen {
+  width: min(640px, 100%);
+  min-height: min(760px, calc(100vh - 40px));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 26px;
+  padding: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(10, 24, 22, 0.72), rgba(10, 24, 22, 0.72)),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 58px);
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.34);
+}
+
+.title-screen {
+  background:
+    linear-gradient(rgba(10, 24, 22, 0.62), rgba(10, 24, 22, 0.76)),
+    linear-gradient(180deg, rgba(125, 219, 149, 0.28), transparent 42%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 58px);
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #ffd166;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+h1 {
+  margin: 0;
+  max-width: 12em;
+  font-size: clamp(2.2rem, 7vw, 4.8rem);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.lead {
+  max-width: 34rem;
+  margin: 18px 0 0;
+  color: rgba(247, 251, 255, 0.82);
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.primary-button {
+  align-self: flex-start;
+  min-width: 172px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 8px;
+  color: #10221b;
+  background: #ffd166;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.primary-button:hover {
+  background: #ffe08f;
+}
+
+.control-note {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.7);
+  font-size: 0.92rem;
+}
+
+.game-layout {
+  width: min(460px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hud,
+.boss-hud,
+.instructions {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(11, 28, 27, 0.86);
+  backdrop-filter: blur(14px);
+}
+
+.hud {
+  display: grid;
+  grid-template-columns: 1.35fr auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+}
+
+.hud span,
+.boss-hud span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(247, 251, 255, 0.74);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.hud-number,
+.hud-stage {
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.hud-stage {
+  grid-column: 1 / -1;
+  justify-content: start;
+  color: #c8ffdf;
+}
+
+.meter {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.meter-fill {
+  height: 100%;
+  transition: width 120ms linear;
+}
+
+.meter-fill.hp {
+  background: linear-gradient(90deg, #68d391, #f6e05e);
+}
+
+.meter-fill.boss {
+  background: linear-gradient(90deg, #ef476f, #ffd166);
+}
+
+.boss-hud {
+  padding: 10px;
+}
+
+.field {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 420 / 720;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  touch-action: none;
+  user-select: none;
+  background:
+    linear-gradient(180deg, rgba(70, 147, 111, 0.16), rgba(22, 50, 38, 0.42)),
+    repeating-linear-gradient(90deg, rgba(220, 255, 230, 0.08) 0 1px, transparent 1px 70px),
+    linear-gradient(180deg, #244d37 0%, #1b5134 54%, #1b352c 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.scroll-band {
+  position: absolute;
+  inset: -40% 0 auto;
+  height: 45%;
+  opacity: 0.35;
+  background: repeating-linear-gradient(180deg, transparent 0 38px, rgba(255, 255, 255, 0.12) 38px 40px);
+  animation: drift 4s linear infinite;
+}
+
+.band-two {
+  animation-duration: 6s;
+  opacity: 0.2;
+}
+
+.play-limit {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 42%;
+  bottom: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.04));
+}
+
+.player,
+.enemy,
+.coin,
+.enemy-bullet,
+.boss,
+.slash,
+.floating-effect {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.player,
+.enemy,
+.coin,
+.boss {
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.player {
+  color: #122018;
+  background:
+    radial-gradient(circle at 34% 28%, #fff7cf 0 16%, transparent 17%),
+    linear-gradient(135deg, #f7f1d2, #6ee7b7 72%);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 22px rgba(110, 231, 183, 0.5);
+  z-index: 6;
+}
+
+.player.is-hit {
+  animation: hitFlash 140ms steps(2, end) infinite;
+}
+
+.slash {
+  z-index: 4;
+  border-radius: 120px 120px 12px 12px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.98), rgba(255, 209, 102, 0.55) 36%, transparent 72%),
+    linear-gradient(105deg, transparent 0 32%, rgba(255, 255, 255, 0.92) 34% 37%, transparent 39% 100%);
+  border-top: 3px solid rgba(255, 247, 210, 0.9);
+  filter: drop-shadow(0 0 22px rgba(255, 209, 102, 0.95));
+  animation: slashBurst 180ms ease-out both;
+  pointer-events: none;
+}
+
+.slash-core,
+.slash-line,
+.slash-shock {
+  position: absolute;
+  pointer-events: none;
+}
+
+.slash-core {
+  left: 18%;
+  right: 18%;
+  bottom: 0;
+  height: 58%;
+  border-radius: 50% 50% 0 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(255, 255, 255, 0.95), transparent 68%);
+  mix-blend-mode: screen;
+}
+
+.slash-line {
+  left: 10%;
+  right: 10%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #fff7ce 14%, #ffffff 54%, transparent);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.9);
+  transform-origin: center;
+}
+
+.line-one {
+  top: 30%;
+  transform: rotate(-18deg);
+  animation: slashLineOne 170ms ease-out both;
+}
+
+.line-two {
+  top: 48%;
+  transform: rotate(14deg);
+  animation: slashLineTwo 170ms ease-out both;
+}
+
+.slash-shock {
+  left: 11%;
+  right: 11%;
+  bottom: 5%;
+  height: 82%;
+  border-radius: 50% 50% 10% 10%;
+  border-top: 2px solid rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  animation: shockRing 180ms ease-out both;
+}
+
+.enemy {
+  color: #fff;
+  background: #ef476f;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  z-index: 3;
+  transition: filter 80ms ease-out;
+}
+
+.enemy-flying {
+  background: #4cc9f0;
+}
+
+.enemy-charger {
+  background: #f77f00;
+}
+
+.boss {
+  color: #fff7d6;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.35), transparent 18%),
+    linear-gradient(135deg, #533483, #c9184a);
+  border: 3px solid rgba(255, 209, 102, 0.86);
+  z-index: 2;
+}
+
+.enemy.is-slashed,
+.boss.is-slashed {
+  animation: slashHit 160ms ease-out both;
+  filter: brightness(1.9) saturate(1.45);
+}
+
+.boss.is-slashed {
+  box-shadow:
+    0 0 0 5px rgba(255, 255, 255, 0.18),
+    0 0 32px rgba(255, 209, 102, 0.72);
+}
+
+.coin {
+  color: #2d2100;
+  background:
+    radial-gradient(circle at 34% 28%, #fff7ce 0 18%, transparent 19%),
+    #ffd166;
+  border: 2px solid rgba(255, 247, 210, 0.98);
+  font-size: 0.72rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(92, 65, 0, 0.35),
+    0 0 16px rgba(255, 209, 102, 0.72);
+  z-index: 5;
+  animation: coinFloat 780ms ease-in-out infinite alternate;
+}
+
+.coin.is-attracted {
+  animation: coinFloat 420ms ease-in-out infinite alternate, coinMagnet 240ms ease-out infinite alternate;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.32),
+    0 0 24px rgba(255, 209, 102, 0.96);
+}
+
+.enemy-bullet {
+  border-radius: 999px;
+  background: #b8f7ff;
+  box-shadow: 0 0 14px rgba(184, 247, 255, 0.76);
+  z-index: 4;
+}
+
+.floating-effect {
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  animation: effectRise 340ms ease-out both;
+}
+
+.floating-effect strong {
+  color: #fff7ce;
+  font-size: 0.82rem;
+  line-height: 1;
+  text-shadow:
+    0 1px 0 #5c2400,
+    0 0 10px rgba(255, 209, 102, 0.95);
+}
+
+.effect-coin {
+  animation-duration: 480ms;
+}
+
+.effect-coin strong {
+  color: #ffd166;
+  font-size: 0.9rem;
+}
+
+.spark {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, transparent 0 42%, #ffffff 44% 56%, transparent 58% 100%),
+    linear-gradient(0deg, transparent 0 42%, #ffd166 44% 56%, transparent 58% 100%),
+    radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 209, 102, 0.42) 42%, transparent 68%);
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.9);
+  animation: sparkPop 220ms ease-out both;
+}
+
+.instructions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  color: rgba(247, 251, 255, 0.72);
+  font-size: 0.76rem;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 460px;
+}
+
+.result-grid div {
+  min-height: 78px;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.result-grid span {
+  display: block;
+  color: rgba(247, 251, 255, 0.68);
+  font-size: 0.78rem;
+}
+
+.result-grid strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.55rem;
+}
+
+@keyframes drift {
+  from {
+    transform: translateY(-20%);
+  }
+  to {
+    transform: translateY(120%);
+  }
+}
+
+@keyframes hitFlash {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes slashBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.74) translateY(12px);
+  }
+  38% {
+    opacity: 1;
+    transform: scale(1.06) translateY(-2px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.14) translateY(-12px);
+  }
+}
+
+@keyframes slashLineOne {
+  from {
+    opacity: 0;
+    transform: translateX(-36px) rotate(-22deg) scaleX(0.3);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(28px) rotate(-16deg) scaleX(1.08);
+  }
+}
+
+@keyframes slashLineTwo {
+  from {
+    opacity: 0;
+    transform: translateX(32px) rotate(18deg) scaleX(0.35);
+  }
+  45% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-24px) rotate(12deg) scaleX(1.04);
+  }
+}
+
+@keyframes shockRing {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes slashHit {
+  0% {
+    opacity: 1;
+  }
+  35% {
+    opacity: 0.72;
+    box-shadow:
+      0 0 0 5px rgba(255, 255, 255, 0.28),
+      0 0 26px rgba(255, 209, 102, 0.85);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes sparkPop {
+  from {
+    opacity: 1;
+    transform: rotate(0deg) scale(0.35);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(35deg) scale(1.5);
+  }
+}
+
+@keyframes effectRise {
+  from {
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes coinFloat {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.18);
+  }
+}
+
+@keyframes coinMagnet {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.35);
+  }
+}
+
+@media (max-width: 520px) {
+  .app-shell {
+    padding: 10px;
+  }
+
+  .menu-screen {
+    min-height: calc(100vh - 20px);
+    padding: 24px;
+  }
+
+  .hud {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .instructions {
+    flex-direction: column;
+  }
+}
