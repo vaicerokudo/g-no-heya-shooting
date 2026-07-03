@@ -110,6 +110,12 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' || event.key === 'p' || event.key === 'P') {
+        togglePause();
+        event.preventDefault();
+        return;
+      }
+
       if (keyMap[event.key]) {
         pressedKeys.current.add(event.key);
         event.preventDefault();
@@ -163,7 +169,33 @@ function App() {
   };
 
   const goToPrepare = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'prepare' }));
+  };
+
+  const pauseGame = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    lastFrame.current = null;
+    setGame((current) => (current.status === 'playing' ? { ...current, status: 'paused' } : current));
+  };
+
+  const resumeGame = () => {
+    lastFrame.current = null;
+    setGame((current) => (current.status === 'paused' ? { ...current, status: 'playing' } : current));
+  };
+
+  const togglePause = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    lastFrame.current = null;
+    setGame((current) => {
+      if (current.status === 'playing') return { ...current, status: 'paused' };
+      if (current.status === 'paused') return { ...current, status: 'playing' };
+      return current;
+    });
   };
 
   const summonSupport = () => {
@@ -261,7 +293,7 @@ function App() {
         </section>
       )}
 
-      {game.status === 'playing' && (
+      {(game.status === 'playing' || game.status === 'paused') && (
         <section className="game-layout">
           <div className="hud">
             <div>
@@ -274,6 +306,9 @@ function App() {
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{STAGE_NAME}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}</div>
+            <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
+              一時停止
+            </button>
           </div>
 
           {game.boss && (
@@ -286,7 +321,7 @@ function App() {
           )}
 
           <div
-            className="field"
+            className={`field ${game.status === 'paused' ? 'is-paused' : ''}`}
             ref={fieldRef}
             onPointerDown={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss))}
             onPointerMove={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss))}
@@ -372,6 +407,26 @@ function App() {
             >
               総長
             </div>
+
+            {game.status === 'paused' && (
+              <div className="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+                <div className="pause-panel">
+                  <p className="eyebrow">Pause</p>
+                  <h2 id="pause-title">一時停止</h2>
+                  <div className="pause-actions">
+                    <button className="primary-button" onClick={resumeGame}>
+                      再開
+                    </button>
+                    <button className="secondary-button" onClick={begin}>
+                      はじめからやり直す
+                    </button>
+                    <button className="secondary-button" onClick={goToPrepare}>
+                      出撃準備へ戻る
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="instructions">
@@ -400,9 +455,14 @@ function App() {
               <strong>{Math.floor(game.elapsed)}s</strong>
             </div>
           </div>
-          <button className="primary-button" onClick={begin}>
-            もう一度出撃
-          </button>
+          <div className="result-actions">
+            <button className="primary-button" onClick={begin}>
+              もう一度出撃
+            </button>
+            <button className="secondary-button" onClick={goToPrepare}>
+              出撃準備へ戻る
+            </button>
+          </div>
         </section>
       )}
     </main>

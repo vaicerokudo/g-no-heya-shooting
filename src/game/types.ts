@@ -1,4 +1,4 @@
-export type GameStatus = 'title' | 'prepare' | 'playing' | 'clear' | 'gameOver';
+export type GameStatus = 'title' | 'prepare' | 'playing' | 'paused' | 'clear' | 'gameOver';
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
