@@ -1175,6 +1175,123 @@ h1 {
   gap: 14px;
 }
 
+.main-character-select {
+  display: grid;
+  gap: 12px;
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgba(247, 251, 255, 0.78);
+  font-weight: 800;
+}
+
+.section-heading strong {
+  color: #ffd166;
+}
+
+.main-character-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.main-character-card {
+  position: relative;
+  min-height: 188px;
+  display: grid;
+  align-content: end;
+  justify-items: start;
+  gap: 5px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  border-radius: 8px;
+  color: #f7fbff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(13, 18, 17, 0.84));
+  cursor: pointer;
+  text-align: left;
+}
+
+.main-character-card img,
+.character-silhouette {
+  justify-self: center;
+  width: min(92%, 106px);
+  height: 88px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.42));
+}
+
+.character-silhouette {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  color: rgba(247, 251, 255, 0.58);
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.main-character-card strong,
+.main-character-card em,
+.main-character-card small {
+  position: relative;
+  z-index: 1;
+}
+
+.main-character-card strong {
+  font-size: 1rem;
+}
+
+.main-character-card em,
+.main-character-card small {
+  color: rgba(247, 251, 255, 0.72);
+  font-style: normal;
+  font-size: 0.78rem;
+}
+
+.main-character-card.is-active {
+  border-color: rgba(255, 209, 102, 0.78);
+  box-shadow: 0 0 22px rgba(255, 209, 102, 0.18);
+}
+
+.main-character-card.is-locked {
+  cursor: not-allowed;
+  filter: grayscale(0.8);
+  opacity: 0.68;
+}
+
+.character-status-badge {
+  position: absolute;
+  right: 9px;
+  top: 9px;
+  z-index: 2;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 209, 102, 0.42);
+  border-radius: 999px;
+  color: #ffe8a3;
+  background: rgba(23, 20, 16, 0.78);
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.main-character-card.is-locked .character-status-badge {
+  color: rgba(247, 251, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.locked-character-notice {
+  margin: 0;
+  color: #ffe8a3;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .sortie-card {
   min-height: 300px;
 }
@@ -1507,12 +1624,14 @@ h1 {
 }
 
 .hud-stage,
+.hud-main,
 .hud-support,
 .hud-weapon {
   justify-content: start;
   color: #c8ffdf;
 }
 
+.hud-main,
 .hud-support,
 .hud-weapon {
   min-height: 34px;
@@ -1524,6 +1643,11 @@ h1 {
   color: #ffe8a3;
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.hud-main {
+  background: rgba(143, 220, 255, 0.1);
+  color: #bfefff;
 }
 
 .hud-weapon {
@@ -2813,6 +2937,14 @@ h1 {
 
   .sortie-summary {
     grid-template-columns: 1fr;
+  }
+
+  .main-character-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .main-character-card {
+    min-height: 164px;
   }
 
   .sortie-card {

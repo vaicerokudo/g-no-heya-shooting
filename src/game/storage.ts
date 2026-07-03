@@ -1,5 +1,7 @@
 import { hydrateOwnedSupport } from './supports';
 import { hydrateOwnedWeapon } from './weapons';
+import { resolveActiveMainCharacterId } from './characters';
+import type { MainCharacterId } from './characters';
 import type { OwnedSupport } from './supports';
 import type { SupportId } from './types';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
@@ -10,6 +12,7 @@ const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
 const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
+const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-id';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -120,6 +123,16 @@ export function saveActiveSupportId(supportId: SupportId | null) {
     return;
   }
   window.localStorage.setItem(ACTIVE_SUPPORT_ID_KEY, supportId);
+}
+
+export function loadActiveMainCharacterId(): MainCharacterId {
+  if (typeof window === 'undefined') return 'socho';
+  return resolveActiveMainCharacterId(window.localStorage.getItem(ACTIVE_MAIN_CHARACTER_ID_KEY));
+}
+
+export function saveActiveMainCharacterId(characterId: MainCharacterId) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(ACTIVE_MAIN_CHARACTER_ID_KEY, resolveActiveMainCharacterId(characterId));
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {

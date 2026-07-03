@@ -12,12 +12,14 @@ import {
   FORGE_WEAPON_COST,
   SHOP_SUPPORT_SUMMON_COST,
 } from './game/constants';
-import { getMainCharacter } from './game/characters';
+import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveActiveMainCharacterId } from './game/characters';
+import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
 import {
   loadOwnedCoins,
   loadOwnedWeapons,
+  loadActiveMainCharacterId,
   loadActiveSupportId,
   loadEquippedWeapons,
   loadFreeSupportSummonUsed,
@@ -25,6 +27,7 @@ import {
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
+  saveActiveMainCharacterId,
   saveActiveSupportId,
   saveEquippedWeapons,
   saveFreeSupportSummonUsed,
@@ -146,6 +149,8 @@ function App() {
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
+  const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
+  const [lockedMainCharacterNotice, setLockedMainCharacterNotice] = useState('');
   const [freeSupportSummonUsed, setFreeSupportSummonUsed] = useState(() => loadFreeSupportSummonUsed());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
@@ -232,7 +237,7 @@ function App() {
   const hibikiShield = getHibikiShieldView(game);
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
-  const mainCharacter = useMemo(() => getMainCharacter('socho'), []);
+  const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
   const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
   const selectedSupportLevel = useMemo(
     () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
@@ -451,6 +456,18 @@ function App() {
     saveActiveSupportId(support.id);
   };
 
+  const chooseMainCharacter = (character: MainCharacterDefinition) => {
+    if (!isMainCharacterAvailable(character.id)) {
+      setLockedMainCharacterNotice(`${character.name}は今後のアップデートで解放予定です。`);
+      return;
+    }
+
+    const nextCharacterId = resolveActiveMainCharacterId(character.id);
+    setActiveMainCharacterId(nextCharacterId);
+    saveActiveMainCharacterId(nextCharacterId);
+    setLockedMainCharacterNotice('');
+  };
+
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
     if (game.status !== 'playing' || !joystickBaseRef.current) return;
     event.preventDefault();
@@ -635,15 +652,46 @@ function App() {
             <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
+          <div className="main-character-select">
+            <div className="section-heading">
+              <span>メインキャラ選択</span>
+              <strong>現在：{mainCharacter.name}</strong>
+            </div>
+            <div className="main-character-list">
+              {mainCharacterList.map((character) => {
+                const isActive = activeMainCharacterId === character.id;
+                const isAvailable = character.status === 'available';
+                return (
+                  <button
+                    key={character.id}
+                    type="button"
+                    className={`main-character-card ${isActive ? 'is-active' : ''} ${isAvailable ? 'is-available' : 'is-locked'}`}
+                    onClick={() => chooseMainCharacter(character)}
+                  >
+                    {character.image ? (
+                      <img src={character.image} alt={character.name} />
+                    ) : (
+                      <span className="character-silhouette">{character.name.slice(0, 1)}</span>
+                    )}
+                    <span className="character-status-badge">{isActive ? '選択中' : character.statusLabel}</span>
+                    <strong>{character.name}</strong>
+                    <em>{character.role}</em>
+                    <small>{character.weaponType}</small>
+                  </button>
+                );
+              })}
+            </div>
+            {lockedMainCharacterNotice && <p className="locked-character-notice">{lockedMainCharacterNotice}</p>}
+          </div>
           <div className="sortie-summary">
             <article className="formation-card main-card sortie-card">
               <span className="slot-label">メインキャラ</span>
-              <img src={mainCharacter.image} alt={mainCharacter.name} />
+              {mainCharacter.image && <img src={mainCharacter.image} alt={mainCharacter.name} />}
               <div>
                 <h2>{mainCharacter.name}</h2>
                 <strong>{mainCharacter.role}</strong>
                 <p>{mainCharacter.description}</p>
-                <p className="formation-status">{mainCharacter.status}</p>
+                <p className="formation-status">{mainCharacter.statusLabel}</p>
               </div>
             </article>
             <article className="formation-card weapon-card sortie-card">
@@ -1080,6 +1128,7 @@ function App() {
           <article className="stage-card">
             <span>Stage 1</span>
             <h2>アストリア草原</h2>
+            <p>{`メイン：${mainCharacter.name}`}</p>
             {selectedSupport ? (
               <>
                 <p>{`同行：${selectedSupport.name} Lv ${selectedSupportLevel}`}</p>
@@ -1118,6 +1167,7 @@ function App() {
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{STAGE_NAME}</div>
+            <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
             <div className="hud-weapon">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
@@ -1341,6 +1391,10 @@ function App() {
             <div>
               <span>{'\u6b66\u5668'}</span>
               <strong>{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</strong>
+            </div>
+            <div>
+              <span>メイン</span>
+              <strong>{mainCharacter.name}</strong>
             </div>
           </div>
           {rewardSummary && (
