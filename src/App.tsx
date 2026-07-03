@@ -8,6 +8,7 @@ import {
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
   STAGE_NAME,
+  FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
   STAR_SLASH_WAVE_HALF_WIDTH,
   STAR_SLASH_WAVE_RANGE,
@@ -29,6 +30,7 @@ import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 import {
   addOwnedWeapon,
   forgeRandomWeapon,
+  FORGE_RESULT_LINES,
   getEquippedSochoWeapon,
   getSochoWeaponOptions,
   hasSochoSlashWave,
@@ -55,6 +57,7 @@ type JoystickState = {
 type ForgeResult = {
   weapon: WeaponDefinition;
   isNew: boolean;
+  sagLine: string;
 };
 
 type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate';
@@ -439,20 +442,22 @@ function App() {
   const forgeWeapon = () => {
     if (ownedCoins < FORGE_WEAPON_COST || isForging) return;
 
+    const nextCoins = ownedCoins - FORGE_WEAPON_COST;
+    setForgeResult(null);
     setIsForging(true);
+    setOwnedCoins(nextCoins);
+    saveOwnedCoins(nextCoins);
+
     window.setTimeout(() => {
       const weapon = forgeRandomWeapon();
       const isNew = !ownedWeapons.some((ownedWeapon) => ownedWeapon.id === weapon.id);
-      const nextCoins = ownedCoins - FORGE_WEAPON_COST;
       const nextWeapons = addOwnedWeapon(ownedWeapons, weapon);
 
-      setOwnedCoins(nextCoins);
-      saveOwnedCoins(nextCoins);
       setOwnedWeapons(nextWeapons);
       saveOwnedWeapons(nextWeapons);
-      setForgeResult({ weapon, isNew });
+      setForgeResult({ weapon, isNew, sagLine: FORGE_RESULT_LINES[weapon.rarity] });
       setIsForging(false);
-    }, 520);
+    }, FORGE_ANIMATION_DURATION);
   };
 
   const resetSavedWeapons = () => {
@@ -655,6 +660,7 @@ function App() {
             <h2>{'\u73fe\u5728\u88c5\u5099\u4e2d\u306e\u6b66\u5668'}：{equippedSochoWeapon.name}</h2>
             <p>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</p>
             <p>{equippedSochoWeapon.description}</p>
+            <p className="weapon-effect-line">{'\u52b9\u679c'}：{equippedSochoWeapon.effectDescription}</p>
           </article>
           <div className="equipment-list">
             <h2>{'\u7dcf\u9577\u304c\u88c5\u5099\u3067\u304d\u308b\u6240\u6301\u6b66\u5668'}</h2>
@@ -671,6 +677,7 @@ function App() {
                     </div>
                     <span className="weapon-count">x{weapon.count}</span>
                     <p>{weapon.description}</p>
+                    <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                     <button className="secondary-button" onClick={() => equipSochoWeapon(weapon.id)} disabled={isEquipped}>
                       {isEquipped ? '\u88c5\u5099\u4e2d' : '\u88c5\u5099\u3059\u308b'}
                     </button>
@@ -704,6 +711,7 @@ function App() {
                   </div>
                   <span className="weapon-count">x{weapon.count}</span>
                   <p>{weapon.description}</p>
+                  <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                 </article>
               ))
             )}
@@ -768,19 +776,24 @@ function App() {
               {ownedCoins < FORGE_WEAPON_COST && <p className="forge-warning">{'\u30b3\u30a4\u30f3\u304c\u8db3\u308a\u307e\u305b\u3093'}</p>}
             </div>
             <div className={`forge-anvil ${isForging ? 'is-forging' : ''}`} aria-hidden="true">
+              <span className="forge-glow" />
+              <span className="forge-flash" />
               <span className="forge-hammer">Hammer</span>
               <span className="forge-spark spark-one" />
               <span className="forge-spark spark-two" />
               <span className="forge-spark spark-three" />
+              <span className="forge-spark spark-four" />
+              <span className="forge-spark spark-five" />
             </div>
           </div>
           {forgeResult && (
-            <article className={`forge-result rarity-${forgeResult.weapon.rarity}`}> 
-              <p>{'\u935b\u9020\u6210\u529f\uff01'} {forgeResult.isNew ? '\u65b0\u898f\u5165\u624b' : '\u6240\u6301\u6570+1'}</p>
+            <article className={`forge-result forge-result-card rarity-${forgeResult.weapon.rarity}`}> 
+              <p className="forge-success-title">{'\u935b\u9020\u6210\u529f\uff01'} {forgeResult.isNew ? '\u65b0\u898f\u5165\u624b' : '\u6240\u6301\u6570+1'}</p>
               <h2>{forgeResult.weapon.name}</h2>
-              <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.rarity}</strong>
-              <span>{forgeResult.weapon.type}</span>
+              <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.type} / {forgeResult.weapon.rarity}</strong>
               <p>{forgeResult.weapon.description}</p>
+              <p className="weapon-effect-line">{'\u52b9\u679c'}：{forgeResult.weapon.effectDescription}</p>
+              <p className="sag-result-line">サッグ「{forgeResult.sagLine}」</p>
             </article>
           )}
           <p className="rarity-note">common {WEAPON_RARITY_WEIGHTS.common}% / rare {WEAPON_RARITY_WEIGHTS.rare}% / epic {WEAPON_RARITY_WEIGHTS.epic}%</p>
@@ -823,6 +836,7 @@ function App() {
                   </div>
                   <span className="weapon-count">x{weapon.count}</span>
                   <p>{weapon.description}</p>
+                  <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                 </article>
               ))
             )}

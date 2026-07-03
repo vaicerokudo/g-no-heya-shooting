@@ -7,6 +7,7 @@ export type WeaponDefinition = {
   type: string;
   rarity: WeaponRarity;
   description: string;
+  effectDescription: string;
 };
 
 export type OwnedWeapon = WeaponDefinition & {
@@ -35,6 +36,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '太刀',
     rarity: 'common',
     description: '総長用。基本の太刀。',
+    effectDescription: '標準の前方半円斬撃。',
   },
   {
     id: 'star-vein-tachi',
@@ -43,6 +45,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '太刀',
     rarity: 'rare',
     description: '総長用。斬撃に星脈の力を宿す。',
+    effectDescription: '斬撃時に、前方へ細い星脈の斬撃波を放つ。',
   },
   {
     id: 'repeating-crossbow-bow',
@@ -51,6 +54,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '弓',
     rarity: 'rare',
     description: 'つつ用。連射しやすい弓。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'shadow-stitch-blade',
@@ -59,6 +63,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '刀',
     rarity: 'rare',
     description: 'ROKUDO用。影をまとった刀。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'prototype-turret-unit',
@@ -67,6 +72,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '砲台',
     rarity: 'common',
     description: 'Deli用。設置砲撃用の試作兵装。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'ironwall-greatshield',
@@ -75,6 +81,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '大盾',
     rarity: 'common',
     description: 'hibiki用。前方防御に優れた大盾。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'fang-thrust-spear',
@@ -83,6 +90,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '槍',
     rarity: 'common',
     description: 'うしまる用。直線突破に向いた槍。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'mountain-breaker-axe',
@@ -91,6 +99,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '両刃斧',
     rarity: 'epic',
     description: 'ROCKEL用。広範囲を薙ぎ払う斧。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
   {
     id: 'twin-fang-pistols',
@@ -99,8 +108,15 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '拳銃',
     rarity: 'common',
     description: 'Player用。2丁拳銃の基礎武器。',
+    effectDescription: '今後、対応キャラ実装時に反映予定。',
   },
 ];
+
+export const FORGE_RESULT_LINES: Record<WeaponRarity, string> = {
+  common: 'まずまずの出来だな。',
+  rare: 'お、なかなかいいもんが打てたぜ。',
+  epic: 'こいつは大当たりだ。大事に使えよ。',
+};
 
 export function forgeRandomWeapon(): WeaponDefinition {
   const rarity = pickWeightedRarity();
@@ -122,6 +138,11 @@ export function addOwnedWeapon(ownedWeapons: OwnedWeapon[], weapon: WeaponDefini
 
 export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
   return weaponCandidates.find((weapon) => weapon.id === weaponId);
+}
+
+export function hydrateOwnedWeapon(weapon: OwnedWeapon): OwnedWeapon {
+  const currentDefinition = getWeaponById(weapon.id);
+  return currentDefinition ? { ...currentDefinition, count: weapon.count } : weapon;
 }
 
 export function getSochoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {

@@ -635,8 +635,16 @@ button {
   overflow: hidden;
 }
 
+.forge-anvil.is-forging {
+  box-shadow:
+    inset 0 0 34px rgba(255, 88, 35, 0.38),
+    0 0 34px rgba(255, 159, 28, 0.24);
+}
+
 .forge-anvil::after {
   content: "";
+  position: relative;
+  z-index: 2;
   width: 92px;
   height: 36px;
   border-radius: 12px 12px 18px 18px;
@@ -644,8 +652,38 @@ button {
   box-shadow: 0 16px 24px rgba(0, 0, 0, 0.34);
 }
 
+.forge-glow,
+.forge-flash {
+  position: absolute;
+  pointer-events: none;
+}
+
+.forge-glow {
+  inset: 18px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 80, 28, 0.58), rgba(255, 209, 102, 0.2) 38%, transparent 64%);
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.forge-flash {
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 247, 206, 0.92), rgba(255, 159, 28, 0.22) 36%, transparent 62%);
+  opacity: 0;
+}
+
+.forge-anvil.is-forging .forge-glow {
+  animation: forgeHeat 1100ms ease-in-out both;
+}
+
+.forge-anvil.is-forging .forge-flash {
+  animation: forgeFlash 1100ms ease-out both;
+}
+
 .forge-hammer {
   position: absolute;
+  z-index: 3;
   top: 24px;
   color: #fff7ce;
   font-size: 0.74rem;
@@ -654,11 +692,12 @@ button {
 }
 
 .forge-anvil.is-forging .forge-hammer {
-  animation: hammerStrike 520ms ease-in-out infinite;
+  animation: hammerStrike 360ms ease-in-out 3;
 }
 
 .forge-spark {
   position: absolute;
+  z-index: 4;
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -668,7 +707,7 @@ button {
 }
 
 .forge-anvil.is-forging .forge-spark {
-  animation: forgeSpark 520ms ease-out infinite;
+  animation: forgeSpark 360ms ease-out 3;
 }
 
 .spark-one {
@@ -688,6 +727,18 @@ button {
   animation-delay: 160ms !important;
 }
 
+.spark-four {
+  left: 42%;
+  top: 62%;
+  animation-delay: 210ms !important;
+}
+
+.spark-five {
+  left: 58%;
+  top: 62%;
+  animation-delay: 260ms !important;
+}
+
 .forge-result,
 .weapon-card,
 .empty-inventory {
@@ -700,12 +751,74 @@ button {
 
 .forge-result {
   display: grid;
-  gap: 6px;
+  gap: 8px;
   box-shadow: 0 0 24px rgba(255, 209, 102, 0.18);
 }
 
 .forge-result h2 {
   color: #ffd166;
+}
+
+.forge-result-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.forge-result-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(120deg, transparent 0 18%, rgba(255, 255, 255, 0.14) 32%, transparent 48%),
+    radial-gradient(circle at 85% 18%, rgba(255, 209, 102, 0.18), transparent 34%);
+  opacity: 0.9;
+}
+
+.forge-success-title {
+  position: relative;
+  color: #ffd166 !important;
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.65);
+}
+
+.weapon-effect-line {
+  grid-column: 1 / -1;
+  padding: 8px 10px;
+  border: 1px solid rgba(184, 247, 255, 0.22);
+  border-radius: 8px;
+  color: #c8ffdf !important;
+  background: rgba(76, 201, 240, 0.08);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.sag-result-line {
+  position: relative;
+  padding: 8px 10px;
+  border-left: 3px solid rgba(255, 209, 102, 0.7);
+  color: #ffe8a3 !important;
+  background: rgba(255, 209, 102, 0.09);
+  font-weight: 800;
+}
+
+.forge-result.rarity-common {
+  background:
+    linear-gradient(180deg, rgba(220, 220, 210, 0.08), rgba(17, 16, 13, 0.88)),
+    rgba(17, 16, 13, 0.86);
+}
+
+.forge-result.rarity-rare {
+  background:
+    linear-gradient(180deg, rgba(76, 201, 240, 0.16), rgba(17, 16, 13, 0.9)),
+    rgba(17, 16, 13, 0.86);
+}
+
+.forge-result.rarity-epic {
+  background:
+    linear-gradient(180deg, rgba(255, 85, 48, 0.16), rgba(255, 209, 102, 0.1), rgba(17, 16, 13, 0.9)),
+    rgba(17, 16, 13, 0.86);
 }
 
 .rarity-common {
@@ -808,6 +921,34 @@ button {
   100% {
     opacity: 0;
     transform: translate(18px, -22px) scale(1.2);
+  }
+}
+
+@keyframes forgeHeat {
+  0% {
+    opacity: 0.18;
+    transform: scale(0.72);
+  }
+  52% {
+    opacity: 0.86;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 0.28;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes forgeFlash {
+  0%,
+  58% {
+    opacity: 0;
+  }
+  68% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
