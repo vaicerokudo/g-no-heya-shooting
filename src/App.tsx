@@ -47,6 +47,7 @@ type ForgeResult = {
 };
 
 type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate';
+type GuildHotspotId = 'party' | 'summon' | 'equipment' | 'weapons' | 'map';
 
 const astoriaFacilities: Array<{
   id: MapFacilityId;
@@ -58,6 +59,19 @@ const astoriaFacilities: Array<{
   { id: 'forge', label: '鍛冶屋', xPercent: 13, yPercent: 31 },
   { id: 'shop', label: '雑貨屋', xPercent: 13, yPercent: 47 },
   { id: 'gate', label: '門', xPercent: 50, yPercent: 76 },
+];
+
+const guildLobbyHotspots: Array<{
+  id: GuildHotspotId;
+  label: string;
+  xPercent: number;
+  yPercent: number;
+}> = [
+  { id: 'party', label: '\u7de8\u6210', xPercent: 23, yPercent: 72 },
+  { id: 'summon', label: '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a', xPercent: 51, yPercent: 47 },
+  { id: 'equipment', label: '\u88c5\u5099', xPercent: 80, yPercent: 27 },
+  { id: 'weapons', label: '\u6240\u6301\u6b66\u5668', xPercent: 73, yPercent: 62 },
+  { id: 'map', label: 'MAP\u3078\u623b\u308b', xPercent: 16, yPercent: 92 },
 ];
 
 const keyMap: Record<string, Vector> = {
@@ -297,6 +311,14 @@ function App() {
     if (facilityId === 'gate') goToGate();
   };
 
+  const goToGuildHotspot = (hotspotId: GuildHotspotId) => {
+    if (hotspotId === 'party') goToGuildParty();
+    if (hotspotId === 'summon') goToGuildSummon();
+    if (hotspotId === 'equipment') goToGuildEquipment();
+    if (hotspotId === 'weapons') goToGuildWeapons();
+    if (hotspotId === 'map') goToAstoriaMap();
+  };
+
   const pauseGame = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
@@ -472,27 +494,34 @@ function App() {
       )}
 
       {game.status === 'guildLobby' && (
-        <section className="menu-screen guild-lobby-screen">
-          <div className="guild-lobby-scene">
-            <div className="guild-guide">
-              <img src="/assets/tcg/support-7171.png" alt="7171" />
+        <section className="guild-lobby-hotspot-screen">
+          <div className="guild-lobby-topbar">
+            <div>
+              <p className="eyebrow">GUILD LOBBY</p>
+              <h1>{'G\u306e\u90e8\u5c4b\u30ed\u30d3\u30fc'}</h1>
+              <p>{'7171\u304c\u53d7\u4ed8\u3067\u6848\u5185\u3057\u3066\u3044\u307e\u3059\u3002'}</p>
             </div>
-            <div className="guild-dialogue">
-              <p className="eyebrow">G Guild House</p>
-              <h1>{'G\u306e\u90e8\u5c4b'}</h1>
-              <p>{'\u3053\u3053\u306fG\u306e\u90e8\u5c4b\u30ae\u30eb\u30c9\u30cf\u30a6\u30b9\u3060\u3088\u3002\u51fa\u6483\u306e\u6e96\u5099\u3092\u3057\u3066\u3044\u304f\uff1f'}</p>
+            <div className="guild-coin-chip">
+              <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+              <strong>{ownedCoins}</strong>
             </div>
           </div>
-          <div className="owned-coins-panel compact">
-            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
-            <strong>{ownedCoins}</strong>
-          </div>
-          <div className="guild-menu-grid">
-            <button className="guild-menu-button" onClick={goToGuildParty}>{'\u7de8\u6210'}</button>
-            <button className="guild-menu-button" onClick={goToGuildSummon}>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a'}</button>
-            <button className="guild-menu-button" onClick={goToGuildEquipment}>{'\u88c5\u5099'}</button>
-            <button className="guild-menu-button" onClick={goToGuildWeapons}>{'\u6240\u6301\u6b66\u5668'}</button>
-            <button className="guild-menu-button secondary" onClick={goToAstoriaMap}>Back to MAP</button>
+          <div className="guild-lobby-board" aria-label="Guild lobby destinations">
+            <img src="/assets/tcg/guild-lobby.png" alt="G guild lobby" />
+            <img className="guild-lobby-7171" src="/assets/tcg/support-7171.png" alt="7171" />
+            {guildLobbyHotspots.map((hotspot) => (
+              <button
+                key={hotspot.id}
+                className={`guild-hotspot ${hotspot.id}`}
+                style={{
+                  left: `${hotspot.xPercent}%`,
+                  top: `${hotspot.yPercent}%`,
+                }}
+                onClick={() => goToGuildHotspot(hotspot.id)}
+              >
+                <span>{hotspot.label}</span>
+              </button>
+            ))}
           </div>
         </section>
       )}
