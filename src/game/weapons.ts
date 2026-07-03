@@ -13,6 +13,12 @@ export type OwnedWeapon = WeaponDefinition & {
   count: number;
 };
 
+export type CharacterId = 'socho';
+
+export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
+
+export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
+
 export const WEAPON_RARITY_WEIGHTS: Record<WeaponRarity, number> = {
   common: 65,
   rare: 27,
@@ -110,6 +116,22 @@ export function addOwnedWeapon(ownedWeapons: OwnedWeapon[], weapon: WeaponDefini
   }
 
   return [...ownedWeapons, { ...weapon, count: 1 }];
+}
+
+export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
+  return weaponCandidates.find((weapon) => weapon.id === weaponId);
+}
+
+export function getSochoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return ownedWeapons.filter((weapon) => isSochoWeapon(weapon.id));
+}
+
+export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
+}
+
+export function isSochoWeapon(weaponId: string): boolean {
+  return weaponId === 'iron-tachi' || weaponId === 'star-vein-tachi';
 }
 
 function pickWeightedRarity(): WeaponRarity {

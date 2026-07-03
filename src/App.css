@@ -393,6 +393,57 @@ button {
   gap: 10px;
 }
 
+.equipped-weapon-label {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 8px !important;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 209, 102, 0.34);
+  border-radius: 999px;
+  color: #ffe8a3 !important;
+  background: rgba(255, 209, 102, 0.12);
+  font-size: 0.78rem !important;
+  font-weight: 900;
+}
+
+.equipment-screen {
+  gap: 18px;
+}
+
+.equipped-weapon-panel,
+.equipment-list {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 10px;
+}
+
+.equipped-weapon-panel {
+  padding: 16px;
+  border: 1px solid rgba(255, 209, 102, 0.34);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 209, 102, 0.12), rgba(17, 16, 13, 0.86)),
+    rgba(17, 16, 13, 0.86);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.26);
+}
+
+.equipped-weapon-panel span {
+  color: #ffd166;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.equipped-weapon-panel h2,
+.equipment-list h2 {
+  margin: 0;
+}
+
+.equipped-weapon-panel p {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.74);
+  line-height: 1.6;
+}
+
 .forge-screen {
   justify-content: flex-start;
 }
@@ -565,6 +616,31 @@ button {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 8px 12px;
+}
+
+.weapon-card.is-equipped {
+  border-color: rgba(255, 209, 102, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 26px rgba(255, 209, 102, 0.22);
+}
+
+.equipment-weapon-card .secondary-button {
+  grid-column: 1 / -1;
+}
+
+.equipped-badge {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 209, 102, 0.5);
+  border-radius: 999px;
+  color: #ffd166;
+  background: rgba(255, 209, 102, 0.12);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .weapon-card p {
@@ -1004,12 +1080,14 @@ h1 {
 }
 
 .hud-stage,
-.hud-support {
+.hud-support,
+.hud-weapon {
   justify-content: start;
   color: #c8ffdf;
 }
 
-.hud-support {
+.hud-support,
+.hud-weapon {
   min-height: 34px;
   display: grid;
   place-items: center start;
@@ -1019,6 +1097,10 @@ h1 {
   color: #ffe8a3;
   font-size: 0.86rem;
   font-weight: 800;
+}
+
+.hud-weapon {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .pause-button {
@@ -1770,7 +1852,7 @@ h1 {
 
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
   max-width: 460px;
 }
@@ -2125,6 +2207,10 @@ h1 {
     flex-direction: column;
   }
 
+  .weapon-card {
+    grid-template-columns: 1fr;
+  }
+
   .hud {
     grid-template-columns: 1fr 1fr;
   }
@@ -2177,6 +2263,7 @@ h1 {
   }
 
   .owned-coins-panel.compact,
+  .result-grid,
   .reward-breakdown {
     grid-template-columns: 1fr;
   }

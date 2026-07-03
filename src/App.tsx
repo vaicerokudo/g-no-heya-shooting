@@ -15,15 +15,23 @@ import { calculateCoinReward } from './game/rewards';
 import {
   loadOwnedCoins,
   loadOwnedWeapons,
+  loadEquippedWeapons,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
+  saveEquippedWeapons,
   saveOwnedWeapons,
 } from './game/storage';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
-import { addOwnedWeapon, forgeRandomWeapon, WEAPON_RARITY_WEIGHTS } from './game/weapons';
-import type { OwnedWeapon, WeaponDefinition } from './game/weapons';
+import {
+  addOwnedWeapon,
+  forgeRandomWeapon,
+  getEquippedSochoWeapon,
+  getSochoWeaponOptions,
+  WEAPON_RARITY_WEIGHTS,
+} from './game/weapons';
+import type { EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
 
 type SupportCharacter = {
   id: SupportId;
@@ -153,6 +161,7 @@ function App() {
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
+  const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
   const supportId = useRef<SupportId | null>(null);
@@ -221,6 +230,8 @@ function App() {
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
   const hibikiShield = getHibikiShieldView(game);
   const myououGaruda = getMyououGarudaView(game);
+  const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
+  const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
   const screenTitle = useMemo(() => {
     if (game.status === 'clear') return '星門、沈黙。';
     if (game.status === 'gameOver') return '撤退。';
@@ -432,6 +443,12 @@ function App() {
     setForgeResult(null);
   };
 
+  const equipSochoWeapon = (weaponId: string) => {
+    const nextEquippedWeapons = { ...equippedWeapons, socho: weaponId };
+    setEquippedWeapons(nextEquippedWeapons);
+    saveEquippedWeapons(nextEquippedWeapons);
+  };
+
   return (
     <main className="app-shell">
       {game.status === 'title' && (
@@ -541,6 +558,7 @@ function App() {
               <div>
                 <h2>{'\u7dcf\u9577'}</h2>
                 <p>{'\u524d\u65b9\u534a\u5186\u65ac\u6483\u3067\u524d\u7dda\u3092\u5207\u308a\u958b\u304f\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\u3002'}</p>
+                <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</p>
               </div>
             </article>
             <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}> 
@@ -606,17 +624,42 @@ function App() {
       )}
 
       {game.status === 'guildEquipment' && (
-        <section className="menu-screen guild-subscreen">
+        <section className="menu-screen guild-subscreen equipment-screen">
           <p className="eyebrow">Guild House</p>
           <h1>{'\u88c5\u5099'}</h1>
           <div className="owned-coins-panel compact">
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <article className="guild-placeholder-card">
-            <h2>{'\u73fe\u5728\u88c5\u5099\uff1a\u672a\u5b9f\u88c5'}</h2>
-            <p>{'\u88c5\u5099\u5909\u66f4\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002'}</p>
+          <article className="equipped-weapon-panel">
+            <span>{'\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\uff1a\u7dcf\u9577'}</span>
+            <h2>{'\u73fe\u5728\u88c5\u5099\u4e2d\u306e\u6b66\u5668'}：{equippedSochoWeapon.name}</h2>
+            <p>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</p>
+            <p>{equippedSochoWeapon.description}</p>
           </article>
+          <div className="equipment-list">
+            <h2>{'\u7dcf\u9577\u304c\u88c5\u5099\u3067\u304d\u308b\u6240\u6301\u6b66\u5668'}</h2>
+            {sochoWeaponOptions.length === 0 ? (
+              <p className="empty-inventory">{'\u7dcf\u9577\u7528\u306e\u6b66\u5668\u3092\u6301\u3063\u3066\u3044\u307e\u305b\u3093\u3002\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b\u3067\u935b\u9020\u3057\u3066\u307f\u3088\u3046\u3002'}</p>
+            ) : (
+              sochoWeaponOptions.map((weapon) => {
+                const isEquipped = equippedSochoWeapon.id === weapon.id;
+                return (
+                  <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''}`}> 
+                    <div>
+                      <h3>{weapon.name}</h3>
+                      <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                    </div>
+                    <span className="weapon-count">x{weapon.count}</span>
+                    <p>{weapon.description}</p>
+                    <button className="secondary-button" onClick={() => equipSochoWeapon(weapon.id)} disabled={isEquipped}>
+                      {isEquipped ? '\u88c5\u5099\u4e2d' : '\u88c5\u5099\u3059\u308b'}
+                    </button>
+                  </article>
+                );
+              })
+            )}
+          </div>
           <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
         </section>
       )}
@@ -638,6 +681,7 @@ function App() {
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                    {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
                   <span className="weapon-count">x{weapon.count}</span>
                   <p>{weapon.description}</p>
@@ -740,6 +784,7 @@ function App() {
             <span>Stage 1</span>
             <h2>アストリア草原</h2>
             <p>{selectedSupport ? `サポート：${selectedSupport.name}` : 'ギルドハウスで初回無料サポート召喚を行うと出撃できます。'}</p>
+            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
               アストリア草原へ出撃
             </button>
@@ -770,6 +815,7 @@ function App() {
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{STAGE_NAME}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}</div>
+            <div className="hud-weapon">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
@@ -973,6 +1019,10 @@ function App() {
             <div>
               <span>時間</span>
               <strong>{Math.floor(game.elapsed)}s</strong>
+            </div>
+            <div>
+              <span>{'\u6b66\u5668'}</span>
+              <strong>{equippedSochoWeapon.name}</strong>
             </div>
           </div>
           {rewardSummary && (
