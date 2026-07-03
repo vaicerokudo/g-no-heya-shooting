@@ -1174,6 +1174,70 @@ h1 {
   letter-spacing: 0;
 }
 
+.owned-coins-panel,
+.reward-breakdown {
+  width: min(460px, 100%);
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(35, 29, 19, 0.82), rgba(12, 22, 20, 0.86));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.owned-coins-panel {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.owned-coins-panel.compact {
+  grid-template-columns: 1fr auto auto;
+}
+
+.owned-coins-panel span,
+.reward-breakdown span {
+  color: rgba(247, 251, 255, 0.7);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.owned-coins-panel strong,
+.reward-breakdown strong {
+  color: #ffd166;
+  font-size: 1.15rem;
+}
+
+.reset-coins-button {
+  padding: 7px 10px;
+  border: 1px solid rgba(247, 251, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(247, 251, 255, 0.68);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.reset-coins-button:hover {
+  border-color: rgba(255, 209, 102, 0.42);
+  color: #ffffff;
+}
+
+.reward-breakdown {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reward-breakdown div {
+  min-height: 62px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1501,6 +1565,11 @@ h1 {
 
   .instructions {
     flex-direction: column;
+  }
+
+  .owned-coins-panel.compact,
+  .reward-breakdown {
+    grid-template-columns: 1fr;
   }
 
   .in-game-controls {

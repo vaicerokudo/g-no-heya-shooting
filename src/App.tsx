@@ -10,6 +10,8 @@ import {
   STAGE_NAME,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
+import { calculateCoinReward } from './game/rewards';
+import { loadOwnedCoins, resetOwnedCoins, saveOwnedCoins } from './game/storage';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 
@@ -106,6 +108,7 @@ function App() {
   const [summonCards, setSummonCards] = useState<SupportCharacter[]>([]);
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
+  const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
   const supportId = useRef<SupportId | null>(null);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
@@ -113,6 +116,7 @@ function App() {
   const joystickBaseRef = useRef<HTMLDivElement | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
   const lastFrame = useRef<number | null>(null);
+  const rewardedResultKey = useRef<string | null>(null);
 
   useEffect(() => {
     supportId.current = selectedSupport?.id ?? null;
@@ -176,12 +180,28 @@ function App() {
     if (game.status === 'gameOver') return '撤退。';
     return 'Gの部屋：星門シューティング';
   }, [game.status]);
+  const rewardSummary = useMemo(() => calculateCoinReward(game.status, game.coinsCollected), [game.status, game.coinsCollected]);
+
+  useEffect(() => {
+    if (!rewardSummary) return;
+
+    const resultKey = `${rewardSummary.status}:${Math.floor(game.elapsed * 1000)}:${game.defeatedEnemies}:${rewardSummary.stageCoins}`;
+    if (rewardedResultKey.current === resultKey) return;
+    rewardedResultKey.current = resultKey;
+
+    setOwnedCoins((current) => {
+      const nextCoins = current + rewardSummary.addedCoins;
+      saveOwnedCoins(nextCoins);
+      return nextCoins;
+    });
+  }, [game.defeatedEnemies, game.elapsed, rewardSummary]);
 
   const begin = () => {
     if (!selectedSupport) return;
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
+    rewardedResultKey.current = null;
     lastFrame.current = null;
     setGame(startGame());
   };
@@ -275,6 +295,12 @@ function App() {
     setJoystick({ x: 0, y: 0, active: false });
   };
 
+  const resetSavedCoins = () => {
+    if (!window.confirm('所持コインを0にリセットしますか？')) return;
+    resetOwnedCoins();
+    setOwnedCoins(0);
+  };
+
   return (
     <main className="app-shell">
       {game.status === 'title' && (
@@ -289,8 +315,15 @@ function App() {
           <div className="title-visual" aria-hidden="true">
             <img src={assetPaths.player} alt="" />
           </div>
+          <div className="owned-coins-panel">
+            <span>所持コイン</span>
+            <strong>{ownedCoins}</strong>
+          </div>
           <button className="primary-button" onClick={goToPrepare}>
             出撃準備
+          </button>
+          <button className="reset-coins-button" onClick={resetSavedCoins}>
+            所持コインリセット
           </button>
           <p className="control-note">PC: WASD / 矢印キー　スマホ: 画面ドラッグ　攻撃: 自動</p>
         </section>
@@ -302,6 +335,14 @@ function App() {
             <p className="eyebrow">星門出撃準備</p>
             <h1>編成確認</h1>
             <p className="lead">初回無料サポート召喚で仲間を1人迎えてから、アストリア草原へ出撃します。</p>
+          </div>
+
+          <div className="owned-coins-panel compact">
+            <span>所持コイン</span>
+            <strong>{ownedCoins}</strong>
+            <button className="reset-coins-button" onClick={resetSavedCoins}>
+              リセット
+            </button>
           </div>
 
           <div className="formation-grid">
@@ -561,6 +602,33 @@ function App() {
               <strong>{Math.floor(game.elapsed)}s</strong>
             </div>
           </div>
+          {rewardSummary && (
+            <div className="reward-breakdown">
+              <div>
+                <span>ステージ獲得</span>
+                <strong>{rewardSummary.stageCoins}</strong>
+              </div>
+              {rewardSummary.status === 'clear' ? (
+                <div>
+                  <span>クリアボーナス</span>
+                  <strong>+{rewardSummary.clearBonus}</strong>
+                </div>
+              ) : (
+                <div>
+                  <span>持ち帰り率</span>
+                  <strong>{Math.round(rewardSummary.keepRate * 100)}%</strong>
+                </div>
+              )}
+              <div>
+                <span>今回加算</span>
+                <strong>+{rewardSummary.addedCoins}</strong>
+              </div>
+              <div>
+                <span>所持コイン</span>
+                <strong>{ownedCoins}</strong>
+              </div>
+            </div>
+          )}
           <div className="result-actions">
             <button className="primary-button" onClick={begin}>
               もう一度出撃

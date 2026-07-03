@@ -109,24 +109,22 @@ export function updateGame(state: GameState, dt: number, move: Vector, supportId
   next = updateEffects(next, dt);
 
   if (next.player.hp <= 0) {
-    const keptCoins = Math.floor(next.coinsCollected * 0.4);
     return {
       ...next,
       status: 'gameOver',
-      coinsCollected: keptCoins,
-      message: `撤退。拾ったコインの一部 ${keptCoins} 枚を持ち帰った。`,
+      message: `Game over. Stage coins: ${next.coinsCollected}`,
     };
   }
 
   if (next.boss && next.boss.hp <= 0) {
-    const bonusCoins = get7171BossClearCoinBonus(supportId);
-    const totalCoins = next.coinsCollected + bonusCoins;
+    const supportBonusCoins = get7171BossClearCoinBonus(supportId);
+    const stageCoins = next.coinsCollected + supportBonusCoins;
     return {
       ...next,
       boss: null,
       status: 'clear',
-      coinsCollected: totalCoins,
-      message: `大型魔獣を撃破。コイン ${totalCoins} 枚を獲得。`,
+      coinsCollected: stageCoins,
+      message: `Stage clear. Stage coins: ${stageCoins}`,
     };
   }
 
