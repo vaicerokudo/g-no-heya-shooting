@@ -1,9 +1,11 @@
 import { hydrateOwnedWeapon } from './weapons';
+import type { OwnedSupport } from './supports';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
 
 const OWNED_COINS_KEY = 'g-no-heya-shooting:owned-coins';
 const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
+const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -68,6 +70,29 @@ export function saveEquippedWeapons(equippedWeapons: EquippedWeaponsByCharacter)
   window.localStorage.setItem(EQUIPPED_WEAPONS_KEY, JSON.stringify(equippedWeapons));
 }
 
+export function loadOwnedSupports(): OwnedSupport[] {
+  if (typeof window === 'undefined') return [];
+
+  const rawValue = window.localStorage.getItem(OWNED_SUPPORTS_KEY);
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (Array.isArray(parsed)) return parsed.filter(isOwnedSupport);
+    if (!parsed || typeof parsed !== 'object') return [];
+
+    return Object.values(parsed).filter(isOwnedSupport);
+  } catch {
+    return [];
+  }
+}
+
+export function saveOwnedSupports(ownedSupports: OwnedSupport[]) {
+  if (typeof window === 'undefined') return;
+  const byId = Object.fromEntries(ownedSupports.map((support) => [support.id, support]));
+  window.localStorage.setItem(OWNED_SUPPORTS_KEY, JSON.stringify(byId));
+}
+
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {
   if (!value || typeof value !== 'object') return false;
   const weapon = value as Partial<OwnedWeapon>;
@@ -79,5 +104,19 @@ function isOwnedWeapon(value: unknown): value is OwnedWeapon {
     (weapon.rarity === 'common' || weapon.rarity === 'rare' || weapon.rarity === 'epic') &&
     typeof weapon.description === 'string' &&
     typeof weapon.count === 'number'
+  );
+}
+
+function isOwnedSupport(value: unknown): value is OwnedSupport {
+  if (!value || typeof value !== 'object') return false;
+  const support = value as Partial<OwnedSupport>;
+  return (
+    (support.id === '7171' ||
+      support.id === 'yabuko' ||
+      support.id === 'player' ||
+      support.id === 'hibiki' ||
+      support.id === 'myouou') &&
+    typeof support.count === 'number' &&
+    support.count > 0
   );
 }

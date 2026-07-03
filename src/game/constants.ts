@@ -53,6 +53,7 @@ export const GAME_OVER_COIN_KEEP_RATE = 0.5;
 
 export const FORGE_WEAPON_COST = 30;
 export const FORGE_ANIMATION_DURATION = 1100;
+export const SHOP_SUPPORT_SUMMON_COST = 80;
 
 export const YABUKO_HEART_DROP_CHANCE = 0.22;
 export const YABUKO_RED_HEART_HEAL = 24;

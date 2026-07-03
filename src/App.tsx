@@ -10,6 +10,7 @@ import {
   STAGE_NAME,
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
+  SHOP_SUPPORT_SUMMON_COST,
   STAR_SLASH_WAVE_HALF_WIDTH,
   STAR_SLASH_WAVE_RANGE,
 } from './game/constants';
@@ -19,12 +20,21 @@ import {
   loadOwnedCoins,
   loadOwnedWeapons,
   loadEquippedWeapons,
+  loadOwnedSupports,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
   saveEquippedWeapons,
+  saveOwnedSupports,
   saveOwnedWeapons,
 } from './game/storage';
+import {
+  addOwnedSupport,
+  getSupportById,
+  SHOPKEEPER_SUPPORT_LINES,
+  supportCandidates,
+} from './game/supports';
+import type { OwnedSupport, SupportCharacter } from './game/supports';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 import {
@@ -38,15 +48,8 @@ import {
 } from './game/weapons';
 import type { EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
 
-type SupportCharacter = {
-  id: SupportId;
-  name: string;
-  role: string;
-  description: string;
-  image: string;
-};
-
 type SummonPhase = 'idle' | 'gate' | 'cards' | 'revealing' | 'done';
+type SummonContext = 'guildFree' | 'shopPaid';
 
 type JoystickState = {
   x: number;
@@ -121,44 +124,6 @@ const assetPaths = {
   },
 };
 
-const supportCandidates: SupportCharacter[] = [
-  {
-    id: '7171',
-    name: '7171',
-    role: '収集＆金策',
-    description: 'コインやドロップを集める周回向きサポート。',
-    image: '/assets/tcg/support-card-7171.png',
-  },
-  {
-    id: 'yabuko',
-    name: 'やぶこ',
-    role: '回復',
-    description: '回復で総長の継戦を支えるサポート。',
-    image: '/assets/tcg/support-card-yabuko.png',
-  },
-  {
-    id: 'player',
-    name: 'Player',
-    role: '2丁拳銃で援護射撃',
-    description: '弾幕と援護射撃で前線を支えるサポート。',
-    image: '/assets/tcg/support-card-player.png',
-  },
-  {
-    id: 'hibiki',
-    name: 'hibiki',
-    role: '大盾で被弾軽減',
-    description: '大盾で被弾を抑える防御型サポート。',
-    image: '/assets/tcg/support-card-hibiki.png',
-  },
-  {
-    id: 'myouou',
-    name: '明王',
-    role: '迦楼羅で敵を一掃',
-    description: '神聖な範囲攻撃で戦場を切り開くサポート。',
-    image: '/assets/tcg/support-card-myouou.png',
-  },
-];
-
 function App() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
   const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(null);
@@ -168,9 +133,12 @@ function App() {
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
+  const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
+  const [summonContext, setSummonContext] = useState<SummonContext>('guildFree');
+  const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
   const supportId = useRef<SupportId | null>(null);
   const equippedWeaponId = useRef('iron-tachi');
   const pressedKeys = useRef(new Set<string>());
@@ -329,6 +297,19 @@ function App() {
     setGame((current) => ({ ...current, status: 'shop' }));
   };
 
+  const goToShopSupportSummon = () => {
+    setSummonContext('shopPaid');
+    setSummonPhase('idle');
+    setSummonCards([]);
+    setRevealingCardId(null);
+    setShopSummonResult(null);
+    setGame((current) => ({ ...current, status: 'shopSupportSummon' }));
+  };
+
+  const goToShopSupportList = () => {
+    setGame((current) => ({ ...current, status: 'shopSupportList' }));
+  };
+
   const goToGate = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
@@ -380,6 +361,22 @@ function App() {
   const summonSupport = () => {
     if (selectedSupport || summonPhase !== 'idle') return;
 
+    setSummonContext('guildFree');
+    setSummonPhase('gate');
+    window.setTimeout(() => {
+      setSummonCards(shuffleSupports(supportCandidates));
+      setSummonPhase('cards');
+    }, 650);
+  };
+
+  const buySupportSummon = () => {
+    if (ownedCoins < SHOP_SUPPORT_SUMMON_COST || (summonPhase !== 'idle' && summonPhase !== 'done')) return;
+
+    const nextCoins = ownedCoins - SHOP_SUPPORT_SUMMON_COST;
+    setOwnedCoins(nextCoins);
+    saveOwnedCoins(nextCoins);
+    setShopSummonResult(null);
+    setSummonContext('shopPaid');
     setSummonPhase('gate');
     window.setTimeout(() => {
       setSummonCards(shuffleSupports(supportCandidates));
@@ -394,6 +391,14 @@ function App() {
     setSummonPhase('revealing');
     window.setTimeout(() => {
       setSelectedSupport(support);
+      setOwnedSupports((current) => {
+        const nextSupports = addOwnedSupport(current, support.id);
+        saveOwnedSupports(nextSupports);
+        return nextSupports;
+      });
+      if (summonContext === 'shopPaid') {
+        setShopSummonResult(support);
+      }
       setSummonPhase('done');
     }, 760);
   };
@@ -849,17 +854,114 @@ function App() {
       )}
 
       {game.status === 'shop' && (
-        <section className="menu-screen facility-screen">
+        <section className="menu-screen facility-screen shop-screen">
           <p className="eyebrow">Astoria Facility</p>
-          <h1>雑貨屋</h1>
-          <div className="owned-coins-panel">
-            <span>所持コイン</span>
+          <h1>{'\u96d1\u8ca8\u5c4b'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <p className="lead">アイテム購入は今後実装予定です。冒険用品を並べる準備中です。</p>
-          <button className="secondary-button" onClick={goToAstoriaMap}>
-            MAPへ戻る
-          </button>
+          <div className="shop-dialogue-stage">
+            <img className="shopkeeper-portrait" src="/assets/tcg/shopkeeper.png" alt="Shopkeeper" />
+            <article className="shop-dialogue-panel">
+              <span className="speaker-name">{'\u96d1\u8ca8\u5c4b\u306e\u5e97\u4e3b'}</span>
+              <p>{'\u3044\u3089\u3063\u3057\u3083\u3044\u3002\u4eca\u65e5\u306f\u3069\u306e\u30ab\u30fc\u30c9\u3092\u5f15\u3044\u3066\u3044\u304f\uff1f'}</p>
+              <p>{'\u3053\u306e\u30ab\u30fc\u30c9\u306b\u306f\u3001\u65c5\u3092\u52a9\u3051\u308b\u4ef2\u9593\u306e\u529b\u304c\u5bbf\u3063\u3066\u308b\u3088\u3002'}</p>
+              <p>{'\u8ab0\u304c\u6765\u308b\u304b\u306f\u3001\u958b\u3044\u3066\u304b\u3089\u306e\u304a\u697d\u3057\u307f\u3055\u3002'}</p>
+            </article>
+          </div>
+          <div className="shop-menu-actions">
+            <button className="primary-button" onClick={goToShopSupportSummon}>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046'}</button>
+            <button className="secondary-button" onClick={goToShopSupportList}>{'\u53ec\u559a\u6e08\u307f\u30b5\u30dd\u30fc\u30c8\u3092\u898b\u308b'}</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'shopSupportSummon' && (
+        <section className="menu-screen facility-screen shop-screen">
+          <p className="eyebrow">Support Card Shop</p>
+          <h1>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <div className="shop-cost-card">
+            <span>{'\u53ec\u559a\u8cbb\u7528'}</span>
+            <strong>{SHOP_SUPPORT_SUMMON_COST}</strong>
+            <p>{'\u30b2\u30fc\u30e0\u5185\u30b3\u30a4\u30f3\u3067\u3001\u65c5\u3092\u52a9\u3051\u308b\u30b5\u30dd\u30fc\u30c8\u30ab\u30fc\u30c9\u30921\u679a\u958b\u304d\u307e\u3059\u3002'}</p>
+          </div>
+          <article className={`formation-card support-card guild-summon-card shop-summon-card ${shopSummonResult ? 'has-support' : ''} summon-phase-${summonPhase}`}> 
+            <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9'}</span>
+            {shopSummonResult && summonPhase === 'done' ? (
+              <>
+                <img src={shopSummonResult.image} alt={shopSummonResult.name} />
+                <div>
+                  <h2>{shopSummonResult.name}</h2>
+                  <strong>{shopSummonResult.role}</strong>
+                  <p>{shopSummonResult.effectDescription}</p>
+                  <p className="summon-success">{'\u5e97\u4e3b'}「{SHOPKEEPER_SUPPORT_LINES[shopSummonResult.id]}」</p>
+                </div>
+              </>
+            ) : (
+              <SummonCardStage
+                phase={summonPhase}
+                cards={summonCards}
+                revealingCardId={revealingCardId}
+                cardBack={assetPaths.cardBack}
+                onChoose={chooseSupportCard}
+              />
+            )}
+          </article>
+          {ownedCoins < SHOP_SUPPORT_SUMMON_COST && summonPhase === 'idle' && (
+            <p className="forge-warning">{'\u30b3\u30a4\u30f3\u304c\u8db3\u308a\u307e\u305b\u3093'}</p>
+          )}
+          <div className="shop-menu-actions">
+            <button className="primary-button" onClick={buySupportSummon} disabled={ownedCoins < SHOP_SUPPORT_SUMMON_COST || (summonPhase !== 'idle' && summonPhase !== 'done')}>
+              {summonPhase === 'idle' || summonPhase === 'done' ? '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046' : '\u53ec\u559a\u4e2d...'}
+            </button>
+            <button className="secondary-button" onClick={goToShop} disabled={summonPhase === 'gate' || summonPhase === 'cards' || summonPhase === 'revealing'}>
+              {'\u5e97\u4e3b\u306b\u623b\u308b'}
+            </button>
+            <button className="secondary-button" onClick={goToAstoriaMap} disabled={summonPhase === 'gate' || summonPhase === 'cards' || summonPhase === 'revealing'}>MAPへ戻る</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'shopSupportList' && (
+        <section className="menu-screen facility-screen shop-screen">
+          <p className="eyebrow">Support Collection</p>
+          <h1>{'\u53ec\u559a\u6e08\u307f\u30b5\u30dd\u30fc\u30c8'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <div className="support-inventory">
+            {ownedSupports.length === 0 ? (
+              <p className="empty-inventory">{'\u307e\u3060\u53ec\u559a\u6e08\u307f\u30b5\u30dd\u30fc\u30c8\u306f\u3044\u307e\u305b\u3093\u3002\u307e\u305a\u306f\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3063\u3066\u307f\u3088\u3046\u3002'}</p>
+            ) : (
+              ownedSupports.map((ownedSupport) => {
+                const support = getSupportById(ownedSupport.id);
+                const isActive = selectedSupport?.id === support.id;
+                return (
+                  <article key={support.id} className={`support-list-card ${isActive ? 'is-active' : ''}`}>
+                    <img src={support.image} alt={support.name} />
+                    <div>
+                      <h2>{support.name}</h2>
+                      <strong>{support.role}</strong>
+                      <p>{support.effectDescription}</p>
+                      {isActive && <em className="equipped-badge">{'\u73fe\u5728\u540c\u884c\u4e2d'}</em>}
+                    </div>
+                    <span className="weapon-count">x{ownedSupport.count}</span>
+                  </article>
+                );
+              })
+            )}
+          </div>
+          <div className="shop-menu-actions">
+            <button className="secondary-button" onClick={goToShop}>{'\u5e97\u4e3b\u306b\u623b\u308b'}</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
         </section>
       )}
 

@@ -10,6 +10,8 @@ export type GameStatus =
   | 'forgeDraw'
   | 'forgeWeapons'
   | 'shop'
+  | 'shopSupportSummon'
+  | 'shopSupportList'
   | 'gate'
   | 'playing'
   | 'paused'
