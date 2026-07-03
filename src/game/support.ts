@@ -13,8 +13,10 @@ import {
   PLAYER_SUPPORT_BULLET_SPEED,
   PLAYER_SUPPORT_FIRE_INTERVAL,
   PLAYER_SUPPORT_SHOTS_PER_BURST,
+  YABUKO_HEART_DROP_CHANCE,
+  YABUKO_RED_HEART_HEAL,
 } from './constants';
-import type { Boss, Coin, Enemy, FloatingEffect, GameState, SupportBullet, SupportId, Vector } from './types';
+import type { Boss, Coin, Enemy, FloatingEffect, GameState, HeartPickup, SupportBullet, SupportId, Vector } from './types';
 
 const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
   { x: -1, y: 0 },
@@ -48,6 +50,10 @@ export function is7171Support(supportId: SupportId | null): boolean {
   return supportId === '7171';
 }
 
+export function isYabukoSupport(supportId: SupportId | null): boolean {
+  return supportId === 'yabuko';
+}
+
 export function getCoinMagnetRadius(supportId: SupportId | null): number {
   return is7171Support(supportId) ? COIN_MAGNET_RADIUS * NANA_SUPPORT_MAGNET_MULTIPLIER : COIN_MAGNET_RADIUS;
 }
@@ -78,6 +84,31 @@ export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: Su
   }
 
   return { coins, effects, nextId };
+}
+
+export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: SupportId | null) {
+  const hearts: HeartPickup[] = [];
+  const effects: FloatingEffect[] = [];
+
+  if (isYabukoSupport(supportId) && Math.random() < YABUKO_HEART_DROP_CHANCE) {
+    hearts.push({
+      id: nextId++,
+      x: enemy.x + (Math.random() > 0.5 ? 12 : -12),
+      y: enemy.y - 10,
+      heartType: 'red',
+      healAmount: YABUKO_RED_HEART_HEAL,
+    });
+    effects.push({
+      id: nextId++,
+      kind: 'heal',
+      x: enemy.x,
+      y: enemy.y - 26,
+      text: 'HEART',
+      timer: 0.46,
+    });
+  }
+
+  return { hearts, effects, nextId };
 }
 
 function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameState {

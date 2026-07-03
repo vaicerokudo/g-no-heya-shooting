@@ -39,6 +39,16 @@ export type Coin = {
   isBonus?: boolean;
 };
 
+export type HeartType = 'red';
+
+export type HeartPickup = {
+  id: number;
+  x: number;
+  y: number;
+  heartType: HeartType;
+  healAmount: number;
+};
+
 export type EnemyBullet = {
   id: number;
   x: number;
@@ -59,7 +69,7 @@ export type SupportBullet = {
   life: number;
 };
 
-export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus';
+export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus' | 'heal';
 
 export type FloatingEffect = {
   id: number;
@@ -91,6 +101,7 @@ export type GameState = {
   player: Player;
   enemies: Enemy[];
   coins: Coin[];
+  hearts: HeartPickup[];
   bullets: EnemyBullet[];
   supportBullets: SupportBullet[];
   effects: FloatingEffect[];

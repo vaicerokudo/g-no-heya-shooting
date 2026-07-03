@@ -366,6 +366,17 @@ function App() {
               </div>
             ))}
 
+            {game.hearts.map((heart) => (
+              <div
+                key={heart.id}
+                className={`heart-pickup heart-${heart.heartType}`}
+                style={place(heart.x, heart.y, 24)}
+                aria-label="healing heart"
+              >
+                ♥
+              </div>
+            ))}
+
             {game.enemies.map((enemy) => (
               <div
                 key={enemy.id}

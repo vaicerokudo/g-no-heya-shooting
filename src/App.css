@@ -579,6 +579,7 @@ h1 {
 .field.is-paused .scroll-band,
 .field.is-paused .slash,
 .field.is-paused .coin,
+.field.is-paused .heart-pickup,
 .field.is-paused .enemy.is-slashed,
 .field.is-paused .boss.is-slashed,
 .field.is-paused .player.is-hit,
@@ -614,6 +615,7 @@ h1 {
 .player,
 .enemy,
 .coin,
+.heart-pickup,
 .enemy-bullet,
 .support-bullet,
 .boss,
@@ -627,6 +629,7 @@ h1 {
 .player,
 .enemy,
 .coin,
+.heart-pickup,
 .boss {
   display: grid;
   place-items: center;
@@ -834,6 +837,37 @@ h1 {
     0 0 20px rgba(200, 255, 223, 0.8);
 }
 
+.heart-pickup {
+  color: #fff4f7;
+  border: 2px solid rgba(255, 218, 226, 0.96);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 34% 30%, #ffffff 0 16%, transparent 17%),
+    radial-gradient(circle, #ff5c8a 0 54%, #9b1744 76%);
+  font-size: 0.96rem;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(85, 0, 28, 0.72);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.22),
+    0 0 18px rgba(255, 92, 138, 0.76),
+    0 0 28px rgba(186, 255, 220, 0.28);
+  z-index: 5;
+  animation: heartFloat 720ms ease-in-out infinite alternate;
+}
+
+.heart-pickup::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 1px solid rgba(255, 218, 226, 0.44);
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, transparent 0 47%, rgba(255, 255, 255, 0.62) 48% 52%, transparent 53%),
+    linear-gradient(0deg, transparent 0 47%, rgba(200, 255, 223, 0.48) 48% 52%, transparent 53%);
+  opacity: 0.72;
+  animation: heartSigil 1.3s linear infinite;
+}
+
 .enemy-bullet {
   border-radius: 999px;
   background: #b8f7ff;
@@ -898,6 +932,15 @@ h1 {
     0 1px 0 #10351d,
     0 0 12px rgba(200, 255, 223, 0.95),
     0 0 18px rgba(255, 209, 102, 0.75);
+}
+
+.effect-heal strong {
+  color: #ffd6e2;
+  font-size: 0.82rem;
+  text-shadow:
+    0 1px 0 #5f0b2b,
+    0 0 12px rgba(255, 92, 138, 0.96),
+    0 0 18px rgba(200, 255, 223, 0.58);
 }
 
 .effect-support strong {
@@ -1144,6 +1187,24 @@ h1 {
   }
   to {
     filter: brightness(1.35);
+  }
+}
+
+@keyframes heartFloat {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.16);
+  }
+}
+
+@keyframes heartSigil {
+  from {
+    transform: rotate(0deg) scale(0.96);
+  }
+  to {
+    transform: rotate(360deg) scale(1.04);
   }
 }
 

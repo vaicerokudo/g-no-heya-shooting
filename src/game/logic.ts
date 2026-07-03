@@ -6,6 +6,7 @@ import {
   COIN_MAGNET_SPEED,
   FIELD_HEIGHT,
   FIELD_WIDTH,
+  HEART_PICKUP_RADIUS,
   PLAYER_LIMITS,
   PLAYER_MAX_HP,
   PLAYER_START,
@@ -20,6 +21,7 @@ import {
 import { chooseEnemyKind, createEnemy } from './enemies';
 import {
   createEnemyCoinDrops,
+  createYabukoHeartDrop,
   get7171BossClearCoinBonus,
   getCoinMagnetRadius,
   getCoinPickupRadius,
@@ -33,6 +35,7 @@ export const createInitialGameState = (): GameState => ({
   player: createPlayer(),
   enemies: [],
   coins: [],
+  hearts: [],
   bullets: [],
   supportBullets: [],
   effects: [],
@@ -86,6 +89,7 @@ export function updateGame(state: GameState, dt: number, move: Vector, supportId
   next = runAutoSlash(next, dt, supportId);
   next = updateCoins(next, dt, supportId);
   next = collectCoins(next, supportId);
+  next = collectHearts(next);
   next = resolvePlayerDamage(next);
   next = updateEffects(next, dt);
 
@@ -272,9 +276,10 @@ function updateBullets(state: GameState, dt: number): GameState {
 function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null): GameState {
   if (state.player.attackCooldown > 0) return state;
 
-  const { enemies, defeated, coins, nextId, effects } = damageEnemiesWithSlash(
+  const { enemies, defeated, coins, hearts, nextId, effects } = damageEnemiesWithSlash(
     state.enemies,
     state.coins,
+    state.hearts,
     state.effects,
     state.nextId,
     state.player,
@@ -287,6 +292,7 @@ function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null)
     enemies,
     boss: bossHit.boss,
     coins,
+    hearts,
     effects: bossHit.effect ? [...effects, bossHit.effect] : effects,
     nextId: bossHit.nextId,
     defeatedEnemies: state.defeatedEnemies + defeated,
@@ -301,6 +307,7 @@ function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null)
 function damageEnemiesWithSlash(
   enemies: Enemy[],
   coins: Coin[],
+  hearts: GameState['hearts'],
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
@@ -308,6 +315,7 @@ function damageEnemiesWithSlash(
 ) {
   let defeated = 0;
   const nextCoins = [...coins];
+  const nextHearts = [...hearts];
   const nextEffects = [...effects];
   const nextEnemies: Enemy[] = [];
 
@@ -325,12 +333,16 @@ function damageEnemiesWithSlash(
       nextCoins.push(...drops.coins);
       nextEffects.push(...drops.effects);
       nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
     } else {
       nextEnemies.push({ ...enemy, hp, hitTimer: 0.16 });
     }
   }
 
-  return { enemies: nextEnemies, defeated, coins: nextCoins, nextId, effects: nextEffects };
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
 }
 
 function damageBossWithSlash(boss: Boss | null, player: Player, nextId: number) {
@@ -388,6 +400,39 @@ function collectCoins(state: GameState, supportId: SupportId | null): GameState 
     effects,
     nextId,
     coinsCollected: state.coinsCollected + collected,
+  };
+}
+
+function collectHearts(state: GameState): GameState {
+  let nextId = state.nextId;
+  let player = state.player;
+  const effects = [...state.effects];
+  const hearts = state.hearts.filter((heart) => {
+    const pickup = Math.hypot(state.player.x - heart.x, state.player.y - heart.y) < HEART_PICKUP_RADIUS;
+    if (pickup) {
+      const recovered = Math.min(heart.healAmount, player.maxHp - player.hp);
+      player = {
+        ...player,
+        hp: Math.min(player.maxHp, player.hp + heart.healAmount),
+      };
+      effects.push({
+        id: nextId++,
+        kind: 'heal',
+        x: state.player.x,
+        y: state.player.y - 34,
+        text: recovered > 0 ? `+HP ${recovered}` : 'HP MAX',
+        timer: 0.52,
+      });
+    }
+    return !pickup;
+  });
+
+  return {
+    ...state,
+    player,
+    hearts,
+    effects,
+    nextId,
   };
 }
 

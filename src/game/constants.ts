@@ -43,6 +43,10 @@ export const NANA_SUPPORT_PICKUP_MULTIPLIER = 1.18;
 export const NANA_SUPPORT_BONUS_COIN_CHANCE = 0.25;
 export const NANA_SUPPORT_BOSS_BONUS_COINS = 3;
 
+export const YABUKO_HEART_DROP_CHANCE = 0.22;
+export const YABUKO_RED_HEART_HEAL = 24;
+export const HEART_PICKUP_RADIUS = 46;
+
 export const COIN_PICKUP_RADIUS = 56;
 export const COIN_MAGNET_RADIUS = 104;
 export const COIN_MAGNET_SPEED = 360;
