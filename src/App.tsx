@@ -107,6 +107,7 @@ const assetPaths = {
   player: '/assets/tcg/chibi-socho.png',
   boss: '/assets/tcg/boss-bear.png',
   cardBack: '/assets/tcg/card-back-default.png',
+  sag: '/assets/tcg/sag-portrait.png',
   enemies: {
     small: '/assets/tcg/enemy-goblin.png',
     flying: '/assets/tcg/enemy-lesser-wyvern.png',
@@ -301,6 +302,14 @@ function App() {
 
   const goToForge = () => {
     setGame((current) => ({ ...current, status: 'forge' }));
+  };
+
+  const goToForgeDraw = () => {
+    setGame((current) => ({ ...current, status: 'forgeDraw' }));
+  };
+
+  const goToForgeWeapons = () => {
+    setGame((current) => ({ ...current, status: 'forgeWeapons' }));
   };
 
   const goToShop = () => {
@@ -694,12 +703,46 @@ function App() {
       )}
 
       {game.status === 'forge' && (
-        <section className="menu-screen facility-screen forge-screen">
+        <section className="menu-screen facility-screen forge-screen forge-dialogue-screen">
           <p className="eyebrow">Astoria Facility</p>
           <h1>{'\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b'}</h1>
-          <div className="owned-coins-panel">
+          <div className="owned-coins-panel compact">
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
+          </div>
+          <div className="forge-dialogue-stage">
+            <div className="forge-character">
+              <img src={assetPaths.sag} alt="Sag" />
+            </div>
+            <article className="forge-dialogue-panel">
+              <span className="speaker-name">サッグ</span>
+              <p>おう、来たか。</p>
+              <p>叩いて鍛えるのは鉄だけじゃねぇ。</p>
+              <p>武器も、物語も、ここから強くなるんだ。</p>
+            </article>
+          </div>
+          <div className="forge-menu-actions">
+            <button className="primary-button" onClick={goToForgeDraw}>{'\u6b66\u5668\u3092\u935b\u9020'}</button>
+            <button className="secondary-button" onClick={goToForgeWeapons}>{'\u6240\u6301\u6b66\u5668\u3092\u898b\u308b'}</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'forgeDraw' && (
+        <section className="menu-screen facility-screen forge-screen forge-work-screen">
+          <p className="eyebrow">Sag Forge</p>
+          <h1>{'\u6b66\u5668\u935b\u9020'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <div className="forge-mini-dialogue">
+            <img src={assetPaths.sag} alt="Sag" />
+            <div>
+              <strong>サッグ</strong>
+              <p>どれが出るかは火床と星脈次第だ。準備ができたら叩くぞ。</p>
+            </div>
           </div>
           <div className="forge-panel">
             <div>
@@ -730,6 +773,29 @@ function App() {
               <p>{forgeResult.weapon.description}</p>
             </article>
           )}
+          <p className="rarity-note">common {WEAPON_RARITY_WEIGHTS.common}% / rare {WEAPON_RARITY_WEIGHTS.rare}% / epic {WEAPON_RARITY_WEIGHTS.epic}%</p>
+          <div className="forge-menu-actions">
+            <button className="secondary-button" onClick={goToForge}>サッグに戻る</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'forgeWeapons' && (
+        <section className="menu-screen facility-screen forge-screen forge-work-screen">
+          <p className="eyebrow">Sag Forge</p>
+          <h1>{'\u6240\u6301\u6b66\u5668'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <div className="forge-mini-dialogue">
+            <img src={assetPaths.sag} alt="Sag" />
+            <div>
+              <strong>サッグ</strong>
+              <p>今まで鍛えた武器だ。総長に持たせるなら、ギルドハウスの装備から選んでくれ。</p>
+            </div>
+          </div>
           <div className="weapon-inventory-header">
             <h2>{'\u6240\u6301\u6b66\u5668\u4e00\u89a7'}</h2>
             <button className="reset-coins-button" onClick={resetSavedWeapons}>{'\u6240\u6301\u6b66\u5668\u30ea\u30bb\u30c3\u30c8'}</button>
@@ -743,6 +809,7 @@ function App() {
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                    {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
                   <span className="weapon-count">x{weapon.count}</span>
                   <p>{weapon.description}</p>
@@ -750,10 +817,10 @@ function App() {
               ))
             )}
           </div>
-          <p className="rarity-note">common {WEAPON_RARITY_WEIGHTS.common}% / rare {WEAPON_RARITY_WEIGHTS.rare}% / epic {WEAPON_RARITY_WEIGHTS.epic}%</p>
-          <button className="secondary-button" onClick={goToAstoriaMap}>
-            Back to MAP
-          </button>
+          <div className="forge-menu-actions">
+            <button className="secondary-button" onClick={goToForge}>サッグに戻る</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
         </section>
       )}
 

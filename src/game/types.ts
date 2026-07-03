@@ -7,6 +7,8 @@ export type GameStatus =
   | 'guildEquipment'
   | 'guildWeapons'
   | 'forge'
+  | 'forgeDraw'
+  | 'forgeWeapons'
   | 'shop'
   | 'gate'
   | 'playing'
