@@ -47,6 +47,8 @@ export const CLEAR_COIN_BONUS = 10;
 // Future 7171 Lv growth can raise this keep rate after game over.
 export const GAME_OVER_COIN_KEEP_RATE = 0.5;
 
+export const FORGE_WEAPON_COST = 30;
+
 export const YABUKO_HEART_DROP_CHANCE = 0.22;
 export const YABUKO_RED_HEART_HEAL = 24;
 export const HEART_PICKUP_RADIUS = 46;

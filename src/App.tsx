@@ -8,12 +8,22 @@ import {
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
   STAGE_NAME,
+  FORGE_WEAPON_COST,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
-import { loadOwnedCoins, resetOwnedCoins, saveOwnedCoins } from './game/storage';
+import {
+  loadOwnedCoins,
+  loadOwnedWeapons,
+  resetOwnedCoins,
+  resetOwnedWeapons,
+  saveOwnedCoins,
+  saveOwnedWeapons,
+} from './game/storage';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
+import { addOwnedWeapon, forgeRandomWeapon, WEAPON_RARITY_WEIGHTS } from './game/weapons';
+import type { OwnedWeapon, WeaponDefinition } from './game/weapons';
 
 type SupportCharacter = {
   id: SupportId;
@@ -29,6 +39,11 @@ type JoystickState = {
   x: number;
   y: number;
   active: boolean;
+};
+
+type ForgeResult = {
+  weapon: WeaponDefinition;
+  isNew: boolean;
 };
 
 type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate';
@@ -123,6 +138,9 @@ function App() {
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
+  const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
+  const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
+  const [isForging, setIsForging] = useState(false);
   const supportId = useRef<SupportId | null>(null);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
@@ -346,6 +364,32 @@ function App() {
     setOwnedCoins(0);
   };
 
+  const forgeWeapon = () => {
+    if (ownedCoins < FORGE_WEAPON_COST || isForging) return;
+
+    setIsForging(true);
+    window.setTimeout(() => {
+      const weapon = forgeRandomWeapon();
+      const isNew = !ownedWeapons.some((ownedWeapon) => ownedWeapon.id === weapon.id);
+      const nextCoins = ownedCoins - FORGE_WEAPON_COST;
+      const nextWeapons = addOwnedWeapon(ownedWeapons, weapon);
+
+      setOwnedCoins(nextCoins);
+      saveOwnedCoins(nextCoins);
+      setOwnedWeapons(nextWeapons);
+      saveOwnedWeapons(nextWeapons);
+      setForgeResult({ weapon, isNew });
+      setIsForging(false);
+    }, 520);
+  };
+
+  const resetSavedWeapons = () => {
+    if (!window.confirm('所持武器をリセットしますか？')) return;
+    resetOwnedWeapons();
+    setOwnedWeapons([]);
+    setForgeResult(null);
+  };
+
   return (
     <main className="app-shell">
       {game.status === 'title' && (
@@ -472,16 +516,65 @@ function App() {
       )}
 
       {game.status === 'forge' && (
-        <section className="menu-screen facility-screen">
+        <section className="menu-screen facility-screen forge-screen">
           <p className="eyebrow">Astoria Facility</p>
-          <h1>サッグの鍛冶屋</h1>
+          <h1>{'\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b'}</h1>
           <div className="owned-coins-panel">
-            <span>所持コイン</span>
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <p className="lead">武器鍛造は今後実装予定です。サッグが炉を温めています。</p>
+          <div className="forge-panel">
+            <div>
+              <h2>{'\u6b66\u5668\u935b\u9020'}</h2>
+              <p>{'\u6240\u6301\u30b3\u30a4\u30f3\u3092\u4f7f\u3063\u3066\u3001\u30e9\u30f3\u30c0\u30e0\u306b\u6b66\u5668\u3092\u935b\u9020\u3057\u307e\u3059\u3002\u52b9\u679c\u306e\u53cd\u6620\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002'}</p>
+              <div className="forge-cost">
+                <span>{'\u935b\u9020\u8cbb\u7528'}</span>
+                <strong>{FORGE_WEAPON_COST}</strong>
+              </div>
+              <button className="primary-button" onClick={forgeWeapon} disabled={ownedCoins < FORGE_WEAPON_COST || isForging}>
+                {isForging ? '\u935b\u9020\u4e2d...' : '\u6b66\u5668\u3092\u935b\u9020'}
+              </button>
+              {ownedCoins < FORGE_WEAPON_COST && <p className="forge-warning">{'\u30b3\u30a4\u30f3\u304c\u8db3\u308a\u307e\u305b\u3093'}</p>}
+            </div>
+            <div className={`forge-anvil ${isForging ? 'is-forging' : ''}`} aria-hidden="true">
+              <span className="forge-hammer">Hammer</span>
+              <span className="forge-spark spark-one" />
+              <span className="forge-spark spark-two" />
+              <span className="forge-spark spark-three" />
+            </div>
+          </div>
+          {forgeResult && (
+            <article className={`forge-result rarity-${forgeResult.weapon.rarity}`}> 
+              <p>{'\u935b\u9020\u6210\u529f\uff01'} {forgeResult.isNew ? '\u65b0\u898f\u5165\u624b' : '\u6240\u6301\u6570+1'}</p>
+              <h2>{forgeResult.weapon.name}</h2>
+              <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.rarity}</strong>
+              <span>{forgeResult.weapon.type}</span>
+              <p>{forgeResult.weapon.description}</p>
+            </article>
+          )}
+          <div className="weapon-inventory-header">
+            <h2>{'\u6240\u6301\u6b66\u5668\u4e00\u89a7'}</h2>
+            <button className="reset-coins-button" onClick={resetSavedWeapons}>{'\u6240\u6301\u6b66\u5668\u30ea\u30bb\u30c3\u30c8'}</button>
+          </div>
+          <div className="weapon-inventory">
+            {ownedWeapons.length === 0 ? (
+              <p className="empty-inventory">{'\u307e\u3060\u6b66\u5668\u3092\u6240\u6301\u3057\u3066\u3044\u307e\u305b\u3093'}</p>
+            ) : (
+              ownedWeapons.map((weapon) => (
+                <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
+                  <div>
+                    <h3>{weapon.name}</h3>
+                    <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                  </div>
+                  <span className="weapon-count">x{weapon.count}</span>
+                  <p>{weapon.description}</p>
+                </article>
+              ))
+            )}
+          </div>
+          <p className="rarity-note">common {WEAPON_RARITY_WEIGHTS.common}% / rare {WEAPON_RARITY_WEIGHTS.rare}% / epic {WEAPON_RARITY_WEIGHTS.epic}%</p>
           <button className="secondary-button" onClick={goToAstoriaMap}>
-            MAPへ戻る
+            MAP???
           </button>
         </section>
       )}

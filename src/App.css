@@ -234,6 +234,224 @@ button {
   line-height: 1.6;
 }
 
+.forge-screen {
+  justify-content: flex-start;
+}
+
+.forge-panel {
+  width: min(560px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(52, 33, 20, 0.86), rgba(20, 18, 15, 0.9));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+}
+
+.forge-panel h2,
+.weapon-inventory-header h2,
+.weapon-card h3,
+.forge-result h2 {
+  margin: 0;
+}
+
+.forge-panel p,
+.weapon-card p,
+.forge-result p,
+.empty-inventory,
+.rarity-note {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.74);
+  line-height: 1.6;
+}
+
+.forge-cost {
+  width: fit-content;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.12);
+  color: #ffd166;
+  font-weight: 900;
+}
+
+.forge-warning {
+  margin-top: 8px !important;
+  color: #ffb3a7 !important;
+  font-weight: 800;
+}
+
+.forge-anvil {
+  position: relative;
+  min-height: 132px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 209, 102, 0.28), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(10, 9, 8, 0.5));
+  overflow: hidden;
+}
+
+.forge-anvil::after {
+  content: "";
+  width: 92px;
+  height: 36px;
+  border-radius: 12px 12px 18px 18px;
+  background: linear-gradient(180deg, #76706a, #2d2b2a);
+  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.34);
+}
+
+.forge-hammer {
+  position: absolute;
+  top: 24px;
+  color: #fff7ce;
+  font-size: 0.74rem;
+  font-weight: 900;
+  transform: rotate(-16deg);
+}
+
+.forge-anvil.is-forging .forge-hammer {
+  animation: hammerStrike 520ms ease-in-out infinite;
+}
+
+.forge-spark {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ffd166;
+  opacity: 0;
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.9);
+}
+
+.forge-anvil.is-forging .forge-spark {
+  animation: forgeSpark 520ms ease-out infinite;
+}
+
+.spark-one {
+  left: 45%;
+  top: 58%;
+}
+
+.spark-two {
+  left: 54%;
+  top: 56%;
+  animation-delay: 90ms !important;
+}
+
+.spark-three {
+  left: 50%;
+  top: 64%;
+  animation-delay: 160ms !important;
+}
+
+.forge-result,
+.weapon-card,
+.empty-inventory {
+  width: min(560px, 100%);
+  padding: 14px;
+  border: 1px solid rgba(255, 209, 102, 0.24);
+  border-radius: 8px;
+  background: rgba(17, 16, 13, 0.86);
+}
+
+.forge-result {
+  display: grid;
+  gap: 6px;
+  box-shadow: 0 0 24px rgba(255, 209, 102, 0.18);
+}
+
+.forge-result h2 {
+  color: #ffd166;
+}
+
+.rarity-common {
+  border-color: rgba(247, 251, 255, 0.2);
+}
+
+.rarity-rare {
+  border-color: rgba(76, 201, 240, 0.5);
+  box-shadow: 0 0 22px rgba(76, 201, 240, 0.12);
+}
+
+.rarity-epic {
+  border-color: rgba(255, 209, 102, 0.62);
+  box-shadow: 0 0 26px rgba(255, 209, 102, 0.22);
+}
+
+.weapon-inventory-header {
+  width: min(560px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weapon-inventory {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 10px;
+}
+
+.weapon-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 12px;
+}
+
+.weapon-card p {
+  grid-column: 1 / -1;
+}
+
+.weapon-card strong {
+  color: rgba(247, 251, 255, 0.74);
+  font-size: 0.78rem;
+}
+
+.weapon-count {
+  min-width: 42px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.14);
+  color: #ffd166;
+  font-weight: 900;
+}
+
+@keyframes hammerStrike {
+  0%,
+  100% {
+    transform: translateY(-8px) rotate(-16deg);
+  }
+  52% {
+    transform: translateY(28px) rotate(8deg);
+  }
+}
+
+@keyframes forgeSpark {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  38% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(18px, -22px) scale(1.2);
+  }
+}
+
 .eyebrow {
   margin: 0 0 12px;
   color: #ffd166;
@@ -1682,6 +1900,19 @@ h1 {
     min-width: 62px;
     min-height: 54px;
     font-size: 0.66rem;
+  }
+
+  .forge-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .forge-anvil {
+    min-height: 108px;
+  }
+
+  .weapon-inventory-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .hud {
