@@ -17,12 +17,14 @@ import { calculateCoinReward } from './game/rewards';
 import {
   loadOwnedCoins,
   loadOwnedWeapons,
+  loadActiveSupportId,
   loadEquippedWeapons,
   loadFreeSupportSummonUsed,
   loadOwnedSupports,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
+  saveActiveSupportId,
   saveEquippedWeapons,
   saveFreeSupportSummonUsed,
   saveOwnedSupports,
@@ -131,7 +133,10 @@ const assetPaths = {
 
 function App() {
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
-  const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(null);
+  const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(() => {
+    const activeSupportId = loadActiveSupportId();
+    return activeSupportId ? getSupportById(activeSupportId) : null;
+  });
   const [summonPhase, setSummonPhase] = useState<SummonPhase>('idle');
   const [summonCards, setSummonCards] = useState<SupportCharacter[]>([]);
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
@@ -160,6 +165,14 @@ function App() {
   useEffect(() => {
     supportId.current = selectedSupport?.id ?? null;
   }, [selectedSupport]);
+
+  useEffect(() => {
+    if (!selectedSupport) return;
+    const isOwned = ownedSupports.some((support) => support.id === selectedSupport.id);
+    if (isOwned) return;
+    setSelectedSupport(null);
+    saveActiveSupportId(null);
+  }, [ownedSupports, selectedSupport]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -414,6 +427,7 @@ function App() {
     setSummonPhase('revealing');
     window.setTimeout(() => {
       setSelectedSupport(support);
+      saveActiveSupportId(support.id);
       setOwnedSupports((current) => {
         const nextSupports = addOwnedSupport(current, support.id);
         saveOwnedSupports(nextSupports);
@@ -426,6 +440,13 @@ function App() {
       setShopSummonResult(support);
       setSummonPhase('done');
     }, 760);
+  };
+
+  const chooseActiveSupport = (support: SupportCharacter) => {
+    const isOwned = ownedSupports.some((ownedSupport) => ownedSupport.id === support.id);
+    if (!isOwned) return;
+    setSelectedSupport(support);
+    saveActiveSupportId(support.id);
   };
 
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -684,10 +705,13 @@ function App() {
                     <img src={support.image} alt={support.name} />
                     <div>
                       <h2>{support.name}</h2>
+                      <strong>Lv {ownedSupport.level} / x{ownedSupport.count}</strong>
                       <p>{support.effectDescription}</p>
                       {isActive && <em className="equipped-badge">{'\u73fe\u5728\u540c\u884c\u4e2d'}</em>}
                     </div>
-                    <span className="weapon-count">Lv {ownedSupport.level} / x{ownedSupport.count}</span>
+                    <button className="secondary-button" onClick={() => chooseActiveSupport(support)} disabled={isActive}>
+                      {isActive ? '\u540c\u884c\u4e2d' : '\u540c\u884c\u3059\u308b'}
+                    </button>
                   </article>
                 );
               })
@@ -1041,7 +1065,14 @@ function App() {
           <article className="stage-card">
             <span>Stage 1</span>
             <h2>アストリア草原</h2>
-            <p>{selectedSupport ? `サポート：${selectedSupport.name}` : 'ギルドハウスで初回無料サポート召喚を行うと出撃できます。'}</p>
+            {selectedSupport ? (
+              <>
+                <p>{`同行：${selectedSupport.name} Lv ${selectedSupportLevel}`}</p>
+                <p>{`効果：${selectedSupport.effectDescription}`}</p>
+              </>
+            ) : (
+              <p>{freeSupportSummonUsed ? '同行：なし。Gの部屋でサポートを選ぼう。' : '同行：なし。初回無料召喚は雑貨屋でできます。'}</p>
+            )}
             <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
               アストリア草原へ出撃
@@ -1049,8 +1080,8 @@ function App() {
           </article>
           <div className="prepare-actions">
             {!selectedSupport && (
-              <button className="secondary-button" onClick={goToPrepare}>
-                ギルドハウスへ
+              <button className="secondary-button" onClick={freeSupportSummonUsed ? goToPrepare : goToShopSupportSummon}>
+                {freeSupportSummonUsed ? 'Gの部屋で選ぶ' : '雑貨屋で初回無料召喚'}
               </button>
             )}
             <button className="secondary-button" onClick={goToAstoriaMap}>

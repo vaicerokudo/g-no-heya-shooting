@@ -1,6 +1,7 @@
 import { hydrateOwnedSupport } from './supports';
 import { hydrateOwnedWeapon } from './weapons';
 import type { OwnedSupport } from './supports';
+import type { SupportId } from './types';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
 
 const OWNED_COINS_KEY = 'g-no-heya-shooting:owned-coins';
@@ -8,6 +9,7 @@ const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
+const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -105,6 +107,21 @@ export function saveFreeSupportSummonUsed(isUsed: boolean) {
   window.localStorage.setItem(FREE_SUPPORT_SUMMON_USED_KEY, String(isUsed));
 }
 
+export function loadActiveSupportId(): SupportId | null {
+  if (typeof window === 'undefined') return null;
+  const rawValue = window.localStorage.getItem(ACTIVE_SUPPORT_ID_KEY);
+  return isSupportId(rawValue) ? rawValue : null;
+}
+
+export function saveActiveSupportId(supportId: SupportId | null) {
+  if (typeof window === 'undefined') return;
+  if (!supportId) {
+    window.localStorage.removeItem(ACTIVE_SUPPORT_ID_KEY);
+    return;
+  }
+  window.localStorage.setItem(ACTIVE_SUPPORT_ID_KEY, supportId);
+}
+
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {
   if (!value || typeof value !== 'object') return false;
   const weapon = value as Partial<OwnedWeapon>;
@@ -131,4 +148,8 @@ function isOwnedSupport(value: unknown): value is OwnedSupport {
     typeof support.count === 'number' &&
     support.count > 0
   );
+}
+
+function isSupportId(value: unknown): value is SupportId {
+  return value === '7171' || value === 'yabuko' || value === 'player' || value === 'hibiki' || value === 'myouou';
 }
