@@ -111,7 +111,9 @@ button {
 
 .astoria-map-board {
   position: relative;
-  min-height: 560px;
+  width: min(560px, 100%);
+  aspect-ratio: 941 / 1665;
+  align-self: center;
   overflow: hidden;
   border: 1px solid rgba(255, 209, 102, 0.32);
   border-radius: 8px;
@@ -132,59 +134,71 @@ button {
 .astoria-map-board > img {
   width: 100%;
   height: 100%;
-  min-height: 560px;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
 }
 
 .map-hotspot {
   position: absolute;
   z-index: 1;
-  min-width: 122px;
-  min-height: 46px;
-  padding: 8px 12px;
-  border: 1px solid rgba(255, 209, 102, 0.66);
+  min-width: 68px;
+  min-height: 58px;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
   border-radius: 999px;
   color: #fff7ce;
-  background: rgba(30, 25, 17, 0.82);
-  font-size: 0.86rem;
+  background: transparent;
+  font-size: 0.72rem;
   font-weight: 900;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 20px rgba(255, 209, 102, 0.28);
   cursor: pointer;
+  transform: translate(-50%, -50%);
 }
 
 .map-hotspot:hover,
 .map-hotspot:focus-visible {
-  background: rgba(65, 48, 23, 0.96);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 0 28px rgba(255, 209, 102, 0.58);
+  filter: drop-shadow(0 0 14px rgba(255, 209, 102, 0.9));
   outline: none;
 }
 
-.map-hotspot.guild-house {
-  left: 35%;
-  top: 50%;
+.map-pin {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 247, 206, 0.92);
+  border-radius: 999px 999px 999px 0;
+  background:
+    radial-gradient(circle at 58% 42%, #ffffff 0 18%, #ffd166 22% 56%, #8c4d16 62%);
+  box-shadow:
+    0 0 0 6px rgba(255, 209, 102, 0.14),
+    0 0 18px rgba(255, 209, 102, 0.72);
+  transform: rotate(-45deg);
 }
 
-.map-hotspot.forge {
-  left: 14%;
-  top: 62%;
+.map-label {
+  min-width: 58px;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 209, 102, 0.62);
+  border-radius: 999px;
+  background: rgba(30, 25, 17, 0.82);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 16px rgba(0, 0, 0, 0.32);
+  white-space: nowrap;
 }
 
-.map-hotspot.shop {
-  right: 14%;
-  top: 58%;
+.map-hotspot.guildHouse .map-label {
+  min-width: 76px;
 }
 
-.map-hotspot.gate {
-  left: 50%;
-  top: 24%;
-  transform: translateX(-50%);
+.map-hotspot::before {
+  content: "";
+  position: absolute;
+  inset: -8px -10px;
+  border-radius: 999px;
 }
 
 .facility-screen,
@@ -1664,35 +1678,10 @@ h1 {
     flex-direction: column;
   }
 
-  .astoria-map-board,
-  .astoria-map-board > img {
-    min-height: 520px;
-  }
-
   .map-hotspot {
-    min-width: 108px;
-    min-height: 44px;
-    padding: 7px 10px;
-    font-size: 0.74rem;
-  }
-
-  .map-hotspot.guild-house {
-    left: 28%;
-    top: 51%;
-  }
-
-  .map-hotspot.forge {
-    left: 6%;
-    top: 66%;
-  }
-
-  .map-hotspot.shop {
-    right: 5%;
-    top: 61%;
-  }
-
-  .map-hotspot.gate {
-    top: 25%;
+    min-width: 62px;
+    min-height: 54px;
+    font-size: 0.66rem;
   }
 
   .hud {

@@ -31,6 +31,20 @@ type JoystickState = {
   active: boolean;
 };
 
+type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate';
+
+const astoriaFacilities: Array<{
+  id: MapFacilityId;
+  label: string;
+  xPercent: number;
+  yPercent: number;
+}> = [
+  { id: 'guildHouse', label: 'Gの部屋', xPercent: 75, yPercent: 22 },
+  { id: 'forge', label: '鍛冶屋', xPercent: 13, yPercent: 31 },
+  { id: 'shop', label: '雑貨屋', xPercent: 13, yPercent: 47 },
+  { id: 'gate', label: '門', xPercent: 50, yPercent: 76 },
+];
+
 const keyMap: Record<string, Vector> = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -238,6 +252,13 @@ function App() {
     setGame((current) => ({ ...current, status: 'gate' }));
   };
 
+  const goToMapFacility = (facilityId: MapFacilityId) => {
+    if (facilityId === 'guildHouse') goToPrepare();
+    if (facilityId === 'forge') goToForge();
+    if (facilityId === 'shop') goToShop();
+    if (facilityId === 'gate') goToGate();
+  };
+
   const pauseGame = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
@@ -366,20 +387,22 @@ function App() {
             </div>
           </div>
 
-          <div className="astoria-map-board" aria-label="アストリアMAP施設">
-            <img src="/assets/tcg/astoria-hub-map.png" alt="アストリアMAP" />
-            <button className="map-hotspot guild-house" onClick={goToPrepare}>
-              Gの部屋ギルドハウス
-            </button>
-            <button className="map-hotspot forge" onClick={goToForge}>
-              サッグの鍛冶屋
-            </button>
-            <button className="map-hotspot shop" onClick={goToShop}>
-              雑貨屋
-            </button>
-            <button className="map-hotspot gate" onClick={goToGate}>
-              出撃門
-            </button>
+          <div className="astoria-map-board" aria-label="Astoria map facilities">
+            <img src="/assets/tcg/astoria-hub-map.png" alt="Astoria map" />
+            {astoriaFacilities.map((facility) => (
+              <button
+                key={facility.id}
+                className={`map-hotspot ${facility.id}`}
+                style={{
+                  left: `${facility.xPercent}%`,
+                  top: `${facility.yPercent}%`,
+                }}
+                onClick={() => goToMapFacility(facility.id)}
+              >
+                <span className="map-pin" />
+                <span className="map-label">{facility.label}</span>
+              </button>
+            ))}
           </div>
         </section>
       )}
