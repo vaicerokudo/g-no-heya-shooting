@@ -234,6 +234,118 @@ button {
   line-height: 1.6;
 }
 
+.guild-lobby-screen {
+  justify-content: flex-start;
+  background:
+    linear-gradient(rgba(18, 17, 13, 0.62), rgba(18, 17, 13, 0.86)),
+    url("/assets/tcg/guild-lobby.png") center / cover;
+}
+
+.guild-lobby-scene {
+  width: min(560px, 100%);
+  display: grid;
+  grid-template-columns: minmax(140px, 0.72fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(35, 29, 19, 0.5), rgba(12, 22, 20, 0.8));
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.28);
+}
+
+.guild-guide {
+  min-height: 238px;
+  display: grid;
+  place-items: end center;
+  overflow: hidden;
+}
+
+.guild-guide img {
+  width: min(220px, 100%);
+  max-height: 300px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.48));
+}
+
+.guild-dialogue {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: 8px;
+  background: rgba(17, 16, 13, 0.82);
+}
+
+.guild-dialogue h1,
+.guild-dialogue p {
+  margin: 0;
+}
+
+.guild-dialogue p:not(.eyebrow) {
+  color: rgba(247, 251, 255, 0.82);
+  line-height: 1.7;
+}
+
+.guild-menu-grid {
+  width: min(560px, 100%);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.guild-menu-button {
+  min-height: 54px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 209, 102, 0.38);
+  border-radius: 8px;
+  color: #fff7ce;
+  background: rgba(30, 25, 17, 0.88);
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.guild-menu-button:hover,
+.guild-menu-button:focus-visible {
+  border-color: rgba(255, 209, 102, 0.7);
+  background: rgba(65, 48, 23, 0.94);
+  outline: none;
+}
+
+.guild-menu-button.secondary {
+  grid-column: 1 / -1;
+}
+
+.guild-subscreen {
+  justify-content: flex-start;
+}
+
+.guild-summon-card {
+  width: min(560px, 100%);
+}
+
+.guild-placeholder-card,
+.empty-support {
+  width: min(560px, 100%);
+  padding: 16px;
+  border: 1px solid rgba(255, 209, 102, 0.24);
+  border-radius: 8px;
+  background: rgba(17, 16, 13, 0.86);
+  color: rgba(247, 251, 255, 0.78);
+}
+
+.guild-placeholder-card h2,
+.guild-placeholder-card p {
+  margin: 0;
+}
+
+.guild-placeholder-card {
+  display: grid;
+  gap: 10px;
+}
+
 .forge-screen {
   justify-content: flex-start;
 }
@@ -1904,6 +2016,19 @@ h1 {
 
   .forge-panel {
     grid-template-columns: 1fr;
+  }
+
+  .guild-lobby-scene,
+  .guild-menu-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .guild-guide {
+    min-height: 190px;
+  }
+
+  .guild-guide img {
+    max-height: 230px;
   }
 
   .forge-anvil {

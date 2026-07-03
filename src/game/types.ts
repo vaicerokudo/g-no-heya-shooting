@@ -1,7 +1,11 @@
 export type GameStatus =
   | 'title'
   | 'astoriaMap'
-  | 'guildHouse'
+  | 'guildLobby'
+  | 'guildParty'
+  | 'guildSummon'
+  | 'guildEquipment'
+  | 'guildWeapons'
   | 'forge'
   | 'shop'
   | 'gate'

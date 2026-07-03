@@ -251,7 +251,27 @@ function App() {
     dragTarget.current = null;
     resetJoystick();
     lastFrame.current = null;
-    setGame((current) => ({ ...current, status: 'guildHouse' }));
+    setGame((current) => ({ ...current, status: 'guildLobby' }));
+  };
+
+  const goToGuildLobby = () => {
+    goToPrepare();
+  };
+
+  const goToGuildParty = () => {
+    setGame((current) => ({ ...current, status: 'guildParty' }));
+  };
+
+  const goToGuildSummon = () => {
+    setGame((current) => ({ ...current, status: 'guildSummon' }));
+  };
+
+  const goToGuildEquipment = () => {
+    setGame((current) => ({ ...current, status: 'guildEquipment' }));
+  };
+
+  const goToGuildWeapons = () => {
+    setGame((current) => ({ ...current, status: 'guildWeapons' }));
   };
 
   const goToForge = () => {
@@ -451,34 +471,51 @@ function App() {
         </section>
       )}
 
-      {game.status === 'guildHouse' && (
-        <section className="menu-screen prepare-screen">
-          <div>
-            <p className="eyebrow">星門出撃準備</p>
-            <h1>編成確認</h1>
-            <p className="lead">初回無料サポート召喚で仲間を1人迎えてから、アストリア草原へ出撃します。</p>
+      {game.status === 'guildLobby' && (
+        <section className="menu-screen guild-lobby-screen">
+          <div className="guild-lobby-scene">
+            <div className="guild-guide">
+              <img src="/assets/tcg/support-7171.png" alt="7171" />
+            </div>
+            <div className="guild-dialogue">
+              <p className="eyebrow">G Guild House</p>
+              <h1>{'G\u306e\u90e8\u5c4b'}</h1>
+              <p>{'\u3053\u3053\u306fG\u306e\u90e8\u5c4b\u30ae\u30eb\u30c9\u30cf\u30a6\u30b9\u3060\u3088\u3002\u51fa\u6483\u306e\u6e96\u5099\u3092\u3057\u3066\u3044\u304f\uff1f'}</p>
+            </div>
           </div>
-
           <div className="owned-coins-panel compact">
-            <span>所持コイン</span>
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
-            <button className="reset-coins-button" onClick={resetSavedCoins}>
-              リセット
-            </button>
           </div>
+          <div className="guild-menu-grid">
+            <button className="guild-menu-button" onClick={goToGuildParty}>{'\u7de8\u6210'}</button>
+            <button className="guild-menu-button" onClick={goToGuildSummon}>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a'}</button>
+            <button className="guild-menu-button" onClick={goToGuildEquipment}>{'\u88c5\u5099'}</button>
+            <button className="guild-menu-button" onClick={goToGuildWeapons}>{'\u6240\u6301\u6b66\u5668'}</button>
+            <button className="guild-menu-button secondary" onClick={goToAstoriaMap}>Back to MAP</button>
+          </div>
+        </section>
+      )}
 
+      {game.status === 'guildParty' && (
+        <section className="menu-screen prepare-screen guild-subscreen">
+          <p className="eyebrow">Guild House</p>
+          <h1>{'\u7de8\u6210'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
           <div className="formation-grid">
             <article className="formation-card main-card">
-              <span className="slot-label">メイン</span>
-              <img src={assetPaths.player} alt="総長" />
+              <span className="slot-label">{'\u30e1\u30a4\u30f3'}</span>
+              <img src={assetPaths.player} alt="Socho" />
               <div>
-                <h2>総長</h2>
-                <p>前方半円斬撃で前線を切り開く近接メイン。</p>
+                <h2>{'\u7dcf\u9577'}</h2>
+                <p>{'\u524d\u65b9\u534a\u5186\u65ac\u6483\u3067\u524d\u7dda\u3092\u5207\u308a\u958b\u304f\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\u3002'}</p>
               </div>
             </article>
-
-            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''} summon-phase-${summonPhase}`}>
-              <span className="slot-label">サポート</span>
+            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}> 
+              <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8'}</span>
               {selectedSupport ? (
                 <>
                   <img src={selectedSupport.image} alt={selectedSupport.name} />
@@ -486,32 +523,100 @@ function App() {
                     <h2>{selectedSupport.name}</h2>
                     <strong>{selectedSupport.role}</strong>
                     <p>{selectedSupport.description}</p>
-                    <p className="summon-success">召喚成功</p>
                   </div>
                 </>
               ) : (
-                <SummonCardStage
-                  phase={summonPhase}
-                  cards={summonCards}
-                  revealingCardId={revealingCardId}
-                  cardBack={assetPaths.cardBack}
-                  onChoose={chooseSupportCard}
-                />
+                <div className="empty-support">{'\u672a\u53ec\u559a\u3067\u3059\u3002\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u3067\u4ef2\u9593\u3092\u8fce\u3048\u3066\u304f\u3060\u3055\u3044\u3002'}</div>
               )}
             </article>
           </div>
+          <div className="prepare-actions">
+            <button className="primary-button" onClick={goToGate} disabled={!selectedSupport}>Go to Gate</button>
+            <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
+          </div>
+        </section>
+      )}
 
+      {game.status === 'guildSummon' && (
+        <section className="menu-screen prepare-screen guild-subscreen">
+          <p className="eyebrow">Guild House</p>
+          <h1>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <article className={`formation-card support-card guild-summon-card ${selectedSupport ? 'has-support' : ''} summon-phase-${summonPhase}`}> 
+            <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8'}</span>
+            {selectedSupport ? (
+              <>
+                <img src={selectedSupport.image} alt={selectedSupport.name} />
+                <div>
+                  <h2>{selectedSupport.name}</h2>
+                  <strong>{selectedSupport.role}</strong>
+                  <p>{selectedSupport.description}</p>
+                  <p className="summon-success">{'\u53ec\u559a\u6e08\u307f'}</p>
+                </div>
+              </>
+            ) : (
+              <SummonCardStage
+                phase={summonPhase}
+                cards={summonCards}
+                revealingCardId={revealingCardId}
+                cardBack={assetPaths.cardBack}
+                onChoose={chooseSupportCard}
+              />
+            )}
+          </article>
           <div className="prepare-actions">
             <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || summonPhase !== 'idle'}>
-              {selectedSupport ? '召喚済み' : summonPhase === 'idle' ? '初回無料サポート召喚' : 'カードを選択中'}
+              {selectedSupport ? '\u53ec\u559a\u6e08\u307f' : summonPhase === 'idle' ? '\u521d\u56de\u7121\u6599\u30b5\u30dd\u30fc\u30c8\u53ec\u559a' : '\u30ab\u30fc\u30c9\u3092\u9078\u629e\u4e2d'}
             </button>
-            <button className="primary-button" onClick={goToGate} disabled={!selectedSupport || summonPhase === 'gate' || summonPhase === 'revealing'}>
-              Go to Gate
-            </button>
-            <button className="secondary-button" onClick={goToAstoriaMap}>
-              Back to MAP
-            </button>
+            <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
           </div>
+        </section>
+      )}
+
+      {game.status === 'guildEquipment' && (
+        <section className="menu-screen guild-subscreen">
+          <p className="eyebrow">Guild House</p>
+          <h1>{'\u88c5\u5099'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <article className="guild-placeholder-card">
+            <h2>{'\u73fe\u5728\u88c5\u5099\uff1a\u672a\u5b9f\u88c5'}</h2>
+            <p>{'\u88c5\u5099\u5909\u66f4\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002'}</p>
+          </article>
+          <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
+        </section>
+      )}
+
+      {game.status === 'guildWeapons' && (
+        <section className="menu-screen guild-subscreen">
+          <p className="eyebrow">Guild House</p>
+          <h1>{'\u6240\u6301\u6b66\u5668'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <div className="weapon-inventory">
+            {ownedWeapons.length === 0 ? (
+              <p className="empty-inventory">{'\u307e\u3060\u6b66\u5668\u3092\u6240\u6301\u3057\u3066\u3044\u307e\u305b\u3093\u3002\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b\u3067\u935b\u9020\u3067\u304d\u307e\u3059\u3002'}</p>
+            ) : (
+              ownedWeapons.map((weapon) => (
+                <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
+                  <div>
+                    <h3>{weapon.name}</h3>
+                    <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                  </div>
+                  <span className="weapon-count">x{weapon.count}</span>
+                  <p>{weapon.description}</p>
+                </article>
+              ))
+            )}
+          </div>
+          <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
         </section>
       )}
 
@@ -574,7 +679,7 @@ function App() {
           </div>
           <p className="rarity-note">common {WEAPON_RARITY_WEIGHTS.common}% / rare {WEAPON_RARITY_WEIGHTS.rare}% / epic {WEAPON_RARITY_WEIGHTS.epic}%</p>
           <button className="secondary-button" onClick={goToAstoriaMap}>
-            MAP???
+            Back to MAP
           </button>
         </section>
       )}
