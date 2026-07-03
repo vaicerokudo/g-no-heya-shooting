@@ -25,9 +25,9 @@ export const PLAYER_MAX_HP = 100;
 
 export const SLASH_COOLDOWN = 0.72;
 export const SLASH_VISIBLE_TIME = 0.18;
-export const SLASH_RADIUS = 128;
-export const SLASH_BOSS_RADIUS = 144;
-export const SLASH_HALF_WIDTH = 102;
+export const SLASH_RADIUS = 112;
+export const SLASH_BOSS_RADIUS = 138;
+export const SLASH_HALF_WIDTH = 90;
 export const SLASH_DAMAGE = 1;
 
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
@@ -60,6 +60,7 @@ export const MYOUOU_GARUDA_DURATION = 1.25;
 export const MYOUOU_GARUDA_WIDTH = 150;
 export const MYOUOU_GARUDA_HEIGHT = 170;
 export const MYOUOU_GARUDA_FRAME_INTERVAL = 0.11;
+// Future Myouou Lv growth can increase visual size and sweep range from these base values.
 export const MYOUOU_GARUDA_FRAME_PATHS = [
   '/assets/tcg/garuda-frame-1-keyed.png',
   '/assets/tcg/garuda-frame-2-keyed.png',

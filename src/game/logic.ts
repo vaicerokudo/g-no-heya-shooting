@@ -76,7 +76,7 @@ function createPlayer(): Player {
   return {
     x: PLAYER_START.x,
     y: PLAYER_START.y,
-    radius: 21,
+    radius: 19,
     hp: PLAYER_MAX_HP,
     maxHp: PLAYER_MAX_HP,
     attackCooldown: 0.2,

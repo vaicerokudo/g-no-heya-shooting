@@ -658,8 +658,8 @@ h1 {
   position: absolute;
   left: 50%;
   bottom: -4px;
-  width: 56px;
-  height: 72px;
+  width: 48px;
+  height: 62px;
   transform: translateX(-50%);
   background: url("/assets/tcg/chibi-socho.png") center bottom / contain no-repeat;
   pointer-events: none;
