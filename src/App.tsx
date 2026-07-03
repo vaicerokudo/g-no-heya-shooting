@@ -206,12 +206,36 @@ function App() {
     setGame(startGame());
   };
 
+  const goToAstoriaMap = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    resetJoystick();
+    lastFrame.current = null;
+    setGame((current) => ({ ...current, status: 'astoriaMap' }));
+  };
+
   const goToPrepare = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
     lastFrame.current = null;
-    setGame((current) => ({ ...current, status: 'prepare' }));
+    setGame((current) => ({ ...current, status: 'guildHouse' }));
+  };
+
+  const goToForge = () => {
+    setGame((current) => ({ ...current, status: 'forge' }));
+  };
+
+  const goToShop = () => {
+    setGame((current) => ({ ...current, status: 'shop' }));
+  };
+
+  const goToGate = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    resetJoystick();
+    lastFrame.current = null;
+    setGame((current) => ({ ...current, status: 'gate' }));
   };
 
   const pauseGame = () => {
@@ -319,8 +343,8 @@ function App() {
             <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <button className="primary-button" onClick={goToPrepare}>
-            出撃準備
+          <button className="primary-button" onClick={goToAstoriaMap}>
+            アストリアMAPへ
           </button>
           <button className="reset-coins-button" onClick={resetSavedCoins}>
             所持コインリセット
@@ -329,7 +353,38 @@ function App() {
         </section>
       )}
 
-      {game.status === 'prepare' && (
+      {game.status === 'astoriaMap' && (
+        <section className="astoria-map-screen">
+          <div className="map-topbar">
+            <div>
+              <p className="eyebrow">Astoria</p>
+              <h1>アストリアMAP</h1>
+            </div>
+            <div className="owned-coins-panel map-coins">
+              <span>所持コイン</span>
+              <strong>{ownedCoins}</strong>
+            </div>
+          </div>
+
+          <div className="astoria-map-board" aria-label="アストリアMAP施設">
+            <img src="/assets/tcg/astoria-hub-map.png" alt="アストリアMAP" />
+            <button className="map-hotspot guild-house" onClick={goToPrepare}>
+              Gの部屋ギルドハウス
+            </button>
+            <button className="map-hotspot forge" onClick={goToForge}>
+              サッグの鍛冶屋
+            </button>
+            <button className="map-hotspot shop" onClick={goToShop}>
+              雑貨屋
+            </button>
+            <button className="map-hotspot gate" onClick={goToGate}>
+              出撃門
+            </button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'guildHouse' && (
         <section className="menu-screen prepare-screen">
           <div>
             <p className="eyebrow">星門出撃準備</p>
@@ -383,8 +438,70 @@ function App() {
             <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || summonPhase !== 'idle'}>
               {selectedSupport ? '召喚済み' : summonPhase === 'idle' ? '初回無料サポート召喚' : 'カードを選択中'}
             </button>
-            <button className="primary-button" onClick={begin} disabled={!selectedSupport || summonPhase === 'gate' || summonPhase === 'revealing'}>
-              出撃
+            <button className="primary-button" onClick={goToGate} disabled={!selectedSupport || summonPhase === 'gate' || summonPhase === 'revealing'}>
+              Go to Gate
+            </button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>
+              Back to MAP
+            </button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'forge' && (
+        <section className="menu-screen facility-screen">
+          <p className="eyebrow">Astoria Facility</p>
+          <h1>サッグの鍛冶屋</h1>
+          <div className="owned-coins-panel">
+            <span>所持コイン</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <p className="lead">武器鍛造は今後実装予定です。サッグが炉を温めています。</p>
+          <button className="secondary-button" onClick={goToAstoriaMap}>
+            MAPへ戻る
+          </button>
+        </section>
+      )}
+
+      {game.status === 'shop' && (
+        <section className="menu-screen facility-screen">
+          <p className="eyebrow">Astoria Facility</p>
+          <h1>雑貨屋</h1>
+          <div className="owned-coins-panel">
+            <span>所持コイン</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <p className="lead">アイテム購入は今後実装予定です。冒険用品を並べる準備中です。</p>
+          <button className="secondary-button" onClick={goToAstoriaMap}>
+            MAPへ戻る
+          </button>
+        </section>
+      )}
+
+      {game.status === 'gate' && (
+        <section className="menu-screen gate-screen">
+          <p className="eyebrow">Stage Select</p>
+          <h1>出撃門</h1>
+          <div className="owned-coins-panel">
+            <span>所持コイン</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <article className="stage-card">
+            <span>Stage 1</span>
+            <h2>アストリア草原</h2>
+            <p>{selectedSupport ? `サポート：${selectedSupport.name}` : 'ギルドハウスで初回無料サポート召喚を行うと出撃できます。'}</p>
+            <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
+              アストリア草原へ出撃
+            </button>
+          </article>
+          <div className="prepare-actions">
+            {!selectedSupport && (
+              <button className="secondary-button" onClick={goToPrepare}>
+                ギルドハウスへ
+              </button>
+            )}
+            <button className="secondary-button" onClick={goToAstoriaMap}>
+              MAPへ戻る
             </button>
           </div>
         </section>
@@ -553,6 +670,12 @@ function App() {
                     <button className="secondary-button" onClick={goToPrepare}>
                       出撃準備へ戻る
                     </button>
+                    <button className="secondary-button" onClick={goToGate}>
+                      Back to Gate
+                    </button>
+                    <button className="secondary-button" onClick={goToAstoriaMap}>
+                      Back to Astoria MAP
+                    </button>
                   </div>
                 </div>
               </div>
@@ -631,10 +754,13 @@ function App() {
           )}
           <div className="result-actions">
             <button className="primary-button" onClick={begin}>
-              もう一度出撃
+              Retry
             </button>
-            <button className="secondary-button" onClick={goToPrepare}>
-              出撃準備へ戻る
+            <button className="secondary-button" onClick={goToGate}>
+              Back to Gate
+            </button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>
+              Back to Astoria MAP
             </button>
           </div>
         </section>
