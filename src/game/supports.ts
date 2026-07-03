@@ -12,6 +12,7 @@ export type SupportCharacter = {
 export type OwnedSupport = {
   id: SupportId;
   count: number;
+  level: number;
 };
 
 export const supportCandidates: SupportCharacter[] = [
@@ -77,9 +78,29 @@ export function addOwnedSupport(ownedSupports: OwnedSupport[], supportId: Suppor
   const existing = ownedSupports.find((support) => support.id === supportId);
   if (existing) {
     return ownedSupports.map((support) =>
-      support.id === supportId ? { ...support, count: support.count + 1 } : support,
+      support.id === supportId
+        ? { ...support, count: support.count + 1, level: normalizeSupportLevel((support.level ?? support.count) + 1) }
+        : support,
     );
   }
 
-  return [...ownedSupports, { id: supportId, count: 1 }];
+  return [...ownedSupports, { id: supportId, count: 1, level: 1 }];
+}
+
+export function hydrateOwnedSupport(support: OwnedSupport): OwnedSupport {
+  return {
+    id: support.id,
+    count: Math.max(1, Math.floor(support.count)),
+    level: normalizeSupportLevel(support.level ?? support.count),
+  };
+}
+
+export function getOwnedSupportLevel(ownedSupports: OwnedSupport[], supportId: SupportId | null): number {
+  if (!supportId) return 1;
+  const ownedSupport = ownedSupports.find((support) => support.id === supportId);
+  return normalizeSupportLevel(ownedSupport?.level ?? ownedSupport?.count ?? 1);
+}
+
+export function normalizeSupportLevel(level: number | undefined): number {
+  return Math.max(1, Math.floor(level ?? 1));
 }

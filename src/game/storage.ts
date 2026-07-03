@@ -1,3 +1,4 @@
+import { hydrateOwnedSupport } from './supports';
 import { hydrateOwnedWeapon } from './weapons';
 import type { OwnedSupport } from './supports';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
@@ -6,6 +7,7 @@ const OWNED_COINS_KEY = 'g-no-heya-shooting:owned-coins';
 const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
+const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -78,10 +80,10 @@ export function loadOwnedSupports(): OwnedSupport[] {
 
   try {
     const parsed = JSON.parse(rawValue);
-    if (Array.isArray(parsed)) return parsed.filter(isOwnedSupport);
+    if (Array.isArray(parsed)) return parsed.filter(isOwnedSupport).map(hydrateOwnedSupport);
     if (!parsed || typeof parsed !== 'object') return [];
 
-    return Object.values(parsed).filter(isOwnedSupport);
+    return Object.values(parsed).filter(isOwnedSupport).map(hydrateOwnedSupport);
   } catch {
     return [];
   }
@@ -91,6 +93,16 @@ export function saveOwnedSupports(ownedSupports: OwnedSupport[]) {
   if (typeof window === 'undefined') return;
   const byId = Object.fromEntries(ownedSupports.map((support) => [support.id, support]));
   window.localStorage.setItem(OWNED_SUPPORTS_KEY, JSON.stringify(byId));
+}
+
+export function loadFreeSupportSummonUsed(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.localStorage.getItem(FREE_SUPPORT_SUMMON_USED_KEY) === 'true';
+}
+
+export function saveFreeSupportSummonUsed(isUsed: boolean) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(FREE_SUPPORT_SUMMON_USED_KEY, String(isUsed));
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {

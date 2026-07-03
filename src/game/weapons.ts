@@ -1,3 +1,11 @@
+import {
+  SLASH_COOLDOWN,
+  STAR_SLASH_WAVE_BOSS_DAMAGE,
+  STAR_SLASH_WAVE_DAMAGE,
+  STAR_SLASH_WAVE_HALF_WIDTH,
+  STAR_SLASH_WAVE_RANGE,
+} from './constants';
+
 export type WeaponRarity = 'common' | 'rare' | 'epic';
 
 export type WeaponDefinition = {
@@ -12,6 +20,7 @@ export type WeaponDefinition = {
 
 export type OwnedWeapon = WeaponDefinition & {
   count: number;
+  level: number;
 };
 
 export type CharacterId = 'socho';
@@ -19,6 +28,14 @@ export type CharacterId = 'socho';
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
 export type SochoWeaponEffect = 'standardSlash' | 'starSlashWave';
+
+export type SochoWeaponTuning = {
+  slashCooldown: number;
+  starWaveRange: number;
+  starWaveHalfWidth: number;
+  starWaveDamage: number;
+  starWaveBossDamage: number;
+};
 
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 
@@ -129,11 +146,13 @@ export function addOwnedWeapon(ownedWeapons: OwnedWeapon[], weapon: WeaponDefini
   const existingWeapon = ownedWeapons.find((ownedWeapon) => ownedWeapon.id === weapon.id);
   if (existingWeapon) {
     return ownedWeapons.map((ownedWeapon) =>
-      ownedWeapon.id === weapon.id ? { ...ownedWeapon, count: ownedWeapon.count + 1 } : ownedWeapon,
+      ownedWeapon.id === weapon.id
+        ? { ...ownedWeapon, count: ownedWeapon.count + 1, level: normalizeWeaponLevel((ownedWeapon.level ?? ownedWeapon.count) + 1) }
+        : ownedWeapon,
     );
   }
 
-  return [...ownedWeapons, { ...weapon, count: 1 }];
+  return [...ownedWeapons, { ...weapon, count: 1, level: 1 }];
 }
 
 export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
@@ -142,7 +161,9 @@ export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
 
 export function hydrateOwnedWeapon(weapon: OwnedWeapon): OwnedWeapon {
   const currentDefinition = getWeaponById(weapon.id);
-  return currentDefinition ? { ...currentDefinition, count: weapon.count } : weapon;
+  const count = Math.max(1, Math.floor(weapon.count));
+  const level = normalizeWeaponLevel(weapon.level ?? weapon.count);
+  return currentDefinition ? { ...currentDefinition, count, level } : { ...weapon, count, level };
 }
 
 export function getSochoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
@@ -151,6 +172,33 @@ export function getSochoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[
 
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
+}
+
+export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: string | undefined): number {
+  if (!weaponId || weaponId === DEFAULT_SOCHO_WEAPON_ID) {
+    return ownedWeapons.find((weapon) => weapon.id === DEFAULT_SOCHO_WEAPON_ID)?.level ?? 1;
+  }
+
+  return normalizeWeaponLevel(
+    ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ??
+      ownedWeapons.find((weapon) => weapon.id === weaponId)?.count ??
+      1,
+  );
+}
+
+export function getSochoWeaponTuning(weaponId: string | undefined, level = 1): SochoWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const levelBonus = normalizedLevel - 1;
+  const cooldownReduction = Math.min(0.1, levelBonus * 0.018);
+  const hasWave = hasSochoSlashWave(weaponId);
+
+  return {
+    slashCooldown: Math.max(0.58, SLASH_COOLDOWN - cooldownReduction),
+    starWaveRange: hasWave ? STAR_SLASH_WAVE_RANGE + levelBonus * 7 : STAR_SLASH_WAVE_RANGE,
+    starWaveHalfWidth: hasWave ? STAR_SLASH_WAVE_HALF_WIDTH + levelBonus * 1.6 : STAR_SLASH_WAVE_HALF_WIDTH,
+    starWaveDamage: hasWave ? STAR_SLASH_WAVE_DAMAGE + Math.floor(levelBonus / 4) : STAR_SLASH_WAVE_DAMAGE,
+    starWaveBossDamage: hasWave ? STAR_SLASH_WAVE_BOSS_DAMAGE + Math.floor(levelBonus / 5) : STAR_SLASH_WAVE_BOSS_DAMAGE,
+  };
 }
 
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
@@ -164,6 +212,10 @@ export function hasSochoSlashWave(weaponId: string | undefined): boolean {
 
 export function isSochoWeapon(weaponId: string): boolean {
   return weaponId === 'iron-tachi' || weaponId === 'star-vein-tachi';
+}
+
+function normalizeWeaponLevel(level: number | undefined): number {
+  return Math.max(1, Math.floor(level ?? 1));
 }
 
 function pickWeightedRarity(): WeaponRarity {

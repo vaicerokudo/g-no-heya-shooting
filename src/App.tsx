@@ -11,8 +11,6 @@ import {
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
   SHOP_SUPPORT_SUMMON_COST,
-  STAR_SLASH_WAVE_HALF_WIDTH,
-  STAR_SLASH_WAVE_RANGE,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
@@ -20,16 +18,19 @@ import {
   loadOwnedCoins,
   loadOwnedWeapons,
   loadEquippedWeapons,
+  loadFreeSupportSummonUsed,
   loadOwnedSupports,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
   saveEquippedWeapons,
+  saveFreeSupportSummonUsed,
   saveOwnedSupports,
   saveOwnedWeapons,
 } from './game/storage';
 import {
   addOwnedSupport,
+  getOwnedSupportLevel,
   getSupportById,
   SHOPKEEPER_SUPPORT_LINES,
   supportCandidates,
@@ -42,14 +43,16 @@ import {
   forgeRandomWeapon,
   FORGE_RESULT_LINES,
   getEquippedSochoWeapon,
+  getOwnedWeaponLevel,
   getSochoWeaponOptions,
+  getSochoWeaponTuning,
   hasSochoSlashWave,
   WEAPON_RARITY_WEIGHTS,
 } from './game/weapons';
 import type { EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
 
 type SummonPhase = 'idle' | 'gate' | 'cards' | 'revealing' | 'done';
-type SummonContext = 'guildFree' | 'shopPaid';
+type SummonContext = 'shopFree' | 'shopPaid';
 
 type JoystickState = {
   x: number;
@@ -60,6 +63,8 @@ type JoystickState = {
 type ForgeResult = {
   weapon: WeaponDefinition;
   isNew: boolean;
+  count: number;
+  level: number;
   sagLine: string;
 };
 
@@ -85,7 +90,7 @@ const guildLobbyHotspots: Array<{
   yPercent: number;
 }> = [
   { id: 'party', label: '\u7de8\u6210', xPercent: 23, yPercent: 72 },
-  { id: 'summon', label: '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a', xPercent: 51, yPercent: 47 },
+  { id: 'summon', label: '\u540c\u884c\u30b5\u30dd\u30fc\u30c8', xPercent: 51, yPercent: 47 },
   { id: 'equipment', label: '\u88c5\u5099', xPercent: 80, yPercent: 27 },
   { id: 'weapons', label: '\u6240\u6301\u6b66\u5668', xPercent: 73, yPercent: 62 },
   { id: 'map', label: 'MAP\u3078\u623b\u308b', xPercent: 16, yPercent: 92 },
@@ -135,12 +140,15 @@ function App() {
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
+  const [freeSupportSummonUsed, setFreeSupportSummonUsed] = useState(() => loadFreeSupportSummonUsed());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
-  const [summonContext, setSummonContext] = useState<SummonContext>('guildFree');
+  const [summonContext, setSummonContext] = useState<SummonContext>('shopPaid');
   const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
   const supportId = useRef<SupportId | null>(null);
+  const supportLevel = useRef(1);
   const equippedWeaponId = useRef('iron-tachi');
+  const equippedWeaponLevel = useRef(1);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const joystickVector = useRef<Vector | null>(null);
@@ -192,7 +200,9 @@ function App() {
           dt,
           getMoveVector(current, pressedKeys.current, dragTarget.current, joystickVector.current),
           supportId.current,
+          supportLevel.current,
           equippedWeaponId.current,
+          equippedWeaponLevel.current,
         ),
       );
       frameId = requestAnimationFrame(tick);
@@ -209,6 +219,18 @@ function App() {
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
+  const selectedSupportLevel = useMemo(
+    () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
+    [ownedSupports, selectedSupport?.id],
+  );
+  const equippedSochoWeaponLevel = useMemo(
+    () => getOwnedWeaponLevel(ownedWeapons, equippedSochoWeapon.id),
+    [ownedWeapons, equippedSochoWeapon.id],
+  );
+  const sochoWeaponTuning = useMemo(
+    () => getSochoWeaponTuning(equippedSochoWeapon.id, equippedSochoWeaponLevel),
+    [equippedSochoWeapon.id, equippedSochoWeaponLevel],
+  );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
   const screenTitle = useMemo(() => {
     if (game.status === 'clear') return '星門、沈黙。';
@@ -216,6 +238,9 @@ function App() {
     return 'Gの部屋：星門シューティング';
   }, [game.status]);
   const rewardSummary = useMemo(() => calculateCoinReward(game.status, game.coinsCollected), [game.status, game.coinsCollected]);
+  const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
+  const canStartShopSummon =
+    (summonPhase === 'idle' || summonPhase === 'done') && (shopSummonCost === 0 || ownedCoins >= shopSummonCost);
 
   useEffect(() => {
     if (!rewardSummary) return;
@@ -233,7 +258,12 @@ function App() {
 
   useEffect(() => {
     equippedWeaponId.current = equippedSochoWeapon.id;
-  }, [equippedSochoWeapon.id]);
+    equippedWeaponLevel.current = equippedSochoWeaponLevel;
+  }, [equippedSochoWeapon.id, equippedSochoWeaponLevel]);
+
+  useEffect(() => {
+    supportLevel.current = selectedSupportLevel;
+  }, [selectedSupportLevel]);
 
   const begin = () => {
     if (!selectedSupport) return;
@@ -298,7 +328,7 @@ function App() {
   };
 
   const goToShopSupportSummon = () => {
-    setSummonContext('shopPaid');
+    setSummonContext(freeSupportSummonUsed ? 'shopPaid' : 'shopFree');
     setSummonPhase('idle');
     setSummonCards([]);
     setRevealingCardId(null);
@@ -358,25 +388,18 @@ function App() {
     });
   };
 
-  const summonSupport = () => {
-    if (selectedSupport || summonPhase !== 'idle') return;
-
-    setSummonContext('guildFree');
-    setSummonPhase('gate');
-    window.setTimeout(() => {
-      setSummonCards(shuffleSupports(supportCandidates));
-      setSummonPhase('cards');
-    }, 650);
-  };
-
   const buySupportSummon = () => {
-    if (ownedCoins < SHOP_SUPPORT_SUMMON_COST || (summonPhase !== 'idle' && summonPhase !== 'done')) return;
+    const isFreeSummon = !freeSupportSummonUsed;
+    if (!isFreeSummon && ownedCoins < SHOP_SUPPORT_SUMMON_COST) return;
+    if (summonPhase !== 'idle' && summonPhase !== 'done') return;
 
-    const nextCoins = ownedCoins - SHOP_SUPPORT_SUMMON_COST;
-    setOwnedCoins(nextCoins);
-    saveOwnedCoins(nextCoins);
+    if (!isFreeSummon) {
+      const nextCoins = ownedCoins - SHOP_SUPPORT_SUMMON_COST;
+      setOwnedCoins(nextCoins);
+      saveOwnedCoins(nextCoins);
+    }
     setShopSummonResult(null);
-    setSummonContext('shopPaid');
+    setSummonContext(isFreeSummon ? 'shopFree' : 'shopPaid');
     setSummonPhase('gate');
     window.setTimeout(() => {
       setSummonCards(shuffleSupports(supportCandidates));
@@ -396,9 +419,11 @@ function App() {
         saveOwnedSupports(nextSupports);
         return nextSupports;
       });
-      if (summonContext === 'shopPaid') {
-        setShopSummonResult(support);
+      if (summonContext === 'shopFree') {
+        setFreeSupportSummonUsed(true);
+        saveFreeSupportSummonUsed(true);
       }
+      setShopSummonResult(support);
       setSummonPhase('done');
     }, 760);
   };
@@ -457,10 +482,17 @@ function App() {
       const weapon = forgeRandomWeapon();
       const isNew = !ownedWeapons.some((ownedWeapon) => ownedWeapon.id === weapon.id);
       const nextWeapons = addOwnedWeapon(ownedWeapons, weapon);
+      const forgedWeapon = nextWeapons.find((ownedWeapon) => ownedWeapon.id === weapon.id);
 
       setOwnedWeapons(nextWeapons);
       saveOwnedWeapons(nextWeapons);
-      setForgeResult({ weapon, isNew, sagLine: FORGE_RESULT_LINES[weapon.rarity] });
+      setForgeResult({
+        weapon,
+        isNew,
+        count: forgedWeapon?.count ?? 1,
+        level: forgedWeapon?.level ?? 1,
+        sagLine: FORGE_RESULT_LINES[weapon.rarity],
+      });
       setIsForging(false);
     }, FORGE_ANIMATION_DURATION);
   };
@@ -587,7 +619,7 @@ function App() {
               <div>
                 <h2>{'\u7dcf\u9577'}</h2>
                 <p>{'\u524d\u65b9\u534a\u5186\u65ac\u6483\u3067\u524d\u7dda\u3092\u5207\u308a\u958b\u304f\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\u3002'}</p>
-                <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</p>
+                <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</p>
               </div>
             </article>
             <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}> 
@@ -599,6 +631,7 @@ function App() {
                     <h2>{selectedSupport.name}</h2>
                     <strong>{selectedSupport.role}</strong>
                     <p>{selectedSupport.description}</p>
+                    <p className="summon-success">Lv {selectedSupportLevel}</p>
                   </div>
                 </>
               ) : (
@@ -616,37 +649,55 @@ function App() {
       {game.status === 'guildSummon' && (
         <section className="menu-screen prepare-screen guild-subscreen">
           <p className="eyebrow">Guild House</p>
-          <h1>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a'}</h1>
+          <h1>{'\u540c\u884c\u30b5\u30dd\u30fc\u30c8'}</h1>
           <div className="owned-coins-panel compact">
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <article className={`formation-card support-card guild-summon-card ${selectedSupport ? 'has-support' : ''} summon-phase-${summonPhase}`}> 
-            <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8'}</span>
+          <article className={`formation-card support-card guild-summon-card ${selectedSupport ? 'has-support' : ''}`}>
+            <span className="slot-label">{'\u73fe\u5728\u540c\u884c'}</span>
             {selectedSupport ? (
               <>
                 <img src={selectedSupport.image} alt={selectedSupport.name} />
                 <div>
                   <h2>{selectedSupport.name}</h2>
                   <strong>{selectedSupport.role}</strong>
-                  <p>{selectedSupport.description}</p>
-                  <p className="summon-success">{'\u53ec\u559a\u6e08\u307f'}</p>
+                  <p>{selectedSupport.effectDescription}</p>
+                  <p className="summon-success">Lv {selectedSupportLevel}</p>
                 </div>
               </>
             ) : (
-              <SummonCardStage
-                phase={summonPhase}
-                cards={summonCards}
-                revealingCardId={revealingCardId}
-                cardBack={assetPaths.cardBack}
-                onChoose={chooseSupportCard}
-              />
+              <div className="empty-support">
+                {'\u672a\u53ec\u559a\u3067\u3059\u3002\u96d1\u8ca8\u5c4b\u3067\u521d\u56de\u7121\u6599\u306e\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u5f15\u3044\u3066\u304f\u3060\u3055\u3044\u3002'}
+              </div>
             )}
           </article>
+          <div className="support-inventory compact-list">
+            {ownedSupports.length === 0 ? (
+              <p className="empty-inventory">{'\u307e\u3060\u53ec\u559a\u6e08\u307f\u30b5\u30dd\u30fc\u30c8\u306f\u3044\u307e\u305b\u3093\u3002'}</p>
+            ) : (
+              ownedSupports.map((ownedSupport) => {
+                const support = getSupportById(ownedSupport.id);
+                const isActive = selectedSupport?.id === support.id;
+                return (
+                  <article key={support.id} className={`support-list-card ${isActive ? 'is-active' : ''}`}>
+                    <img src={support.image} alt={support.name} />
+                    <div>
+                      <h2>{support.name}</h2>
+                      <p>{support.effectDescription}</p>
+                      {isActive && <em className="equipped-badge">{'\u73fe\u5728\u540c\u884c\u4e2d'}</em>}
+                    </div>
+                    <span className="weapon-count">Lv {ownedSupport.level} / x{ownedSupport.count}</span>
+                  </article>
+                );
+              })
+            )}
+          </div>
           <div className="prepare-actions">
-            <button className="secondary-button" onClick={summonSupport} disabled={Boolean(selectedSupport) || summonPhase !== 'idle'}>
-              {selectedSupport ? '\u53ec\u559a\u6e08\u307f' : summonPhase === 'idle' ? '\u521d\u56de\u7121\u6599\u30b5\u30dd\u30fc\u30c8\u53ec\u559a' : '\u30ab\u30fc\u30c9\u3092\u9078\u629e\u4e2d'}
+            <button className="primary-button" onClick={goToShopSupportSummon}>
+              {'\u96d1\u8ca8\u5c4b\u3067\u8ffd\u52a0\u53ec\u559a'}
             </button>
+            <button className="secondary-button" onClick={goToShopSupportList}>{'\u53ec\u559a\u6e08\u307f\u4e00\u89a7\u3092\u898b\u308b'}</button>
             <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
           </div>
         </section>
@@ -662,7 +713,7 @@ function App() {
           </div>
           <article className="equipped-weapon-panel">
             <span>{'\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\uff1a\u7dcf\u9577'}</span>
-            <h2>{'\u73fe\u5728\u88c5\u5099\u4e2d\u306e\u6b66\u5668'}：{equippedSochoWeapon.name}</h2>
+            <h2>{'\u73fe\u5728\u88c5\u5099\u4e2d\u306e\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</h2>
             <p>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</p>
             <p>{equippedSochoWeapon.description}</p>
             <p className="weapon-effect-line">{'\u52b9\u679c'}：{equippedSochoWeapon.effectDescription}</p>
@@ -680,7 +731,7 @@ function App() {
                       <h3>{weapon.name}</h3>
                       <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
                     </div>
-                    <span className="weapon-count">x{weapon.count}</span>
+                    <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                     <p>{weapon.description}</p>
                     <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                     <button className="secondary-button" onClick={() => equipSochoWeapon(weapon.id)} disabled={isEquipped}>
@@ -714,7 +765,7 @@ function App() {
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
                     {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
-                  <span className="weapon-count">x{weapon.count}</span>
+                  <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                   <p>{weapon.description}</p>
                   <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                 </article>
@@ -796,6 +847,7 @@ function App() {
               <p className="forge-success-title">{'\u935b\u9020\u6210\u529f\uff01'} {forgeResult.isNew ? '\u65b0\u898f\u5165\u624b' : '\u6240\u6301\u6570+1'}</p>
               <h2>{forgeResult.weapon.name}</h2>
               <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.type} / {forgeResult.weapon.rarity}</strong>
+              <p className="summon-success">Lv {forgeResult.level} / 所持数 x{forgeResult.count}</p>
               <p>{forgeResult.weapon.description}</p>
               <p className="weapon-effect-line">{'\u52b9\u679c'}：{forgeResult.weapon.effectDescription}</p>
               <p className="sag-result-line">サッグ「{forgeResult.sagLine}」</p>
@@ -839,7 +891,7 @@ function App() {
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
                     {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
-                  <span className="weapon-count">x{weapon.count}</span>
+                  <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                   <p>{weapon.description}</p>
                   <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
                 </article>
@@ -871,7 +923,11 @@ function App() {
             </article>
           </div>
           <div className="shop-menu-actions">
-            <button className="primary-button" onClick={goToShopSupportSummon}>{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046'}</button>
+            <button className="primary-button" onClick={goToShopSupportSummon}>
+              {freeSupportSummonUsed
+                ? '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046'
+                : '\u521d\u56de\u7121\u6599\u53ec\u559a\u3078'}
+            </button>
             <button className="secondary-button" onClick={goToShopSupportList}>{'\u53ec\u559a\u6e08\u307f\u30b5\u30dd\u30fc\u30c8\u3092\u898b\u308b'}</button>
             <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
           </div>
@@ -887,9 +943,13 @@ function App() {
             <strong>{ownedCoins}</strong>
           </div>
           <div className="shop-cost-card">
-            <span>{'\u53ec\u559a\u8cbb\u7528'}</span>
-            <strong>{SHOP_SUPPORT_SUMMON_COST}</strong>
-            <p>{'\u30b2\u30fc\u30e0\u5185\u30b3\u30a4\u30f3\u3067\u3001\u65c5\u3092\u52a9\u3051\u308b\u30b5\u30dd\u30fc\u30c8\u30ab\u30fc\u30c9\u30921\u679a\u958b\u304d\u307e\u3059\u3002'}</p>
+            <span>{freeSupportSummonUsed ? '\u53ec\u559a\u8cbb\u7528' : '\u521d\u56de\u9650\u5b9a'}</span>
+            <strong>{freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : '\u7121\u6599'}</strong>
+            <p>
+              {freeSupportSummonUsed
+                ? '\u30b2\u30fc\u30e0\u5185\u30b3\u30a4\u30f3\u3067\u3001\u65c5\u3092\u52a9\u3051\u308b\u30b5\u30dd\u30fc\u30c8\u30ab\u30fc\u30c9\u30921\u679a\u958b\u304d\u307e\u3059\u3002'
+                : '\u521d\u56de\u3060\u3051\u3001\u30b3\u30a4\u30f3\u6d88\u8cbb\u306a\u3057\u3067\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u958b\u3051\u3089\u308c\u307e\u3059\u3002'}
+            </p>
           </div>
           <article className={`formation-card support-card guild-summon-card shop-summon-card ${shopSummonResult ? 'has-support' : ''} summon-phase-${summonPhase}`}> 
             <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9'}</span>
@@ -900,6 +960,7 @@ function App() {
                   <h2>{shopSummonResult.name}</h2>
                   <strong>{shopSummonResult.role}</strong>
                   <p>{shopSummonResult.effectDescription}</p>
+                  <p className="summon-success">Lv {getOwnedSupportLevel(ownedSupports, shopSummonResult.id)}</p>
                   <p className="summon-success">{'\u5e97\u4e3b'}「{SHOPKEEPER_SUPPORT_LINES[shopSummonResult.id]}」</p>
                 </div>
               </>
@@ -913,12 +974,16 @@ function App() {
               />
             )}
           </article>
-          {ownedCoins < SHOP_SUPPORT_SUMMON_COST && summonPhase === 'idle' && (
+          {shopSummonCost > 0 && ownedCoins < shopSummonCost && summonPhase === 'idle' && (
             <p className="forge-warning">{'\u30b3\u30a4\u30f3\u304c\u8db3\u308a\u307e\u305b\u3093'}</p>
           )}
           <div className="shop-menu-actions">
-            <button className="primary-button" onClick={buySupportSummon} disabled={ownedCoins < SHOP_SUPPORT_SUMMON_COST || (summonPhase !== 'idle' && summonPhase !== 'done')}>
-              {summonPhase === 'idle' || summonPhase === 'done' ? '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046' : '\u53ec\u559a\u4e2d...'}
+            <button className="primary-button" onClick={buySupportSummon} disabled={!canStartShopSummon}>
+              {summonPhase === 'idle' || summonPhase === 'done'
+                ? freeSupportSummonUsed
+                  ? '\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9\u3092\u8cb7\u3046'
+                  : '\u521d\u56de\u7121\u6599\u53ec\u559a'
+                : '\u53ec\u559a\u4e2d...'}
             </button>
             <button className="secondary-button" onClick={goToShop} disabled={summonPhase === 'gate' || summonPhase === 'cards' || summonPhase === 'revealing'}>
               {'\u5e97\u4e3b\u306b\u623b\u308b'}
@@ -952,7 +1017,7 @@ function App() {
                       <p>{support.effectDescription}</p>
                       {isActive && <em className="equipped-badge">{'\u73fe\u5728\u540c\u884c\u4e2d'}</em>}
                     </div>
-                    <span className="weapon-count">x{ownedSupport.count}</span>
+                    <span className="weapon-count">Lv {ownedSupport.level} / x{ownedSupport.count}</span>
                   </article>
                 );
               })
@@ -977,7 +1042,7 @@ function App() {
             <span>Stage 1</span>
             <h2>アストリア草原</h2>
             <p>{selectedSupport ? `サポート：${selectedSupport.name}` : 'ギルドハウスで初回無料サポート召喚を行うと出撃できます。'}</p>
-            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</p>
+            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
               アストリア草原へ出撃
             </button>
@@ -1007,8 +1072,8 @@ function App() {
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{STAGE_NAME}</div>
-            <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}</div>
-            <div className="hud-weapon">{'\u6b66\u5668'}：{equippedSochoWeapon.name}</div>
+            <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
+            <div className="hud-weapon">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
@@ -1059,10 +1124,10 @@ function App() {
               <div
                 className="slash-wave"
                 style={{
-                  left: game.player.x - STAR_SLASH_WAVE_HALF_WIDTH,
-                  top: game.player.y - STAR_SLASH_WAVE_RANGE,
-                  width: STAR_SLASH_WAVE_HALF_WIDTH * 2,
-                  height: STAR_SLASH_WAVE_RANGE,
+                  left: game.player.x - sochoWeaponTuning.starWaveHalfWidth,
+                  top: game.player.y - sochoWeaponTuning.starWaveRange,
+                  width: sochoWeaponTuning.starWaveHalfWidth * 2,
+                  height: sochoWeaponTuning.starWaveRange,
                 }}
               >
                 <span className="slash-wave-core" />
@@ -1074,7 +1139,7 @@ function App() {
               <div
                 key={coin.id}
                 className={`coin ${coin.isBonus ? 'is-bonus' : ''} ${
-                  isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y, supportId.current) ? 'is-attracted' : ''
+                  isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y, supportId.current, supportLevel.current) ? 'is-attracted' : ''
                 }`}
                 style={place(coin.x, coin.y, 18)}
               >
@@ -1229,7 +1294,7 @@ function App() {
             </div>
             <div>
               <span>{'\u6b66\u5668'}</span>
-              <strong>{equippedSochoWeapon.name}</strong>
+              <strong>{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</strong>
             </div>
           </div>
           {rewardSummary && (
@@ -1401,8 +1466,15 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function isCoinAttracted(coinX: number, coinY: number, playerX: number, playerY: number, supportId: SupportId | null) {
-  return Math.hypot(playerX - coinX, playerY - coinY) < getCoinMagnetRadius(supportId);
+function isCoinAttracted(
+  coinX: number,
+  coinY: number,
+  playerX: number,
+  playerY: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+) {
+  return Math.hypot(playerX - coinX, playerY - coinY) < getCoinMagnetRadius(supportId, supportLevel);
 }
 
 export default App;

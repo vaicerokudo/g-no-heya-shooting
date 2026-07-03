@@ -12,16 +12,11 @@ import {
   PLAYER_MAX_HP,
   PLAYER_START,
   PLAYER_SPEED,
-  SLASH_COOLDOWN,
   SLASH_BOSS_RADIUS,
   SLASH_DAMAGE,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
   SLASH_VISIBLE_TIME,
-  STAR_SLASH_WAVE_BOSS_DAMAGE,
-  STAR_SLASH_WAVE_DAMAGE,
-  STAR_SLASH_WAVE_HALF_WIDTH,
-  STAR_SLASH_WAVE_RANGE,
 } from './constants';
 import { chooseEnemyKind, createEnemy } from './enemies';
 import {
@@ -35,7 +30,7 @@ import {
   updateSupportEffects,
 } from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, SupportId, Vector } from './types';
-import { hasSochoSlashWave } from './weapons';
+import { getSochoWeaponTuning, hasSochoSlashWave } from './weapons';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -95,7 +90,9 @@ export function updateGame(
   dt: number,
   move: Vector,
   supportId: SupportId | null = null,
+  supportLevel = 1,
   weaponId: string | undefined = undefined,
+  weaponLevel = 1,
 ): GameState {
   if (state.status !== 'playing') return state;
 
@@ -111,10 +108,10 @@ export function updateGame(
   next = updateEnemies(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
-  next = updateSupportEffects(next, dt, supportId);
-  next = runAutoSlash(next, dt, supportId, weaponId);
-  next = updateCoins(next, dt, supportId);
-  next = collectCoins(next, supportId);
+  next = updateSupportEffects(next, dt, supportId, supportLevel);
+  next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  next = updateCoins(next, dt, supportId, supportLevel);
+  next = collectCoins(next, supportId, supportLevel);
   next = collectHearts(next);
   next = resolvePlayerDamage(next);
   next = updateEffects(next, dt);
@@ -128,7 +125,7 @@ export function updateGame(
   }
 
   if (next.boss && next.boss.hp <= 0) {
-    const supportBonusCoins = get7171BossClearCoinBonus(supportId);
+    const supportBonusCoins = get7171BossClearCoinBonus(supportId, supportLevel);
     const stageCoins = next.coinsCollected + supportBonusCoins;
     return {
       ...next,
@@ -297,9 +294,17 @@ function updateBullets(state: GameState, dt: number): GameState {
   return { ...state, bullets };
 }
 
-function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null, weaponId: string | undefined): GameState {
+function runAutoSlash(
+  state: GameState,
+  dt: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponId: string | undefined,
+  weaponLevel: number,
+): GameState {
   if (state.player.attackCooldown > 0) return state;
   const hasSlashWave = hasSochoSlashWave(weaponId);
+  const weaponTuning = getSochoWeaponTuning(weaponId, weaponLevel);
 
   const { enemies, defeated, coins, hearts, nextId, effects } = damageEnemiesWithSlash(
     state.enemies,
@@ -309,9 +314,11 @@ function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null,
     state.nextId,
     state.player,
     supportId,
+    supportLevel,
     hasSlashWave,
+    weaponTuning,
   );
-  const bossHit = damageBossWithSlash(state.boss, state.player, nextId, hasSlashWave);
+  const bossHit = damageBossWithSlash(state.boss, state.player, nextId, hasSlashWave, weaponTuning);
 
   return {
     ...state,
@@ -324,7 +331,7 @@ function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null,
     defeatedEnemies: state.defeatedEnemies + defeated,
     player: {
       ...state.player,
-      attackCooldown: SLASH_COOLDOWN + dt,
+      attackCooldown: weaponTuning.slashCooldown + dt,
       slashTimer: SLASH_VISIBLE_TIME,
     },
   };
@@ -338,7 +345,9 @@ function damageEnemiesWithSlash(
   nextId: number,
   player: Player,
   supportId: SupportId | null,
+  supportLevel: number,
   hasSlashWave: boolean,
+  weaponTuning: ReturnType<typeof getSochoWeaponTuning>,
 ) {
   let defeated = 0;
   const nextCoins = [...coins];
@@ -348,22 +357,22 @@ function damageEnemiesWithSlash(
 
   for (const enemy of enemies) {
     const slashHit = isInSlash(player, enemy.x, enemy.y, enemy.radius);
-    const waveHit = hasSlashWave && isInStarSlashWave(player, enemy.x, enemy.y, enemy.radius);
+    const waveHit = hasSlashWave && isInStarSlashWave(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
     if (!slashHit && !waveHit) {
       nextEnemies.push(enemy);
       continue;
     }
 
-    const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? STAR_SLASH_WAVE_DAMAGE : 0);
+    const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveDamage : 0);
     const hp = enemy.hp - damage;
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
     if (hp <= 0) {
       defeated += 1;
-      const drops = createEnemyCoinDrops(enemy, nextId, supportId);
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
       nextCoins.push(...drops.coins);
       nextEffects.push(...drops.effects);
       nextId = drops.nextId;
-      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId);
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
       nextHearts.push(...heartDrop.hearts);
       nextEffects.push(...heartDrop.effects);
       nextId = heartDrop.nextId;
@@ -375,12 +384,18 @@ function damageEnemiesWithSlash(
   return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
 }
 
-function damageBossWithSlash(boss: Boss | null, player: Player, nextId: number, hasSlashWave: boolean) {
+function damageBossWithSlash(
+  boss: Boss | null,
+  player: Player,
+  nextId: number,
+  hasSlashWave: boolean,
+  weaponTuning: ReturnType<typeof getSochoWeaponTuning>,
+) {
   if (!boss) return { boss, nextId };
   const slashHit = isInBossSlash(player, boss);
-  const waveHit = hasSlashWave && isInBossStarSlashWave(player, boss);
+  const waveHit = hasSlashWave && isInBossStarSlashWave(player, boss, weaponTuning);
   if (!slashHit && !waveHit) return { boss, nextId };
-  const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? STAR_SLASH_WAVE_BOSS_DAMAGE : 0);
+  const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveBossDamage : 0);
   return {
     boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
     effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${damage}`),
@@ -388,8 +403,8 @@ function damageBossWithSlash(boss: Boss | null, player: Player, nextId: number, 
   };
 }
 
-function updateCoins(state: GameState, dt: number, supportId: SupportId | null): GameState {
-  const magnetRadius = getCoinMagnetRadius(supportId);
+function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
     const dx = state.player.x - coin.x;
     const dy = state.player.y - coin.y;
@@ -407,11 +422,11 @@ function updateCoins(state: GameState, dt: number, supportId: SupportId | null):
   return { ...state, coins };
 }
 
-function collectCoins(state: GameState, supportId: SupportId | null): GameState {
+function collectCoins(state: GameState, supportId: SupportId | null, supportLevel: number): GameState {
   let collected = 0;
   let nextId = state.nextId;
   const effects = [...state.effects];
-  const pickupRadius = getCoinPickupRadius(supportId);
+  const pickupRadius = getCoinPickupRadius(supportId, supportLevel);
   const coins = state.coins.filter((coin) => {
     const pickup = Math.hypot(state.player.x - coin.x, state.player.y - coin.y) < pickupRadius;
     if (pickup) {
@@ -517,19 +532,29 @@ function isInBossSlash(player: Player, boss: Boss): boolean {
   return Math.abs(dx) < widthAtPoint + boss.radius * 0.55 && Math.hypot(dx, dy) < SLASH_BOSS_RADIUS + boss.radius * 0.45;
 }
 
-function isInStarSlashWave(player: Player, x: number, y: number, radius: number): boolean {
+function isInStarSlashWave(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getSochoWeaponTuning>,
+): boolean {
   const dx = x - player.x;
   const dy = player.y - y;
   if (dy < -radius * 0.2) return false;
-  if (dy > STAR_SLASH_WAVE_RANGE + radius) return false;
+  if (dy > weaponTuning.starWaveRange + radius) return false;
 
-  const waveWidth = STAR_SLASH_WAVE_HALF_WIDTH * (0.8 + Math.max(0, dy) / STAR_SLASH_WAVE_RANGE);
+  const waveWidth = weaponTuning.starWaveHalfWidth * (0.8 + Math.max(0, dy) / weaponTuning.starWaveRange);
   return Math.abs(dx) < waveWidth + radius * 0.72;
 }
 
-function isInBossStarSlashWave(player: Player, boss: Boss): boolean {
+function isInBossStarSlashWave(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getSochoWeaponTuning>,
+): boolean {
   const bossLowerBodyY = boss.y + boss.radius * 0.58;
-  return isInStarSlashWave(player, boss.x, bossLowerBodyY, boss.radius * 0.5);
+  return isInStarSlashWave(player, boss.x, bossLowerBodyY, boss.radius * 0.5, weaponTuning);
 }
 
 function updateEffects(state: GameState, dt: number): GameState {

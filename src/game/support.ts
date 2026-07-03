@@ -53,10 +53,10 @@ const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
   { x: 0.72, y: -0.7 },
 ];
 
-export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null): GameState {
+export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null, supportLevel = 1): GameState {
   let next = updateSupportBullets(state, dt);
-  next = updateHibikiShield(next, dt, supportId);
-  next = updateMyououGaruda(next, dt, supportId);
+  next = updateHibikiShield(next, dt, supportId, supportLevel);
+  next = updateMyououGaruda(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -73,7 +73,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
     };
   }
 
-  return spawnPlayerGunfire(next, cooldown);
+  return spawnPlayerGunfire(next, cooldown, supportLevel);
 }
 
 export function is7171Support(supportId: SupportId | null): boolean {
@@ -92,23 +92,26 @@ export function isMyououSupport(supportId: SupportId | null): boolean {
   return supportId === 'myouou';
 }
 
-export function getCoinMagnetRadius(supportId: SupportId | null): number {
-  return is7171Support(supportId) ? COIN_MAGNET_RADIUS * NANA_SUPPORT_MAGNET_MULTIPLIER : COIN_MAGNET_RADIUS;
+export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
+  if (!is7171Support(supportId)) return COIN_MAGNET_RADIUS;
+  return COIN_MAGNET_RADIUS * (NANA_SUPPORT_MAGNET_MULTIPLIER + getLevelBonus(supportLevel) * 0.06);
 }
 
-export function getCoinPickupRadius(supportId: SupportId | null): number {
-  return is7171Support(supportId) ? COIN_PICKUP_RADIUS * NANA_SUPPORT_PICKUP_MULTIPLIER : COIN_PICKUP_RADIUS;
+export function getCoinPickupRadius(supportId: SupportId | null, supportLevel = 1): number {
+  if (!is7171Support(supportId)) return COIN_PICKUP_RADIUS;
+  return COIN_PICKUP_RADIUS * (NANA_SUPPORT_PICKUP_MULTIPLIER + getLevelBonus(supportLevel) * 0.025);
 }
 
-export function get7171BossClearCoinBonus(supportId: SupportId | null): number {
-  return is7171Support(supportId) ? NANA_SUPPORT_BOSS_BONUS_COINS : 0;
+export function get7171BossClearCoinBonus(supportId: SupportId | null, supportLevel = 1): number {
+  return is7171Support(supportId) ? NANA_SUPPORT_BOSS_BONUS_COINS + Math.floor(getLevelBonus(supportLevel) / 2) : 0;
 }
 
-export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: SupportId | null) {
+export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: SupportId | null, supportLevel = 1) {
   const coins: Coin[] = [{ id: nextId++, x: enemy.x, y: enemy.y, value: enemy.kind === 'charger' ? 3 : 1 }];
   const effects: FloatingEffect[] = [];
 
-  if (is7171Support(supportId) && Math.random() < NANA_SUPPORT_BONUS_COIN_CHANCE) {
+  const bonusCoinChance = Math.min(0.42, NANA_SUPPORT_BONUS_COIN_CHANCE + getLevelBonus(supportLevel) * 0.018);
+  if (is7171Support(supportId) && Math.random() < bonusCoinChance) {
     const xOffset = Math.random() > 0.5 ? 14 : -14;
     coins.push({ id: nextId++, x: enemy.x + xOffset, y: enemy.y - 8, value: 1, isBonus: true });
     effects.push({
@@ -124,17 +127,18 @@ export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: Su
   return { coins, effects, nextId };
 }
 
-export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: SupportId | null) {
+export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: SupportId | null, supportLevel = 1) {
   const hearts: HeartPickup[] = [];
   const effects: FloatingEffect[] = [];
 
-  if (isYabukoSupport(supportId) && Math.random() < YABUKO_HEART_DROP_CHANCE) {
+  const heartDropChance = Math.min(0.36, YABUKO_HEART_DROP_CHANCE + getLevelBonus(supportLevel) * 0.012);
+  if (isYabukoSupport(supportId) && Math.random() < heartDropChance) {
     hearts.push({
       id: nextId++,
       x: enemy.x + (Math.random() > 0.5 ? 12 : -12),
       y: enemy.y - 10,
       heartType: 'red',
-      healAmount: YABUKO_RED_HEART_HEAL,
+      healAmount: YABUKO_RED_HEART_HEAL + getLevelBonus(supportLevel) * 2,
     });
     effects.push({
       id: nextId++,
@@ -205,7 +209,7 @@ export function getMyououGarudaView(state: GameState) {
   };
 }
 
-function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null): GameState {
+function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const garuda: MyououGarudaState = {
     ...state.supportGaruda,
     cooldown: Math.max(0, state.supportGaruda.cooldown - dt),
@@ -225,7 +229,7 @@ function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId |
   }
 
   if (isGarudaActive(next.supportGaruda)) {
-    next = damageWithGaruda(next);
+    next = damageWithGaruda(next, supportLevel);
   }
 
   return next;
@@ -257,7 +261,7 @@ function activateMyououGaruda(state: GameState): GameState {
   };
 }
 
-function damageWithGaruda(state: GameState): GameState {
+function damageWithGaruda(state: GameState, supportLevel: number): GameState {
   let nextId = state.nextId;
   let defeatedEnemies = state.defeatedEnemies;
   let boss = state.boss;
@@ -266,6 +270,8 @@ function damageWithGaruda(state: GameState): GameState {
   const effects = [...state.effects];
   const { x, y } = getGarudaPosition(garuda);
   const enemies: GameState['enemies'] = [];
+  const garudaDamage = MYOUOU_GARUDA_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 3);
+  const garudaBossDamage = MYOUOU_GARUDA_BOSS_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4);
 
   for (const enemy of state.enemies) {
     if (garuda.hitEnemyIds.includes(enemy.id) || !isPointInGarudaPath(x, y, enemy.x, enemy.y, enemy.radius)) {
@@ -273,14 +279,14 @@ function damageWithGaruda(state: GameState): GameState {
       continue;
     }
 
-    const hp = enemy.hp - MYOUOU_GARUDA_DAMAGE;
+    const hp = enemy.hp - garudaDamage;
     garuda = { ...garuda, hitEnemyIds: [...garuda.hitEnemyIds, enemy.id] };
     effects.push({
       id: nextId++,
       kind: 'support',
       x: enemy.x,
       y: enemy.y,
-      text: `-${MYOUOU_GARUDA_DAMAGE}`,
+      text: `-${garudaDamage}`,
       timer: 0.34,
     });
 
@@ -298,7 +304,7 @@ function damageWithGaruda(state: GameState): GameState {
   if (boss && !garuda.hasHitBoss && isPointInGarudaPath(x, y, boss.x, boss.y, boss.radius * 0.72)) {
     boss = {
       ...boss,
-      hp: boss.hp - MYOUOU_GARUDA_BOSS_DAMAGE,
+      hp: boss.hp - garudaBossDamage,
       hitTimer: 0.22,
     };
     garuda = { ...garuda, hasHitBoss: true };
@@ -307,7 +313,7 @@ function damageWithGaruda(state: GameState): GameState {
       kind: 'support',
       x: boss.x,
       y: boss.y + boss.radius * 0.12,
-      text: `-${MYOUOU_GARUDA_BOSS_DAMAGE}`,
+      text: `-${garudaBossDamage}`,
       timer: 0.38,
     });
   }
@@ -361,7 +367,7 @@ function isPointInGarudaPath(garudaX: number, garudaY: number, x: number, y: num
   return dx < MYOUOU_GARUDA_HIT_RANGE_X + radius && dy < MYOUOU_GARUDA_HIT_RANGE_Y + radius;
 }
 
-function updateHibikiShield(state: GameState, dt: number, supportId: SupportId | null): GameState {
+function updateHibikiShield(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const shield: HibikiShieldState = {
     cooldown: Math.max(0, state.supportShield.cooldown - dt),
     timer: Math.max(0, state.supportShield.timer - dt),
@@ -378,7 +384,7 @@ function updateHibikiShield(state: GameState, dt: number, supportId: SupportId |
 
   let next: GameState = { ...state, supportShield: shield };
   if (shield.timer <= 0 && shield.cooldown <= 0) {
-    next = activateHibikiShield(next);
+    next = activateHibikiShield(next, supportLevel);
   }
 
   if (isShieldActive(next.supportShield)) {
@@ -388,14 +394,14 @@ function updateHibikiShield(state: GameState, dt: number, supportId: SupportId |
   return next;
 }
 
-function activateHibikiShield(state: GameState): GameState {
+function activateHibikiShield(state: GameState, supportLevel: number): GameState {
   let nextId = state.nextId;
   return {
     ...state,
     supportShield: {
-      cooldown: HIBIKI_SHIELD_INTERVAL,
-      timer: HIBIKI_SHIELD_DURATION,
-      blocksRemaining: HIBIKI_SHIELD_BLOCKS,
+      cooldown: Math.max(5.8, HIBIKI_SHIELD_INTERVAL - getLevelBonus(supportLevel) * 0.08),
+      timer: HIBIKI_SHIELD_DURATION + getLevelBonus(supportLevel) * 0.08,
+      blocksRemaining: HIBIKI_SHIELD_BLOCKS + Math.floor(getLevelBonus(supportLevel) / 5),
       flashTimer: HIBIKI_SHIELD_FLASH_TIME,
     },
     effects: [
@@ -468,7 +474,7 @@ function isPointInHibikiShield(state: GameState, x: number, y: number, radius: n
   return normalizedX * normalizedX + normalizedY * normalizedY < 1.15;
 }
 
-function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameState {
+function spawnPlayerGunfire(state: GameState, cooldownRemainder: number, supportLevel: number): GameState {
   let nextId = state.nextId;
   const bullets: SupportBullet[] = [];
 
@@ -482,7 +488,7 @@ function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameSt
       vx: direction.x * PLAYER_SUPPORT_BULLET_SPEED,
       vy: direction.y * PLAYER_SUPPORT_BULLET_SPEED,
       radius: PLAYER_SUPPORT_BULLET_RADIUS,
-      damage: PLAYER_SUPPORT_BULLET_DAMAGE,
+        damage: PLAYER_SUPPORT_BULLET_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4),
       life: PLAYER_SUPPORT_BULLET_LIFE,
     });
   }
@@ -506,7 +512,7 @@ function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameSt
     nextId,
     supportCooldowns: {
       ...state.supportCooldowns,
-      playerGunfire: PLAYER_SUPPORT_FIRE_INTERVAL + cooldownRemainder,
+      playerGunfire: Math.max(1.02, PLAYER_SUPPORT_FIRE_INTERVAL - getLevelBonus(supportLevel) * 0.035) + cooldownRemainder,
     },
   };
 }
@@ -611,4 +617,8 @@ function chooseDirection(): Vector {
     x: direction.x / length,
     y: direction.y / length,
   };
+}
+
+function getLevelBonus(level: number): number {
+  return Math.max(0, Math.floor(level) - 1);
 }
