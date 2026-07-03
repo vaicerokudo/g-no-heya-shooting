@@ -47,6 +47,13 @@ export const YABUKO_HEART_DROP_CHANCE = 0.22;
 export const YABUKO_RED_HEART_HEAL = 24;
 export const HEART_PICKUP_RADIUS = 46;
 
+export const HIBIKI_SHIELD_INTERVAL = 7;
+export const HIBIKI_SHIELD_DURATION = 2.4;
+export const HIBIKI_SHIELD_BLOCKS = 3;
+export const HIBIKI_SHIELD_WIDTH = 118;
+export const HIBIKI_SHIELD_HEIGHT = 104;
+export const HIBIKI_SHIELD_FLASH_TIME = 0.22;
+
 export const COIN_PICKUP_RADIUS = 56;
 export const COIN_MAGNET_RADIUS = 104;
 export const COIN_MAGNET_SPEED = 360;

@@ -10,7 +10,7 @@ import {
   STAGE_NAME,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
-import { getCoinMagnetRadius } from './game/support';
+import { getCoinMagnetRadius, getHibikiShieldView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 
 type SupportCharacter = {
@@ -155,6 +155,7 @@ function App() {
   const hpPercent = Math.max(0, (game.player.hp / game.player.maxHp) * 100);
   const bossHpPercent = game.boss ? Math.max(0, (game.boss.hp / game.boss.maxHp) * 100) : 0;
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
+  const hibikiShield = getHibikiShieldView(game);
   const screenTitle = useMemo(() => {
     if (game.status === 'clear') return '星門、沈黙。';
     if (game.status === 'gameOver') return '撤退。';
@@ -395,6 +396,15 @@ function App() {
               <div key={bullet.id} className="support-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2.7)} />
             ))}
 
+            {hibikiShield && (
+              <div
+                className={`hibiki-shield ${hibikiShield.isGuarding ? 'is-guarding' : ''}`}
+                style={place(hibikiShield.x, hibikiShield.y, hibikiShield.width, hibikiShield.height)}
+              >
+                <span>{hibikiShield.blocksRemaining}</span>
+              </div>
+            )}
+
             {game.boss && (
               <div
                 className={`boss ${(game.boss.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
@@ -591,11 +601,11 @@ function updateDragTarget(
   };
 }
 
-function place(x: number, y: number, size: number) {
+function place(x: number, y: number, width: number, height = width) {
   return {
-    width: size,
-    height: size,
-    transform: `translate(${x - size / 2}px, ${y - size / 2}px)`,
+    width,
+    height,
+    transform: `translate(${x - width / 2}px, ${y - height / 2}px)`,
   };
 }
 

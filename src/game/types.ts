@@ -69,6 +69,13 @@ export type SupportBullet = {
   life: number;
 };
 
+export type HibikiShieldState = {
+  cooldown: number;
+  timer: number;
+  blocksRemaining: number;
+  flashTimer: number;
+};
+
 export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus' | 'heal';
 
 export type FloatingEffect = {
@@ -104,6 +111,7 @@ export type GameState = {
   hearts: HeartPickup[];
   bullets: EnemyBullet[];
   supportBullets: SupportBullet[];
+  supportShield: HibikiShieldState;
   effects: FloatingEffect[];
   boss: Boss | null;
   elapsed: number;

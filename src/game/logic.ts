@@ -25,6 +25,7 @@ import {
   get7171BossClearCoinBonus,
   getCoinMagnetRadius,
   getCoinPickupRadius,
+  resolveHibikiContactGuard,
   is7171Support,
   updateSupportEffects,
 } from './support';
@@ -38,6 +39,12 @@ export const createInitialGameState = (): GameState => ({
   hearts: [],
   bullets: [],
   supportBullets: [],
+  supportShield: {
+    cooldown: 1.8,
+    timer: 0,
+    blocksRemaining: 0,
+    flashTimer: 0,
+  },
   effects: [],
   boss: null,
   elapsed: 0,
@@ -447,6 +454,9 @@ function resolvePlayerDamage(state: GameState): GameState {
   );
 
   if (!hitEnemy && !hitBullet) return state;
+
+  const guarded = resolveHibikiContactGuard(state, hitEnemy ?? null);
+  if (guarded) return guarded;
 
   return {
     ...state,

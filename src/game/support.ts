@@ -3,6 +3,12 @@ import {
   FIELD_WIDTH,
   COIN_MAGNET_RADIUS,
   COIN_PICKUP_RADIUS,
+  HIBIKI_SHIELD_BLOCKS,
+  HIBIKI_SHIELD_DURATION,
+  HIBIKI_SHIELD_FLASH_TIME,
+  HIBIKI_SHIELD_HEIGHT,
+  HIBIKI_SHIELD_INTERVAL,
+  HIBIKI_SHIELD_WIDTH,
   NANA_SUPPORT_BONUS_COIN_CHANCE,
   NANA_SUPPORT_BOSS_BONUS_COINS,
   NANA_SUPPORT_MAGNET_MULTIPLIER,
@@ -16,7 +22,18 @@ import {
   YABUKO_HEART_DROP_CHANCE,
   YABUKO_RED_HEART_HEAL,
 } from './constants';
-import type { Boss, Coin, Enemy, FloatingEffect, GameState, HeartPickup, SupportBullet, SupportId, Vector } from './types';
+import type {
+  Boss,
+  Coin,
+  Enemy,
+  FloatingEffect,
+  GameState,
+  HeartPickup,
+  HibikiShieldState,
+  SupportBullet,
+  SupportId,
+  Vector,
+} from './types';
 
 const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
   { x: -1, y: 0 },
@@ -27,6 +44,7 @@ const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
 
 export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null): GameState {
   let next = updateSupportBullets(state, dt);
+  next = updateHibikiShield(next, dt, supportId);
 
   if (supportId !== 'player') {
     return next;
@@ -52,6 +70,10 @@ export function is7171Support(supportId: SupportId | null): boolean {
 
 export function isYabukoSupport(supportId: SupportId | null): boolean {
   return supportId === 'yabuko';
+}
+
+export function isHibikiSupport(supportId: SupportId | null): boolean {
+  return supportId === 'hibiki';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null): number {
@@ -109,6 +131,153 @@ export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: S
   }
 
   return { hearts, effects, nextId };
+}
+
+export function resolveHibikiContactGuard(state: GameState, enemy: Enemy | null): GameState | null {
+  if (!enemy || !isShieldActive(state.supportShield) || !isPointInHibikiShield(state, enemy.x, enemy.y, enemy.radius)) {
+    return null;
+  }
+
+  let nextId = state.nextId;
+  return {
+    ...state,
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 74,
+        text: 'GUARD',
+        timer: 0.36,
+      },
+    ],
+    nextId,
+    supportShield: consumeShieldBlock(state.supportShield),
+    player: {
+      ...state.player,
+      invincibleTimer: Math.max(state.player.invincibleTimer, 0.38),
+    },
+  };
+}
+
+export function getHibikiShieldView(state: GameState) {
+  if (!isShieldActive(state.supportShield)) return null;
+  return {
+    x: state.player.x,
+    y: state.player.y - HIBIKI_SHIELD_HEIGHT * 0.52,
+    width: HIBIKI_SHIELD_WIDTH,
+    height: HIBIKI_SHIELD_HEIGHT,
+    blocksRemaining: state.supportShield.blocksRemaining,
+    isGuarding: state.supportShield.flashTimer > 0,
+  };
+}
+
+function updateHibikiShield(state: GameState, dt: number, supportId: SupportId | null): GameState {
+  const shield: HibikiShieldState = {
+    cooldown: Math.max(0, state.supportShield.cooldown - dt),
+    timer: Math.max(0, state.supportShield.timer - dt),
+    blocksRemaining: state.supportShield.blocksRemaining,
+    flashTimer: Math.max(0, state.supportShield.flashTimer - dt),
+  };
+
+  if (!isHibikiSupport(supportId)) {
+    return {
+      ...state,
+      supportShield: shield.timer > 0 ? { ...shield, timer: 0, blocksRemaining: 0 } : shield,
+    };
+  }
+
+  let next: GameState = { ...state, supportShield: shield };
+  if (shield.timer <= 0 && shield.cooldown <= 0) {
+    next = activateHibikiShield(next);
+  }
+
+  if (isShieldActive(next.supportShield)) {
+    next = blockEnemyBulletsWithShield(next);
+  }
+
+  return next;
+}
+
+function activateHibikiShield(state: GameState): GameState {
+  let nextId = state.nextId;
+  return {
+    ...state,
+    supportShield: {
+      cooldown: HIBIKI_SHIELD_INTERVAL,
+      timer: HIBIKI_SHIELD_DURATION,
+      blocksRemaining: HIBIKI_SHIELD_BLOCKS,
+      flashTimer: HIBIKI_SHIELD_FLASH_TIME,
+    },
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 66,
+        text: '大盾展開',
+        timer: 0.44,
+      },
+    ],
+    nextId,
+  };
+}
+
+function blockEnemyBulletsWithShield(state: GameState): GameState {
+  let nextId = state.nextId;
+  let shield = state.supportShield;
+  const effects = [...state.effects];
+  const bullets: GameState['bullets'] = [];
+
+  for (const bullet of state.bullets) {
+    if (isShieldActive(shield) && isPointInHibikiShield(state, bullet.x, bullet.y, bullet.radius)) {
+      effects.push({
+        id: nextId++,
+        kind: 'support',
+        x: bullet.x,
+        y: bullet.y,
+        text: 'GUARD',
+        timer: 0.28,
+      });
+      shield = consumeShieldBlock(shield);
+      continue;
+    }
+    bullets.push(bullet);
+  }
+
+  return {
+    ...state,
+    bullets,
+    effects,
+    nextId,
+    supportShield: shield,
+  };
+}
+
+function consumeShieldBlock(shield: HibikiShieldState): HibikiShieldState {
+  const blocksRemaining = Math.max(0, shield.blocksRemaining - 1);
+  return {
+    ...shield,
+    blocksRemaining,
+    timer: blocksRemaining > 0 ? shield.timer : 0,
+    flashTimer: HIBIKI_SHIELD_FLASH_TIME,
+  };
+}
+
+function isShieldActive(shield: HibikiShieldState): boolean {
+  return shield.timer > 0 && shield.blocksRemaining > 0;
+}
+
+function isPointInHibikiShield(state: GameState, x: number, y: number, radius: number): boolean {
+  const dx = x - state.player.x;
+  const dy = state.player.y - y;
+  if (dy < -radius * 0.35 || dy > HIBIKI_SHIELD_HEIGHT + radius) return false;
+
+  const normalizedX = dx / (HIBIKI_SHIELD_WIDTH * 0.5 + radius);
+  const normalizedY = (dy - HIBIKI_SHIELD_HEIGHT * 0.46) / (HIBIKI_SHIELD_HEIGHT * 0.58 + radius);
+  return normalizedX * normalizedX + normalizedY * normalizedY < 1.15;
 }
 
 function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameState {
