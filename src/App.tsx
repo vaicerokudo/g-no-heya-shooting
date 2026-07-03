@@ -10,10 +10,10 @@ import {
   STAGE_NAME,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
-import type { EnemyKind, GameState, Vector } from './game/types';
+import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 
 type SupportCharacter = {
-  id: string;
+  id: SupportId;
   name: string;
   role: string;
   description: string;
@@ -98,10 +98,15 @@ function App() {
   const [summonPhase, setSummonPhase] = useState<SummonPhase>('idle');
   const [summonCards, setSummonCards] = useState<SupportCharacter[]>([]);
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
+  const supportId = useRef<SupportId | null>(null);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
   const lastFrame = useRef<number | null>(null);
+
+  useEffect(() => {
+    supportId.current = selectedSupport?.id ?? null;
+  }, [selectedSupport]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -130,7 +135,9 @@ function App() {
       const dt = Math.min(0.034, (time - lastFrame.current) / 1000);
       lastFrame.current = time;
 
-      setGame((current) => updateGame(current, dt, getMoveVector(current, pressedKeys.current, dragTarget.current)));
+      setGame((current) =>
+        updateGame(current, dt, getMoveVector(current, pressedKeys.current, dragTarget.current), supportId.current),
+      );
       frameId = requestAnimationFrame(tick);
     };
 
@@ -333,6 +340,10 @@ function App() {
 
             {game.bullets.map((bullet) => (
               <div key={bullet.id} className="enemy-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2)} />
+            ))}
+
+            {game.supportBullets.map((bullet) => (
+              <div key={bullet.id} className="support-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2.7)} />
             ))}
 
             {game.boss && (

@@ -30,6 +30,14 @@ export const SLASH_BOSS_RADIUS = 144;
 export const SLASH_HALF_WIDTH = 102;
 export const SLASH_DAMAGE = 1;
 
+// Support tuning is intentionally centralized so future Lv growth can adjust it.
+export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
+export const PLAYER_SUPPORT_BULLET_SPEED = 286;
+export const PLAYER_SUPPORT_BULLET_DAMAGE = 1;
+export const PLAYER_SUPPORT_BULLET_RADIUS = 4;
+export const PLAYER_SUPPORT_BULLET_LIFE = 1.18;
+export const PLAYER_SUPPORT_SHOTS_PER_BURST = 2;
+
 export const COIN_PICKUP_RADIUS = 56;
 export const COIN_MAGNET_RADIUS = 104;
 export const COIN_MAGNET_SPEED = 360;

@@ -2,6 +2,8 @@ export type GameStatus = 'title' | 'prepare' | 'playing' | 'clear' | 'gameOver';
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
+export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou';
+
 export type Enemy = {
   id: number;
   kind: EnemyKind;
@@ -45,7 +47,18 @@ export type EnemyBullet = {
   radius: number;
 };
 
-export type EffectKind = 'hit' | 'damage' | 'coin';
+export type SupportBullet = {
+  id: number;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  life: number;
+};
+
+export type EffectKind = 'hit' | 'damage' | 'coin' | 'support';
 
 export type FloatingEffect = {
   id: number;
@@ -78,6 +91,7 @@ export type GameState = {
   enemies: Enemy[];
   coins: Coin[];
   bullets: EnemyBullet[];
+  supportBullets: SupportBullet[];
   effects: FloatingEffect[];
   boss: Boss | null;
   elapsed: number;
@@ -85,5 +99,8 @@ export type GameState = {
   defeatedEnemies: number;
   nextId: number;
   spawnTimer: number;
+  supportCooldowns: {
+    playerGunfire: number;
+  };
   message: string;
 };

@@ -20,7 +20,8 @@ import {
   SLASH_VISIBLE_TIME,
 } from './constants';
 import { chooseEnemyKind, createEnemy } from './enemies';
-import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, Vector } from './types';
+import { updateSupportEffects } from './support';
+import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, SupportId, Vector } from './types';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -28,6 +29,7 @@ export const createInitialGameState = (): GameState => ({
   enemies: [],
   coins: [],
   bullets: [],
+  supportBullets: [],
   effects: [],
   boss: null,
   elapsed: 0,
@@ -35,6 +37,9 @@ export const createInitialGameState = (): GameState => ({
   defeatedEnemies: 0,
   nextId: 1,
   spawnTimer: 0.6,
+  supportCooldowns: {
+    playerGunfire: 0.8,
+  },
   message: '',
 });
 
@@ -57,7 +62,7 @@ function createPlayer(): Player {
   };
 }
 
-export function updateGame(state: GameState, dt: number, move: Vector): GameState {
+export function updateGame(state: GameState, dt: number, move: Vector, supportId: SupportId | null = null): GameState {
   if (state.status !== 'playing') return state;
 
   let next: GameState = {
@@ -72,6 +77,7 @@ export function updateGame(state: GameState, dt: number, move: Vector): GameStat
   next = updateEnemies(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
+  next = updateSupportEffects(next, dt, supportId);
   next = runAutoSlash(next, dt);
   next = updateCoins(next, dt);
   next = collectCoins(next);

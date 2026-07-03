@@ -584,6 +584,7 @@ h1 {
 .enemy,
 .coin,
 .enemy-bullet,
+.support-bullet,
 .boss,
 .slash,
 .floating-effect {
@@ -799,6 +800,30 @@ h1 {
   z-index: 4;
 }
 
+.support-bullet {
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 36% 32%, #ffffff 0 20%, #ffe8a3 22% 48%, #f5a524 50% 78%, transparent 80%),
+    #ffd166;
+  box-shadow:
+    0 0 0 1px rgba(255, 247, 210, 0.72),
+    0 0 14px rgba(255, 209, 102, 0.92),
+    0 0 22px rgba(76, 201, 240, 0.5);
+  z-index: 7;
+}
+
+.support-bullet::after {
+  content: "";
+  position: absolute;
+  left: -120%;
+  top: 38%;
+  width: 150%;
+  height: 28%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 247, 210, 0.72));
+  filter: blur(1px);
+}
+
 .floating-effect {
   z-index: 8;
   display: grid;
@@ -823,6 +848,14 @@ h1 {
 .effect-coin strong {
   color: #ffd166;
   font-size: 0.9rem;
+}
+
+.effect-support strong {
+  color: #b8f7ff;
+  font-size: 0.68rem;
+  text-shadow:
+    0 1px 0 #10221b,
+    0 0 10px rgba(76, 201, 240, 0.9);
 }
 
 .spark {
