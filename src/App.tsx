@@ -23,6 +23,12 @@ type SupportCharacter = {
 
 type SummonPhase = 'idle' | 'gate' | 'cards' | 'revealing' | 'done';
 
+type JoystickState = {
+  x: number;
+  y: number;
+  active: boolean;
+};
+
 const keyMap: Record<string, Vector> = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
@@ -99,9 +105,12 @@ function App() {
   const [summonPhase, setSummonPhase] = useState<SummonPhase>('idle');
   const [summonCards, setSummonCards] = useState<SupportCharacter[]>([]);
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
+  const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const supportId = useRef<SupportId | null>(null);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
+  const joystickVector = useRef<Vector | null>(null);
+  const joystickBaseRef = useRef<HTMLDivElement | null>(null);
   const fieldRef = useRef<HTMLDivElement | null>(null);
   const lastFrame = useRef<number | null>(null);
 
@@ -143,7 +152,12 @@ function App() {
       lastFrame.current = time;
 
       setGame((current) =>
-        updateGame(current, dt, getMoveVector(current, pressedKeys.current, dragTarget.current), supportId.current),
+        updateGame(
+          current,
+          dt,
+          getMoveVector(current, pressedKeys.current, dragTarget.current, joystickVector.current),
+          supportId.current,
+        ),
       );
       frameId = requestAnimationFrame(tick);
     };
@@ -167,6 +181,7 @@ function App() {
     if (!selectedSupport) return;
     pressedKeys.current.clear();
     dragTarget.current = null;
+    resetJoystick();
     lastFrame.current = null;
     setGame(startGame());
   };
@@ -174,6 +189,7 @@ function App() {
   const goToPrepare = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
+    resetJoystick();
     lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'prepare' }));
   };
@@ -181,6 +197,7 @@ function App() {
   const pauseGame = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
+    resetJoystick();
     lastFrame.current = null;
     setGame((current) => (current.status === 'playing' ? { ...current, status: 'paused' } : current));
   };
@@ -193,6 +210,7 @@ function App() {
   const togglePause = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
+    resetJoystick();
     lastFrame.current = null;
     setGame((current) => {
       if (current.status === 'playing') return { ...current, status: 'paused' };
@@ -220,6 +238,41 @@ function App() {
       setSelectedSupport(support);
       setSummonPhase('done');
     }, 760);
+  };
+
+  const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (game.status !== 'playing' || !joystickBaseRef.current) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rect = joystickBaseRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxDistance = rect.width * 0.34;
+    const dx = event.clientX - centerX;
+    const dy = event.clientY - centerY;
+    const distance = Math.hypot(dx, dy);
+    const limitedDistance = Math.min(distance, maxDistance);
+    const normalized = distance > 0 ? { x: dx / distance, y: dy / distance } : { x: 0, y: 0 };
+
+    joystickVector.current = distance < 6 ? null : normalized;
+    dragTarget.current = null;
+    setJoystick({
+      x: normalized.x * limitedDistance,
+      y: normalized.y * limitedDistance,
+      active: distance >= 6,
+    });
+  };
+
+  const startJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (game.status !== 'playing') return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    updateJoystick(event);
+  };
+
+  const resetJoystick = () => {
+    joystickVector.current = null;
+    setJoystick({ x: 0, y: 0, active: false });
   };
 
   return (
@@ -326,8 +379,8 @@ function App() {
           <div
             className={`field ${game.status === 'paused' ? 'is-paused' : ''}`}
             ref={fieldRef}
-            onPointerDown={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss))}
-            onPointerMove={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss))}
+            onPointerDown={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}
+            onPointerMove={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}
             onPointerUp={() => {
               dragTarget.current = null;
             }}
@@ -466,8 +519,25 @@ function App() {
           </div>
 
           <div className="instructions">
-            <span>移動: WASD / 矢印キー / ドラッグ</span>
+            <span>移動: WASD / 矢印キー / ドラッグ / スマホ左下ジョイスティック</span>
             <span>攻撃: クールタイムごとに自動斬撃</span>
+          </div>
+
+          <div className="mobile-controls in-game-controls" aria-hidden={game.status !== 'playing'}>
+            <div
+              className={`joystick-base ${joystick.active ? 'is-active' : ''}`}
+              ref={joystickBaseRef}
+              onPointerDown={startJoystick}
+              onPointerMove={updateJoystick}
+              onPointerUp={resetJoystick}
+              onPointerCancel={resetJoystick}
+            >
+              <span
+                className="joystick-knob"
+                style={{ transform: `translate(${joystick.x}px, ${joystick.y}px)` }}
+              />
+            </div>
+            <span className="mobile-control-label">スマホ移動</span>
           </div>
         </section>
       )}
@@ -577,7 +647,11 @@ function shuffleSupports(candidates: SupportCharacter[]) {
     .map(({ candidate }) => candidate);
 }
 
-function getMoveVector(game: GameState, keys: Set<string>, target: Vector | null): Vector {
+function getMoveVector(game: GameState, keys: Set<string>, target: Vector | null, joystick: Vector | null): Vector {
+  if (joystick && game.status === 'playing') {
+    return joystick;
+  }
+
   if (target && game.status === 'playing') {
     const dx = target.x - game.player.x;
     const dy = target.y - game.player.y;
@@ -601,8 +675,9 @@ function updateDragTarget(
   field: HTMLDivElement | null,
   targetRef: React.MutableRefObject<Vector | null>,
   isBossBattle: boolean,
+  isEnabled: boolean,
 ) {
-  if (!field || event.pointerType === 'mouse') return;
+  if (!isEnabled || !field || event.pointerType === 'mouse') return;
   const rect = field.getBoundingClientRect();
   const scaleX = FIELD_WIDTH / rect.width;
   const scaleY = FIELD_HEIGHT / rect.height;

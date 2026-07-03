@@ -1091,6 +1091,89 @@ h1 {
   font-size: 0.76rem;
 }
 
+.mobile-controls {
+  display: none;
+}
+
+.in-game-controls {
+  min-height: 94px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 209, 102, 0.24);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(35, 29, 19, 0.78), rgba(12, 22, 20, 0.84));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(10px);
+}
+
+.joystick-base {
+  position: relative;
+  width: 86px;
+  height: 86px;
+  flex: 0 0 86px;
+  border: 1px solid rgba(184, 247, 255, 0.44);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(184, 247, 255, 0.2), rgba(255, 255, 255, 0.06) 56%, rgba(9, 15, 17, 0.36)),
+    linear-gradient(135deg, rgba(255, 209, 102, 0.16), rgba(76, 201, 240, 0.1));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 18px rgba(76, 201, 240, 0.22);
+  touch-action: none;
+  user-select: none;
+}
+
+.joystick-base::before,
+.joystick-base::after {
+  content: "";
+  position: absolute;
+  inset: 13px;
+  border-radius: inherit;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.joystick-base::after {
+  inset: 50% 14px auto;
+  height: 1px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 -29px 0 rgba(255, 255, 255, 0), 0 29px 0 rgba(255, 255, 255, 0);
+}
+
+.joystick-base.is-active {
+  border-color: rgba(255, 247, 206, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 22px rgba(255, 209, 102, 0.34);
+}
+
+.joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid rgba(255, 247, 206, 0.8);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 32%, #ffffff, #ffe8a3 36%, #f6a63a 70%, #9f5b18);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.34),
+    0 0 16px rgba(255, 209, 102, 0.44);
+  pointer-events: none;
+  transition: transform 80ms ease-out;
+}
+
+.mobile-control-label {
+  color: rgba(247, 251, 255, 0.76);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
 .result-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1418,5 +1501,17 @@ h1 {
 
   .instructions {
     flex-direction: column;
+  }
+
+  .in-game-controls {
+    display: flex;
+    justify-content: flex-start;
+  }
+}
+
+@media (pointer: coarse) {
+  .in-game-controls {
+    display: flex;
+    justify-content: flex-start;
   }
 }
