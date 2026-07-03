@@ -57,8 +57,14 @@ export const HIBIKI_SHIELD_FLASH_TIME = 0.22;
 export const MYOUOU_GARUDA_INTERVAL = 14;
 export const MYOUOU_GARUDA_INITIAL_DELAY = 4.2;
 export const MYOUOU_GARUDA_DURATION = 1.25;
-export const MYOUOU_GARUDA_WIDTH = 170;
-export const MYOUOU_GARUDA_HEIGHT = 132;
+export const MYOUOU_GARUDA_WIDTH = 150;
+export const MYOUOU_GARUDA_HEIGHT = 170;
+export const MYOUOU_GARUDA_FRAME_INTERVAL = 0.11;
+export const MYOUOU_GARUDA_FRAME_PATHS = [
+  '/assets/tcg/garuda-frame-1-keyed.png',
+  '/assets/tcg/garuda-frame-2-keyed.png',
+  '/assets/tcg/garuda-frame-3-keyed.png',
+] as const;
 export const MYOUOU_GARUDA_DAMAGE = 4;
 export const MYOUOU_GARUDA_BOSS_DAMAGE = 4;
 export const MYOUOU_GARUDA_HIT_RANGE_X = 112;

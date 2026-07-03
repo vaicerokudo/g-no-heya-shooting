@@ -12,6 +12,8 @@ import {
   MYOUOU_GARUDA_BOSS_DAMAGE,
   MYOUOU_GARUDA_DAMAGE,
   MYOUOU_GARUDA_DURATION,
+  MYOUOU_GARUDA_FRAME_INTERVAL,
+  MYOUOU_GARUDA_FRAME_PATHS,
   MYOUOU_GARUDA_HEIGHT,
   MYOUOU_GARUDA_HIT_RANGE_X,
   MYOUOU_GARUDA_HIT_RANGE_Y,
@@ -190,12 +192,16 @@ export function getHibikiShieldView(state: GameState) {
 export function getMyououGarudaView(state: GameState) {
   if (!isGarudaActive(state.supportGaruda)) return null;
   const { x, y } = getGarudaPosition(state.supportGaruda);
+  const elapsed = MYOUOU_GARUDA_DURATION - state.supportGaruda.timer;
+  const framePattern = [0, 1, 2, 1];
+  const frameIndex = framePattern[Math.floor(elapsed / MYOUOU_GARUDA_FRAME_INTERVAL) % framePattern.length];
   return {
     x,
     y,
     width: MYOUOU_GARUDA_WIDTH,
     height: MYOUOU_GARUDA_HEIGHT,
     direction: state.supportGaruda.direction,
+    frameSrc: MYOUOU_GARUDA_FRAME_PATHS[frameIndex],
   };
 }
 
@@ -227,13 +233,12 @@ function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId |
 
 function activateMyououGaruda(state: GameState): GameState {
   let nextId = state.nextId;
-  const direction = Math.random() > 0.5 ? 'leftToRight' : 'rightToLeft';
   return {
     ...state,
     supportGaruda: {
       cooldown: MYOUOU_GARUDA_INTERVAL,
       timer: MYOUOU_GARUDA_DURATION,
-      direction,
+      direction: 'bottomToTop',
       hitEnemyIds: [],
       hasHitBoss: false,
     },
@@ -338,11 +343,11 @@ function damageWithGaruda(state: GameState): GameState {
 
 function getGarudaPosition(garuda: MyououGarudaState): Vector {
   const progress = 1 - garuda.timer / MYOUOU_GARUDA_DURATION;
-  const startX = garuda.direction === 'leftToRight' ? -MYOUOU_GARUDA_WIDTH * 0.52 : FIELD_WIDTH + MYOUOU_GARUDA_WIDTH * 0.52;
-  const endX = garuda.direction === 'leftToRight' ? FIELD_WIDTH + MYOUOU_GARUDA_WIDTH * 0.52 : -MYOUOU_GARUDA_WIDTH * 0.52;
+  const startY = FIELD_HEIGHT + MYOUOU_GARUDA_HEIGHT * 0.52;
+  const endY = -MYOUOU_GARUDA_HEIGHT * 0.52;
   return {
-    x: startX + (endX - startX) * progress,
-    y: FIELD_HEIGHT * 0.34,
+    x: FIELD_WIDTH / 2 + Math.sin(progress * Math.PI * 2) * 18,
+    y: startY + (endY - startY) * progress,
   };
 }
 

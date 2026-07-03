@@ -402,9 +402,8 @@ function App() {
                 className={`garuda-sweep garuda-${myououGaruda.direction}`}
                 style={place(myououGaruda.x, myououGaruda.y, myououGaruda.width, myououGaruda.height)}
               >
-                <span className="garuda-wing wing-left" />
-                <span className="garuda-core" />
-                <span className="garuda-wing wing-right" />
+                <img className="garuda-frame" src={myououGaruda.frameSrc} alt="" />
+                <span className="garuda-aura" />
                 <span className="garuda-trail" />
               </div>
             )}

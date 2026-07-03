@@ -49,7 +49,7 @@ export const createInitialGameState = (): GameState => ({
   supportGaruda: {
     cooldown: MYOUOU_GARUDA_INITIAL_DELAY,
     timer: 0,
-    direction: 'leftToRight',
+    direction: 'bottomToTop',
     hitEnemyIds: [],
     hasHitBoss: false,
   },

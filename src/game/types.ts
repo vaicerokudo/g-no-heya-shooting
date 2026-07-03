@@ -76,7 +76,7 @@ export type HibikiShieldState = {
   flashTimer: number;
 };
 
-export type GarudaDirection = 'leftToRight' | 'rightToLeft';
+export type GarudaDirection = 'bottomToTop';
 
 export type MyououGarudaState = {
   cooldown: number;
