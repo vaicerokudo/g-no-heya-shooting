@@ -76,6 +76,16 @@ export type HibikiShieldState = {
   flashTimer: number;
 };
 
+export type GarudaDirection = 'leftToRight' | 'rightToLeft';
+
+export type MyououGarudaState = {
+  cooldown: number;
+  timer: number;
+  direction: GarudaDirection;
+  hitEnemyIds: number[];
+  hasHitBoss: boolean;
+};
+
 export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus' | 'heal';
 
 export type FloatingEffect = {
@@ -112,6 +122,7 @@ export type GameState = {
   bullets: EnemyBullet[];
   supportBullets: SupportBullet[];
   supportShield: HibikiShieldState;
+  supportGaruda: MyououGarudaState;
   effects: FloatingEffect[];
   boss: Boss | null;
   elapsed: number;

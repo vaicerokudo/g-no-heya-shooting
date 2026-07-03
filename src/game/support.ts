@@ -9,6 +9,14 @@ import {
   HIBIKI_SHIELD_HEIGHT,
   HIBIKI_SHIELD_INTERVAL,
   HIBIKI_SHIELD_WIDTH,
+  MYOUOU_GARUDA_BOSS_DAMAGE,
+  MYOUOU_GARUDA_DAMAGE,
+  MYOUOU_GARUDA_DURATION,
+  MYOUOU_GARUDA_HEIGHT,
+  MYOUOU_GARUDA_HIT_RANGE_X,
+  MYOUOU_GARUDA_HIT_RANGE_Y,
+  MYOUOU_GARUDA_INTERVAL,
+  MYOUOU_GARUDA_WIDTH,
   NANA_SUPPORT_BONUS_COIN_CHANCE,
   NANA_SUPPORT_BOSS_BONUS_COINS,
   NANA_SUPPORT_MAGNET_MULTIPLIER,
@@ -30,6 +38,7 @@ import type {
   GameState,
   HeartPickup,
   HibikiShieldState,
+  MyououGarudaState,
   SupportBullet,
   SupportId,
   Vector,
@@ -45,6 +54,7 @@ const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
 export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null): GameState {
   let next = updateSupportBullets(state, dt);
   next = updateHibikiShield(next, dt, supportId);
+  next = updateMyououGaruda(next, dt, supportId);
 
   if (supportId !== 'player') {
     return next;
@@ -74,6 +84,10 @@ export function isYabukoSupport(supportId: SupportId | null): boolean {
 
 export function isHibikiSupport(supportId: SupportId | null): boolean {
   return supportId === 'hibiki';
+}
+
+export function isMyououSupport(supportId: SupportId | null): boolean {
+  return supportId === 'myouou';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null): number {
@@ -171,6 +185,175 @@ export function getHibikiShieldView(state: GameState) {
     blocksRemaining: state.supportShield.blocksRemaining,
     isGuarding: state.supportShield.flashTimer > 0,
   };
+}
+
+export function getMyououGarudaView(state: GameState) {
+  if (!isGarudaActive(state.supportGaruda)) return null;
+  const { x, y } = getGarudaPosition(state.supportGaruda);
+  return {
+    x,
+    y,
+    width: MYOUOU_GARUDA_WIDTH,
+    height: MYOUOU_GARUDA_HEIGHT,
+    direction: state.supportGaruda.direction,
+  };
+}
+
+function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null): GameState {
+  const garuda: MyououGarudaState = {
+    ...state.supportGaruda,
+    cooldown: Math.max(0, state.supportGaruda.cooldown - dt),
+    timer: Math.max(0, state.supportGaruda.timer - dt),
+  };
+
+  if (!isMyououSupport(supportId)) {
+    return {
+      ...state,
+      supportGaruda: garuda.timer > 0 ? { ...garuda, timer: 0, hitEnemyIds: [], hasHitBoss: false } : garuda,
+    };
+  }
+
+  let next: GameState = { ...state, supportGaruda: garuda };
+  if (garuda.timer <= 0 && garuda.cooldown <= 0) {
+    next = activateMyououGaruda(next);
+  }
+
+  if (isGarudaActive(next.supportGaruda)) {
+    next = damageWithGaruda(next);
+  }
+
+  return next;
+}
+
+function activateMyououGaruda(state: GameState): GameState {
+  let nextId = state.nextId;
+  const direction = Math.random() > 0.5 ? 'leftToRight' : 'rightToLeft';
+  return {
+    ...state,
+    supportGaruda: {
+      cooldown: MYOUOU_GARUDA_INTERVAL,
+      timer: MYOUOU_GARUDA_DURATION,
+      direction,
+      hitEnemyIds: [],
+      hasHitBoss: false,
+    },
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: FIELD_WIDTH / 2,
+        y: FIELD_HEIGHT * 0.28,
+        text: '迦楼羅顕現',
+        timer: 0.58,
+      },
+    ],
+    nextId,
+  };
+}
+
+function damageWithGaruda(state: GameState): GameState {
+  let nextId = state.nextId;
+  let defeatedEnemies = state.defeatedEnemies;
+  let boss = state.boss;
+  let garuda = state.supportGaruda;
+  const coins = [...state.coins];
+  const effects = [...state.effects];
+  const { x, y } = getGarudaPosition(garuda);
+  const enemies: GameState['enemies'] = [];
+
+  for (const enemy of state.enemies) {
+    if (garuda.hitEnemyIds.includes(enemy.id) || !isPointInGarudaPath(x, y, enemy.x, enemy.y, enemy.radius)) {
+      enemies.push(enemy);
+      continue;
+    }
+
+    const hp = enemy.hp - MYOUOU_GARUDA_DAMAGE;
+    garuda = { ...garuda, hitEnemyIds: [...garuda.hitEnemyIds, enemy.id] };
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: enemy.x,
+      y: enemy.y,
+      text: `-${MYOUOU_GARUDA_DAMAGE}`,
+      timer: 0.34,
+    });
+
+    if (hp <= 0) {
+      defeatedEnemies += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, 'myouou');
+      coins.push(...drops.coins);
+      effects.push(...drops.effects);
+      nextId = drops.nextId;
+    } else {
+      enemies.push({ ...enemy, hp, hitTimer: 0.18 });
+    }
+  }
+
+  if (boss && !garuda.hasHitBoss && isPointInGarudaPath(x, y, boss.x, boss.y, boss.radius * 0.72)) {
+    boss = {
+      ...boss,
+      hp: boss.hp - MYOUOU_GARUDA_BOSS_DAMAGE,
+      hitTimer: 0.22,
+    };
+    garuda = { ...garuda, hasHitBoss: true };
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: boss.x,
+      y: boss.y + boss.radius * 0.12,
+      text: `-${MYOUOU_GARUDA_BOSS_DAMAGE}`,
+      timer: 0.38,
+    });
+  }
+
+  const bullets: GameState['bullets'] = [];
+  for (const bullet of state.bullets) {
+    if (isPointInGarudaPath(x, y, bullet.x, bullet.y, bullet.radius)) {
+      effects.push({
+        id: nextId++,
+        kind: 'support',
+        x: bullet.x,
+        y: bullet.y,
+        text: '浄化',
+        timer: 0.26,
+      });
+      continue;
+    }
+    bullets.push(bullet);
+  }
+
+  return {
+    ...state,
+    enemies,
+    coins,
+    bullets,
+    effects,
+    boss,
+    defeatedEnemies,
+    nextId,
+    supportGaruda: garuda,
+  };
+}
+
+function getGarudaPosition(garuda: MyououGarudaState): Vector {
+  const progress = 1 - garuda.timer / MYOUOU_GARUDA_DURATION;
+  const startX = garuda.direction === 'leftToRight' ? -MYOUOU_GARUDA_WIDTH * 0.52 : FIELD_WIDTH + MYOUOU_GARUDA_WIDTH * 0.52;
+  const endX = garuda.direction === 'leftToRight' ? FIELD_WIDTH + MYOUOU_GARUDA_WIDTH * 0.52 : -MYOUOU_GARUDA_WIDTH * 0.52;
+  return {
+    x: startX + (endX - startX) * progress,
+    y: FIELD_HEIGHT * 0.34,
+  };
+}
+
+function isGarudaActive(garuda: MyououGarudaState): boolean {
+  return garuda.timer > 0;
+}
+
+function isPointInGarudaPath(garudaX: number, garudaY: number, x: number, y: number, radius: number): boolean {
+  const dx = Math.abs(x - garudaX);
+  const dy = Math.abs(y - garudaY);
+  return dx < MYOUOU_GARUDA_HIT_RANGE_X + radius && dy < MYOUOU_GARUDA_HIT_RANGE_Y + radius;
 }
 
 function updateHibikiShield(state: GameState, dt: number, supportId: SupportId | null): GameState {

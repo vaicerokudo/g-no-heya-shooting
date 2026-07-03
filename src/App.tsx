@@ -10,7 +10,7 @@ import {
   STAGE_NAME,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
-import { getCoinMagnetRadius, getHibikiShieldView } from './game/support';
+import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 
 type SupportCharacter = {
@@ -156,6 +156,7 @@ function App() {
   const bossHpPercent = game.boss ? Math.max(0, (game.boss.hp / game.boss.maxHp) * 100) : 0;
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
   const hibikiShield = getHibikiShieldView(game);
+  const myououGaruda = getMyououGarudaView(game);
   const screenTitle = useMemo(() => {
     if (game.status === 'clear') return '星門、沈黙。';
     if (game.status === 'gameOver') return '撤退。';
@@ -395,6 +396,18 @@ function App() {
             {game.supportBullets.map((bullet) => (
               <div key={bullet.id} className="support-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2.7)} />
             ))}
+
+            {myououGaruda && (
+              <div
+                className={`garuda-sweep garuda-${myououGaruda.direction}`}
+                style={place(myououGaruda.x, myououGaruda.y, myououGaruda.width, myououGaruda.height)}
+              >
+                <span className="garuda-wing wing-left" />
+                <span className="garuda-core" />
+                <span className="garuda-wing wing-right" />
+                <span className="garuda-trail" />
+              </div>
+            )}
 
             {hibikiShield && (
               <div

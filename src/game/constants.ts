@@ -54,6 +54,16 @@ export const HIBIKI_SHIELD_WIDTH = 118;
 export const HIBIKI_SHIELD_HEIGHT = 104;
 export const HIBIKI_SHIELD_FLASH_TIME = 0.22;
 
+export const MYOUOU_GARUDA_INTERVAL = 14;
+export const MYOUOU_GARUDA_INITIAL_DELAY = 4.2;
+export const MYOUOU_GARUDA_DURATION = 1.25;
+export const MYOUOU_GARUDA_WIDTH = 170;
+export const MYOUOU_GARUDA_HEIGHT = 132;
+export const MYOUOU_GARUDA_DAMAGE = 4;
+export const MYOUOU_GARUDA_BOSS_DAMAGE = 4;
+export const MYOUOU_GARUDA_HIT_RANGE_X = 112;
+export const MYOUOU_GARUDA_HIT_RANGE_Y = 88;
+
 export const COIN_PICKUP_RADIUS = 56;
 export const COIN_MAGNET_RADIUS = 104;
 export const COIN_MAGNET_SPEED = 360;
