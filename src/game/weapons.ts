@@ -17,6 +17,8 @@ export type CharacterId = 'socho';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
+export type SochoWeaponEffect = 'standardSlash' | 'starSlashWave';
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 
 export const WEAPON_RARITY_WEIGHTS: Record<WeaponRarity, number> = {
@@ -128,6 +130,15 @@ export function getSochoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[
 
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
+}
+
+export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
+  if (weaponId === 'star-vein-tachi') return 'starSlashWave';
+  return 'standardSlash';
+}
+
+export function hasSochoSlashWave(weaponId: string | undefined): boolean {
+  return getSochoWeaponEffect(weaponId) === 'starSlashWave';
 }
 
 export function isSochoWeapon(weaponId: string): boolean {

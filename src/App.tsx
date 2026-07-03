@@ -9,6 +9,8 @@ import {
   SLASH_RADIUS,
   STAGE_NAME,
   FORGE_WEAPON_COST,
+  STAR_SLASH_WAVE_HALF_WIDTH,
+  STAR_SLASH_WAVE_RANGE,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
@@ -29,6 +31,7 @@ import {
   forgeRandomWeapon,
   getEquippedSochoWeapon,
   getSochoWeaponOptions,
+  hasSochoSlashWave,
   WEAPON_RARITY_WEIGHTS,
 } from './game/weapons';
 import type { EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
@@ -166,6 +169,7 @@ function App() {
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
   const supportId = useRef<SupportId | null>(null);
+  const equippedWeaponId = useRef('iron-tachi');
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const joystickVector = useRef<Vector | null>(null);
@@ -217,6 +221,7 @@ function App() {
           dt,
           getMoveVector(current, pressedKeys.current, dragTarget.current, joystickVector.current),
           supportId.current,
+          equippedWeaponId.current,
         ),
       );
       frameId = requestAnimationFrame(tick);
@@ -233,6 +238,7 @@ function App() {
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
+  const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
   const screenTitle = useMemo(() => {
     if (game.status === 'clear') return '星門、沈黙。';
     if (game.status === 'gameOver') return '撤退。';
@@ -253,6 +259,10 @@ function App() {
       return nextCoins;
     });
   }, [game.defeatedEnemies, game.elapsed, rewardSummary]);
+
+  useEffect(() => {
+    equippedWeaponId.current = equippedSochoWeapon.id;
+  }, [equippedSochoWeapon.id]);
 
   const begin = () => {
     if (!selectedSupport) return;
@@ -927,6 +937,20 @@ function App() {
                 <span className="slash-line line-one" />
                 <span className="slash-line line-two" />
                 <span className="slash-shock" />
+              </div>
+            )}
+            {game.player.slashTimer > 0 && sochoHasSlashWave && (
+              <div
+                className="slash-wave"
+                style={{
+                  left: game.player.x - STAR_SLASH_WAVE_HALF_WIDTH,
+                  top: game.player.y - STAR_SLASH_WAVE_RANGE,
+                  width: STAR_SLASH_WAVE_HALF_WIDTH * 2,
+                  height: STAR_SLASH_WAVE_RANGE,
+                }}
+              >
+                <span className="slash-wave-core" />
+                <span className="slash-wave-stars" />
               </div>
             )}
 

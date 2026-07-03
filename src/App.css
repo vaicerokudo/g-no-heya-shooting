@@ -1314,6 +1314,7 @@ h1 {
 
 .field.is-paused .scroll-band,
 .field.is-paused .slash,
+.field.is-paused .slash-wave,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
 .field.is-paused .hibiki-shield,
@@ -1360,6 +1361,7 @@ h1 {
 .garuda-sweep,
 .boss,
 .slash,
+.slash-wave,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -1466,6 +1468,69 @@ h1 {
   border-top: 2px solid rgba(255, 255, 255, 0.8);
   opacity: 0;
   animation: shockRing 180ms ease-out both;
+}
+
+.slash-wave {
+  z-index: 5;
+  overflow: visible;
+  pointer-events: none;
+  filter:
+    drop-shadow(0 0 14px rgba(255, 247, 206, 0.86))
+    drop-shadow(0 0 20px rgba(76, 201, 240, 0.36));
+  animation: starWaveLunge 190ms ease-out both;
+}
+
+.slash-wave-core,
+.slash-wave-stars {
+  position: absolute;
+  pointer-events: none;
+}
+
+.slash-wave-core {
+  left: 48%;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, transparent 0 2%, rgba(255, 255, 255, 0.96) 16%, #fff7ce 58%, rgba(255, 209, 102, 0.18) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    0 0 18px rgba(255, 247, 206, 0.9),
+    0 0 28px rgba(76, 201, 240, 0.34);
+}
+
+.slash-wave-core::before,
+.slash-wave-core::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 22px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffffff, transparent);
+  transform: translateX(-50%) rotate(18deg);
+  opacity: 0.86;
+}
+
+.slash-wave-core::before {
+  top: 24%;
+}
+
+.slash-wave-core::after {
+  top: 62%;
+  transform: translateX(-50%) rotate(-16deg);
+}
+
+.slash-wave-stars {
+  inset: 0;
+  background:
+    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 68% 36%, rgba(255, 209, 102, 0.86) 0 2px, transparent 3px),
+    radial-gradient(circle at 38% 58%, rgba(184, 247, 255, 0.72) 0 1px, transparent 3px),
+    radial-gradient(circle at 72% 74%, rgba(255, 247, 206, 0.78) 0 1px, transparent 3px);
+  mix-blend-mode: screen;
+  animation: starWaveSparkle 190ms ease-out both;
 }
 
 .enemy {
@@ -2125,6 +2190,35 @@ h1 {
   0% {
     opacity: 0.8;
     transform: scale(0.72);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes starWaveLunge {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scaleY(0.44);
+  }
+  42% {
+    opacity: 0.96;
+    transform: translateY(-2px) scaleY(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-24px) scaleY(1.1);
+  }
+}
+
+@keyframes starWaveSparkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  42% {
+    opacity: 0.92;
   }
   100% {
     opacity: 0;

@@ -29,6 +29,10 @@ export const SLASH_RADIUS = 112;
 export const SLASH_BOSS_RADIUS = 138;
 export const SLASH_HALF_WIDTH = 90;
 export const SLASH_DAMAGE = 1;
+export const STAR_SLASH_WAVE_RANGE = 172;
+export const STAR_SLASH_WAVE_HALF_WIDTH = 26;
+export const STAR_SLASH_WAVE_DAMAGE = 1;
+export const STAR_SLASH_WAVE_BOSS_DAMAGE = 1;
 
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
