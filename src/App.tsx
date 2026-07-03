@@ -12,6 +12,7 @@ import {
   FORGE_WEAPON_COST,
   SHOP_SUPPORT_SUMMON_COST,
 } from './game/constants';
+import { getMainCharacter } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
 import {
@@ -231,6 +232,7 @@ function App() {
   const hibikiShield = getHibikiShieldView(game);
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
+  const mainCharacter = useMemo(() => getMainCharacter('socho'), []);
   const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
   const selectedSupportLevel = useMemo(
     () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
@@ -626,43 +628,56 @@ function App() {
       )}
 
       {game.status === 'guildParty' && (
-        <section className="menu-screen prepare-screen guild-subscreen">
+        <section className="menu-screen prepare-screen guild-subscreen sortie-party-screen">
           <p className="eyebrow">Guild House</p>
-          <h1>{'\u7de8\u6210'}</h1>
+          <h1>編成</h1>
           <div className="owned-coins-panel compact">
-            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <div className="formation-grid">
-            <article className="formation-card main-card">
-              <span className="slot-label">{'\u30e1\u30a4\u30f3'}</span>
-              <img src={assetPaths.player} alt="Socho" />
+          <div className="sortie-summary">
+            <article className="formation-card main-card sortie-card">
+              <span className="slot-label">メインキャラ</span>
+              <img src={mainCharacter.image} alt={mainCharacter.name} />
               <div>
-                <h2>{'\u7dcf\u9577'}</h2>
-                <p>{'\u524d\u65b9\u534a\u5186\u65ac\u6483\u3067\u524d\u7dda\u3092\u5207\u308a\u958b\u304f\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\u3002'}</p>
-                <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</p>
+                <h2>{mainCharacter.name}</h2>
+                <strong>{mainCharacter.role}</strong>
+                <p>{mainCharacter.description}</p>
+                <p className="formation-status">{mainCharacter.status}</p>
               </div>
             </article>
-            <article className={`formation-card support-card ${selectedSupport ? 'has-support' : ''}`}> 
-              <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8'}</span>
+            <article className="formation-card weapon-card sortie-card">
+              <span className="slot-label">装備武器</span>
+              <div>
+                <h2>{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</h2>
+                <strong>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</strong>
+                <p>{equippedSochoWeapon.description}</p>
+                <p className="weapon-effect-line">効果：{equippedSochoWeapon.effectDescription}</p>
+              </div>
+            </article>
+            <article className={`formation-card support-card sortie-card ${selectedSupport ? 'has-support' : ''}`}>
+              <span className="slot-label">同行サポート</span>
               {selectedSupport ? (
                 <>
                   <img src={selectedSupport.image} alt={selectedSupport.name} />
                   <div>
-                    <h2>{selectedSupport.name}</h2>
+                    <h2>{selectedSupport.name} / Lv {selectedSupportLevel}</h2>
                     <strong>{selectedSupport.role}</strong>
-                    <p>{selectedSupport.description}</p>
-                    <p className="summon-success">Lv {selectedSupportLevel}</p>
+                    <p>{selectedSupport.effectDescription}</p>
                   </div>
                 </>
               ) : (
-                <div className="empty-support">{'\u672a\u53ec\u559a\u3067\u3059\u3002\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u3067\u4ef2\u9593\u3092\u8fce\u3048\u3066\u304f\u3060\u3055\u3044\u3002'}</div>
+                <div className="empty-support">
+                  まだ同行サポートがいません。雑貨屋で初回無料召喚をしてみよう。
+                </div>
               )}
             </article>
           </div>
           <div className="prepare-actions">
-            <button className="primary-button" onClick={goToGate} disabled={!selectedSupport}>Go to Gate</button>
-            <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
+            <button className="primary-button" onClick={goToGate} disabled={!selectedSupport}>出撃門へ向かう</button>
+            <button className="secondary-button" onClick={goToGuildEquipment}>装備を変更する</button>
+            <button className="secondary-button" onClick={goToGuildSummon}>同行サポートを変更する</button>
+            <button className="secondary-button" onClick={goToGuildLobby}>ロビーへ戻る</button>
           </div>
         </section>
       )}

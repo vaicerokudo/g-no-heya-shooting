@@ -1169,6 +1169,32 @@ h1 {
   gap: 14px;
 }
 
+.sortie-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sortie-card {
+  min-height: 300px;
+}
+
+.sortie-card.weapon-card {
+  justify-content: center;
+}
+
+.formation-status {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 9px !important;
+  padding: 5px 8px;
+  border: 1px solid rgba(143, 220, 255, 0.34);
+  border-radius: 999px;
+  color: #bfefff !important;
+  background: rgba(47, 95, 121, 0.24);
+  font-size: 0.78rem !important;
+}
+
 .formation-card {
   position: relative;
   min-height: 250px;
@@ -2783,6 +2809,14 @@ h1 {
 
   .formation-grid {
     grid-template-columns: 1fr;
+  }
+
+  .sortie-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .sortie-card {
+    min-height: 230px;
   }
 
   .formation-card {
