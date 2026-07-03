@@ -1,6 +1,12 @@
 import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
+  COIN_MAGNET_RADIUS,
+  COIN_PICKUP_RADIUS,
+  NANA_SUPPORT_BONUS_COIN_CHANCE,
+  NANA_SUPPORT_BOSS_BONUS_COINS,
+  NANA_SUPPORT_MAGNET_MULTIPLIER,
+  NANA_SUPPORT_PICKUP_MULTIPLIER,
   PLAYER_SUPPORT_BULLET_DAMAGE,
   PLAYER_SUPPORT_BULLET_LIFE,
   PLAYER_SUPPORT_BULLET_RADIUS,
@@ -36,6 +42,42 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   }
 
   return spawnPlayerGunfire(next, cooldown);
+}
+
+export function is7171Support(supportId: SupportId | null): boolean {
+  return supportId === '7171';
+}
+
+export function getCoinMagnetRadius(supportId: SupportId | null): number {
+  return is7171Support(supportId) ? COIN_MAGNET_RADIUS * NANA_SUPPORT_MAGNET_MULTIPLIER : COIN_MAGNET_RADIUS;
+}
+
+export function getCoinPickupRadius(supportId: SupportId | null): number {
+  return is7171Support(supportId) ? COIN_PICKUP_RADIUS * NANA_SUPPORT_PICKUP_MULTIPLIER : COIN_PICKUP_RADIUS;
+}
+
+export function get7171BossClearCoinBonus(supportId: SupportId | null): number {
+  return is7171Support(supportId) ? NANA_SUPPORT_BOSS_BONUS_COINS : 0;
+}
+
+export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: SupportId | null) {
+  const coins: Coin[] = [{ id: nextId++, x: enemy.x, y: enemy.y, value: enemy.kind === 'charger' ? 3 : 1 }];
+  const effects: FloatingEffect[] = [];
+
+  if (is7171Support(supportId) && Math.random() < NANA_SUPPORT_BONUS_COIN_CHANCE) {
+    const xOffset = Math.random() > 0.5 ? 14 : -14;
+    coins.push({ id: nextId++, x: enemy.x + xOffset, y: enemy.y - 8, value: 1, isBonus: true });
+    effects.push({
+      id: nextId++,
+      kind: 'bonus',
+      x: enemy.x,
+      y: enemy.y - 22,
+      text: 'BONUS',
+      timer: 0.46,
+    });
+  }
+
+  return { coins, effects, nextId };
 }
 
 function spawnPlayerGunfire(state: GameState, cooldownRemainder: number): GameState {
@@ -122,7 +164,10 @@ function resolveSupportBulletHits(state: GameState): GameState {
 
       if (hp <= 0) {
         defeatedEnemies += 1;
-        coins.push({ id: nextId++, x: enemy.x, y: enemy.y, value: enemy.kind === 'charger' ? 3 : 1 });
+        const drops = createEnemyCoinDrops(enemy, nextId, 'player');
+        coins.push(...drops.coins);
+        effects.push(...drops.effects);
+        nextId = drops.nextId;
         enemies.splice(enemyIndex, 1);
       } else {
         enemies[enemyIndex] = { ...enemy, hp, hitTimer: 0.12 };

@@ -10,6 +10,7 @@ import {
   STAGE_NAME,
 } from './game/constants';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
+import { getCoinMagnetRadius } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 
 type SupportCharacter = {
@@ -356,7 +357,9 @@ function App() {
             {game.coins.map((coin) => (
               <div
                 key={coin.id}
-                className={`coin ${isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y) ? 'is-attracted' : ''}`}
+                className={`coin ${coin.isBonus ? 'is-bonus' : ''} ${
+                  isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y, supportId.current) ? 'is-attracted' : ''
+                }`}
                 style={place(coin.x, coin.y, 18)}
               >
                 $
@@ -589,8 +592,8 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function isCoinAttracted(coinX: number, coinY: number, playerX: number, playerY: number) {
-  return Math.hypot(playerX - coinX, playerY - coinY) < 104;
+function isCoinAttracted(coinX: number, coinY: number, playerX: number, playerY: number, supportId: SupportId | null) {
+  return Math.hypot(playerX - coinX, playerY - coinY) < getCoinMagnetRadius(supportId);
 }
 
 export default App;

@@ -824,6 +824,16 @@ h1 {
     0 0 24px rgba(255, 209, 102, 0.96);
 }
 
+.coin.is-bonus {
+  background:
+    radial-gradient(circle at 34% 28%, #ffffff 0 18%, transparent 19%),
+    linear-gradient(135deg, #fff7ce, #ffd166 48%, #9dffb0);
+  border-color: rgba(200, 255, 223, 0.98);
+  box-shadow:
+    0 0 0 1px rgba(36, 112, 62, 0.35),
+    0 0 20px rgba(200, 255, 223, 0.8);
+}
+
 .enemy-bullet {
   border-radius: 999px;
   background: #b8f7ff;
@@ -879,6 +889,15 @@ h1 {
 .effect-coin strong {
   color: #ffd166;
   font-size: 0.9rem;
+}
+
+.effect-bonus strong {
+  color: #c8ffdf;
+  font-size: 0.84rem;
+  text-shadow:
+    0 1px 0 #10351d,
+    0 0 12px rgba(200, 255, 223, 0.95),
+    0 0 18px rgba(255, 209, 102, 0.75);
 }
 
 .effect-support strong {

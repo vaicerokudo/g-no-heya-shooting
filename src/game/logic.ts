@@ -3,9 +3,7 @@ import {
   BOSS_APPEAR_KILLS,
   BOSS_APPEAR_TIME,
   BOSS_Y,
-  COIN_MAGNET_RADIUS,
   COIN_MAGNET_SPEED,
-  COIN_PICKUP_RADIUS,
   FIELD_HEIGHT,
   FIELD_WIDTH,
   PLAYER_LIMITS,
@@ -20,7 +18,14 @@ import {
   SLASH_VISIBLE_TIME,
 } from './constants';
 import { chooseEnemyKind, createEnemy } from './enemies';
-import { updateSupportEffects } from './support';
+import {
+  createEnemyCoinDrops,
+  get7171BossClearCoinBonus,
+  getCoinMagnetRadius,
+  getCoinPickupRadius,
+  is7171Support,
+  updateSupportEffects,
+} from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, SupportId, Vector } from './types';
 
 export const createInitialGameState = (): GameState => ({
@@ -78,9 +83,9 @@ export function updateGame(state: GameState, dt: number, move: Vector, supportId
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
   next = updateSupportEffects(next, dt, supportId);
-  next = runAutoSlash(next, dt);
-  next = updateCoins(next, dt);
-  next = collectCoins(next);
+  next = runAutoSlash(next, dt, supportId);
+  next = updateCoins(next, dt, supportId);
+  next = collectCoins(next, supportId);
   next = resolvePlayerDamage(next);
   next = updateEffects(next, dt);
 
@@ -95,11 +100,14 @@ export function updateGame(state: GameState, dt: number, move: Vector, supportId
   }
 
   if (next.boss && next.boss.hp <= 0) {
+    const bonusCoins = get7171BossClearCoinBonus(supportId);
+    const totalCoins = next.coinsCollected + bonusCoins;
     return {
       ...next,
       boss: null,
       status: 'clear',
-      message: `大型魔獣を撃破。コイン ${next.coinsCollected} 枚を獲得。`,
+      coinsCollected: totalCoins,
+      message: `大型魔獣を撃破。コイン ${totalCoins} 枚を獲得。`,
     };
   }
 
@@ -261,7 +269,7 @@ function updateBullets(state: GameState, dt: number): GameState {
   return { ...state, bullets };
 }
 
-function runAutoSlash(state: GameState, dt: number): GameState {
+function runAutoSlash(state: GameState, dt: number, supportId: SupportId | null): GameState {
   if (state.player.attackCooldown > 0) return state;
 
   const { enemies, defeated, coins, nextId, effects } = damageEnemiesWithSlash(
@@ -270,6 +278,7 @@ function runAutoSlash(state: GameState, dt: number): GameState {
     state.effects,
     state.nextId,
     state.player,
+    supportId,
   );
   const bossHit = damageBossWithSlash(state.boss, state.player, nextId);
 
@@ -295,6 +304,7 @@ function damageEnemiesWithSlash(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
+  supportId: SupportId | null,
 ) {
   let defeated = 0;
   const nextCoins = [...coins];
@@ -311,7 +321,10 @@ function damageEnemiesWithSlash(
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, '-1'));
     if (hp <= 0) {
       defeated += 1;
-      nextCoins.push({ id: nextId++, x: enemy.x, y: enemy.y, value: enemy.kind === 'charger' ? 3 : 1 });
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
     } else {
       nextEnemies.push({ ...enemy, hp, hitTimer: 0.16 });
     }
@@ -329,14 +342,15 @@ function damageBossWithSlash(boss: Boss | null, player: Player, nextId: number) 
   };
 }
 
-function updateCoins(state: GameState, dt: number): GameState {
+function updateCoins(state: GameState, dt: number, supportId: SupportId | null): GameState {
+  const magnetRadius = getCoinMagnetRadius(supportId);
   const coins = state.coins.map((coin) => {
     const dx = state.player.x - coin.x;
     const dy = state.player.y - coin.y;
     const distance = Math.hypot(dx, dy);
-    if (distance > COIN_MAGNET_RADIUS || distance <= 1) return coin;
+    if (distance > magnetRadius || distance <= 1) return coin;
 
-    const pull = Math.min(distance, (COIN_MAGNET_SPEED + (COIN_MAGNET_RADIUS - distance) * 4) * dt);
+    const pull = Math.min(distance, (COIN_MAGNET_SPEED + (magnetRadius - distance) * 4) * dt);
     return {
       ...coin,
       x: coin.x + (dx / distance) * pull,
@@ -347,17 +361,18 @@ function updateCoins(state: GameState, dt: number): GameState {
   return { ...state, coins };
 }
 
-function collectCoins(state: GameState): GameState {
+function collectCoins(state: GameState, supportId: SupportId | null): GameState {
   let collected = 0;
   let nextId = state.nextId;
   const effects = [...state.effects];
+  const pickupRadius = getCoinPickupRadius(supportId);
   const coins = state.coins.filter((coin) => {
-    const pickup = Math.hypot(state.player.x - coin.x, state.player.y - coin.y) < COIN_PICKUP_RADIUS;
+    const pickup = Math.hypot(state.player.x - coin.x, state.player.y - coin.y) < pickupRadius;
     if (pickup) {
       collected += coin.value;
       effects.push({
         id: nextId++,
-        kind: 'coin',
+        kind: is7171Support(supportId) || coin.isBonus ? 'bonus' : 'coin',
         x: state.player.x,
         y: state.player.y - 24,
         text: `+${coin.value}`,

@@ -36,6 +36,7 @@ export type Coin = {
   x: number;
   y: number;
   value: number;
+  isBonus?: boolean;
 };
 
 export type EnemyBullet = {
@@ -58,7 +59,7 @@ export type SupportBullet = {
   life: number;
 };
 
-export type EffectKind = 'hit' | 'damage' | 'coin' | 'support';
+export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus';
 
 export type FloatingEffect = {
   id: number;
