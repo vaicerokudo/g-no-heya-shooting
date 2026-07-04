@@ -20,7 +20,7 @@ export type GameStatus =
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
-export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru';
+export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli';
 
 export type Enemy = {
   id: number;
@@ -168,6 +168,7 @@ export type GameState = {
   playerArrows: PlayerArrow[];
   supportBullets: SupportBullet[];
   turrets: DeliTurret[];
+  supportTurrets: DeliTurret[];
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;
   effects: FloatingEffect[];
@@ -181,6 +182,7 @@ export type GameState = {
   supportCooldowns: {
     playerGunfire: number;
     ushimaruCounter: number;
+    deliTurret: number;
   };
   message: string;
 };

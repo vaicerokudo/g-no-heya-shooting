@@ -1373,6 +1373,14 @@ function App() {
               />
             ))}
 
+            {game.supportTurrets.map((turret) => (
+              <div
+                key={turret.id}
+                className={`deli-turret support-deli-turret ${turret.timer < 1 ? 'is-fading' : ''}`}
+                style={place(turret.x, turret.y, 36)}
+              />
+            ))}
+
             {game.playerArrows.map((arrow) => (
               <div
                 key={arrow.id}

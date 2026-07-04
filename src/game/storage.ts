@@ -165,12 +165,21 @@ function isOwnedSupport(value: unknown): value is OwnedSupport {
       support.id === 'player' ||
       support.id === 'hibiki' ||
       support.id === 'myouou' ||
-      support.id === 'ushimaru') &&
+      support.id === 'ushimaru' ||
+      support.id === 'deli') &&
     typeof support.count === 'number' &&
     support.count > 0
   );
 }
 
 function isSupportId(value: unknown): value is SupportId {
-  return value === '7171' || value === 'yabuko' || value === 'player' || value === 'hibiki' || value === 'myouou' || value === 'ushimaru';
+  return (
+    value === '7171' ||
+    value === 'yabuko' ||
+    value === 'player' ||
+    value === 'hibiki' ||
+    value === 'myouou' ||
+    value === 'ushimaru' ||
+    value === 'deli'
+  );
 }

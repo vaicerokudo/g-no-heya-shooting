@@ -3,6 +3,15 @@ import {
   FIELD_WIDTH,
   COIN_MAGNET_RADIUS,
   COIN_PICKUP_RADIUS,
+  DELI_SUPPORT_TURRET_BULLET_DAMAGE,
+  DELI_SUPPORT_TURRET_BULLET_LIFE,
+  DELI_SUPPORT_TURRET_BULLET_RADIUS,
+  DELI_SUPPORT_TURRET_BULLET_SPEED,
+  DELI_SUPPORT_TURRET_DEPLOY_INTERVAL,
+  DELI_SUPPORT_TURRET_DURATION,
+  DELI_SUPPORT_TURRET_FIRE_INTERVAL,
+  DELI_SUPPORT_TURRET_MAX_COUNT,
+  DELI_SUPPORT_TURRET_MIN_DEPLOY_INTERVAL,
   HIBIKI_SHIELD_BLOCKS,
   HIBIKI_SHIELD_DURATION,
   HIBIKI_SHIELD_FLASH_TIME,
@@ -40,6 +49,7 @@ import {
 import type {
   Boss,
   Coin,
+  DeliTurret,
   Enemy,
   FloatingEffect,
   GameState,
@@ -63,6 +73,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   next = updateHibikiShield(next, dt, supportId, supportLevel);
   next = updateMyououGaruda(next, dt, supportId, supportLevel);
   next = updateUshimaruCounter(next, dt, supportId, supportLevel);
+  next = updateDeliSupportTurrets(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -100,6 +111,10 @@ export function isMyououSupport(supportId: SupportId | null): boolean {
 
 export function isUshimaruSupport(supportId: SupportId | null): boolean {
   return supportId === 'ushimaru';
+}
+
+export function isDeliSupport(supportId: SupportId | null): boolean {
+  return supportId === 'deli';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -329,6 +344,113 @@ function knockEnemyBack(state: GameState, enemy: Enemy): Enemy {
 
 function getUshimaruCounterCooldown(supportLevel: number): number {
   return Math.max(USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN, USHIMARU_SUPPORT_COUNTER_COOLDOWN - getLevelBonus(supportLevel) * 0.5);
+}
+
+function updateDeliSupportTurrets(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = Math.max(0, state.supportCooldowns.deliTurret - dt);
+  let nextId = state.nextId;
+  const effects = [...state.effects];
+  const bullets: SupportBullet[] = [];
+  let supportTurrets = state.supportTurrets
+    .map((turret) => ({
+      ...turret,
+      timer: turret.timer - dt,
+      fireCooldown: turret.fireCooldown - dt,
+    }))
+    .filter((turret) => turret.timer > 0);
+
+  if (!isDeliSupport(supportId)) {
+    return {
+      ...state,
+      supportTurrets: [],
+      supportCooldowns: {
+        ...state.supportCooldowns,
+        deliTurret: cooldown,
+      },
+    };
+  }
+
+  const tuning = getDeliSupportTurretTuning(supportLevel);
+
+  if (cooldown <= 0) {
+    const turret: DeliTurret = {
+      id: nextId++,
+      x: clamp(state.player.x - 32, 34, FIELD_WIDTH - 34),
+      y: clamp(state.player.y + 28, FIELD_HEIGHT * 0.46, FIELD_HEIGHT - 36),
+      timer: tuning.duration,
+      fireCooldown: 0.32,
+    };
+    supportTurrets = [...supportTurrets, turret].slice(-DELI_SUPPORT_TURRET_MAX_COUNT);
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: turret.x,
+      y: turret.y - 28,
+      text: 'MINI TURRET',
+      timer: 0.34,
+    });
+  }
+
+  supportTurrets = supportTurrets.map((turret) => {
+    if (turret.fireCooldown > 0) return turret;
+    const target = findDeliSupportTurretTarget(state, turret);
+    if (!target) return { ...turret, fireCooldown: tuning.fireInterval };
+
+    const direction = normalize({ x: target.x - turret.x, y: target.y - turret.y });
+    bullets.push({
+      id: nextId++,
+      x: turret.x,
+      y: turret.y - 10,
+      vx: direction.x * DELI_SUPPORT_TURRET_BULLET_SPEED,
+      vy: direction.y * DELI_SUPPORT_TURRET_BULLET_SPEED,
+      radius: DELI_SUPPORT_TURRET_BULLET_RADIUS,
+      damage: DELI_SUPPORT_TURRET_BULLET_DAMAGE,
+      life: DELI_SUPPORT_TURRET_BULLET_LIFE,
+    });
+    return { ...turret, fireCooldown: tuning.fireInterval };
+  });
+
+  return {
+    ...state,
+    supportBullets: [...state.supportBullets, ...bullets],
+    supportTurrets,
+    effects,
+    nextId,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      deliTurret: cooldown <= 0 ? tuning.deployInterval : cooldown,
+    },
+  };
+}
+
+function getDeliSupportTurretTuning(supportLevel: number) {
+  const levelBonus = getLevelBonus(supportLevel);
+  return {
+    deployInterval: Math.max(DELI_SUPPORT_TURRET_MIN_DEPLOY_INTERVAL, DELI_SUPPORT_TURRET_DEPLOY_INTERVAL - levelBonus * 0.5),
+    duration: DELI_SUPPORT_TURRET_DURATION + levelBonus * 0.5,
+    fireInterval: Math.max(1.0, DELI_SUPPORT_TURRET_FIRE_INTERVAL - levelBonus * 0.05),
+  };
+}
+
+function findDeliSupportTurretTarget(state: GameState, turret: DeliTurret): Vector | null {
+  let target: Vector | null = null;
+  let distance = Number.POSITIVE_INFINITY;
+
+  for (const enemy of state.enemies) {
+    const dy = turret.y - enemy.y;
+    if (dy < -36) continue;
+    const currentDistance = Math.hypot(enemy.x - turret.x, enemy.y - turret.y);
+    if (currentDistance < distance) {
+      distance = currentDistance;
+      target = { x: enemy.x, y: enemy.y };
+    }
+  }
+
+  if (!target && state.boss) {
+    target = { x: state.boss.x, y: state.boss.y + state.boss.radius * 0.28 };
+  }
+
+  return target ?? { x: turret.x, y: turret.y - 112 };
 }
 
 function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
@@ -738,6 +860,14 @@ function chooseDirection(): Vector {
   return {
     x: direction.x / length,
     y: direction.y / length,
+  };
+}
+
+function normalize(vector: Vector): Vector {
+  const length = Math.hypot(vector.x, vector.y) || 1;
+  return {
+    x: vector.x / length,
+    y: vector.y / length,
   };
 }
 

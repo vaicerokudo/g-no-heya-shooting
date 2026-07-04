@@ -83,6 +83,7 @@ export const createInitialGameState = (): GameState => ({
   playerArrows: [],
   supportBullets: [],
   turrets: [],
+  supportTurrets: [],
   supportShield: {
     cooldown: 1.8,
     timer: 0,
@@ -107,6 +108,7 @@ export const createInitialGameState = (): GameState => ({
   supportCooldowns: {
     playerGunfire: 0.8,
     ushimaruCounter: 1.2,
+    deliTurret: 1.6,
   },
   message: '',
 });

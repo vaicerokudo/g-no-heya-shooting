@@ -64,6 +64,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '接近してきた敵を牙突カウンターで迎撃し、通常敵を少し押し返す。',
     image: '/assets/tcg/support-card-ushimaru.webp',
   },
+  {
+    id: 'deli',
+    name: 'Deli',
+    role: '小型タレット設置',
+    description: '小型タレットを設置して戦線を支える援護サポート。',
+    effectDescription: '一定間隔で小型タレットを設置し、近い敵または前方へ控えめな自動射撃を行う。',
+    image: '/assets/tcg/support-card-deli.webp',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -73,6 +81,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   hibiki: '守りを固めたい時に頼れるカードだね。',
   myouou: 'おお、強い気配だ。これは大事にしなよ。',
   ushimaru: '前に出るなら、頼れる槍使いだね。',
+  deli: '設置で支えるなら、この子の工夫が光るよ。',
 };
 
 export function drawRandomSupport(): SupportCharacter {

@@ -2539,6 +2539,41 @@ h1 {
   animation: turretFlicker 180ms ease-in-out infinite alternate;
 }
 
+.support-deli-turret {
+  z-index: 6;
+  opacity: 0.94;
+  background:
+    url("/assets/tcg/weapon-prototype-turret.png") center / contain no-repeat,
+    linear-gradient(180deg, rgba(213, 232, 235, 0.9), rgba(58, 77, 86, 0.98) 70%, rgba(18, 24, 30, 0.98)),
+    radial-gradient(circle at 50% 72%, rgba(116, 213, 255, 0.42), transparent 66%);
+  box-shadow:
+    inset 0 1px 0 rgba(235, 255, 255, 0.58),
+    inset 0 -6px 9px rgba(17, 23, 28, 0.72),
+    0 0 0 2px rgba(149, 230, 255, 0.32);
+  filter:
+    drop-shadow(0 7px 7px rgba(0, 0, 0, 0.56))
+    drop-shadow(0 0 11px rgba(116, 213, 255, 0.38));
+}
+
+.support-deli-turret::before {
+  height: 42%;
+  background:
+    linear-gradient(90deg, rgba(231, 251, 255, 0.92), rgba(86, 113, 126, 0.96) 48%, rgba(32, 42, 50, 0.98)),
+    linear-gradient(180deg, rgba(116, 213, 255, 0.55), transparent);
+  box-shadow:
+    0 0 0 1px rgba(209, 247, 255, 0.48),
+    0 -3px 8px rgba(116, 213, 255, 0.36);
+}
+
+.support-deli-turret::after {
+  background:
+    radial-gradient(circle at 50% 38%, rgba(187, 248, 255, 0.72), rgba(65, 126, 146, 0.68) 42%, rgba(28, 35, 42, 0.9) 74%),
+    linear-gradient(180deg, rgba(75, 93, 101, 0.96), rgba(18, 24, 30, 0.98));
+  box-shadow:
+    0 0 10px rgba(116, 213, 255, 0.46),
+    0 6px 8px rgba(0, 0, 0, 0.4);
+}
+
 .garuda-sweep {
   z-index: 7;
   pointer-events: none;
