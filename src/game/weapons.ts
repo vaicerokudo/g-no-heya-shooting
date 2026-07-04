@@ -4,8 +4,12 @@ import {
   DELI_TURRET_DURATION,
   DELI_TURRET_FIRE_INTERVAL,
   DELI_TURRET_MAX_COUNT,
+  MOUNTAIN_BREAKER_VISIBLE_TIME,
   PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
+  ROCKEL_AXE_COOLDOWN,
+  ROCKEL_AXE_HALF_WIDTH,
+  ROCKEL_AXE_RANGE,
   SLASH_COOLDOWN,
   STARBREAKER_SHOCKWAVE_COOLDOWN,
   STARBREAKER_SHOCKWAVE_HALF_WIDTH,
@@ -42,7 +46,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -96,6 +100,17 @@ export type YabukoFmWeaponTuning = {
   starbreakerHalfWidth: number;
 };
 
+export type RockelWeaponTuning = {
+  axeCooldown: number;
+  axeRange: number;
+  axeHalfWidth: number;
+  hasMountainBreaker: boolean;
+  strongEvery: number;
+  strongRange: number;
+  strongHalfWidth: number;
+  strongVisibleTime: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
@@ -103,6 +118,7 @@ export const DEFAULT_PLAYER_WEAPON_ID = 'starter-pistols';
 export const DEFAULT_USHIMARU_WEAPON_ID = 'starter-spear';
 export const DEFAULT_DELI_WEAPON_ID = 'starter-tool-gun';
 export const DEFAULT_YABUKO_FM_WEAPON_ID = 'starter-war-hammer';
+export const DEFAULT_ROCKEL_WEAPON_ID = 'starter-double-axe';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -158,6 +174,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'FMやぶこ用。最初から使える基本の大槌。',
     effectDescription: '遅めの大槌重撃で前方範囲の敵を叩き、通常敵を少し押し返す。',
+  },
+  {
+    id: DEFAULT_ROCKEL_WEAPON_ID,
+    name: '支給両刃斧',
+    owner: 'ROCKEL',
+    type: '両刃斧',
+    rarity: 'common',
+    description: 'ROCKEL用。最初から使える基本の両刃斧。',
+    effectDescription: '前方を大きく横薙ぎし、広めの円弧で敵を巻き込む。',
   },
 ];
 
@@ -240,12 +265,12 @@ export const weaponCandidates: WeaponDefinition[] = [
   },
   {
     id: 'mountain-breaker-axe',
-    name: '破山の両刃斧',
+    name: '山砕きの斧',
     owner: 'ROCKEL',
     type: '両刃斧',
     rarity: 'epic',
-    description: 'ROCKEL用。広範囲を薙ぎ払う斧。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    description: 'ROCKEL用。広範囲を薙ぎ払う重い両刃斧。',
+    effectDescription: '一定回数ごとにMOUNTAIN BREAKを発動し、通常より大きい斧閃で敵を巻き込む。',
     imagePath: '/assets/tcg/weapon-mountain-breaker-axe.png',
   },
   {
@@ -335,6 +360,10 @@ export function getYabukoFmWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeap
   return [getDefaultOwnedWeapon(DEFAULT_YABUKO_FM_WEAPON_ID), ...ownedWeapons.filter((weapon) => isYabukoFmWeapon(weapon.id))];
 }
 
+export function getRockelWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_ROCKEL_WEAPON_ID), ...ownedWeapons.filter((weapon) => isRockelWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -363,6 +392,10 @@ export function getEquippedYabukoFmWeapon(equippedWeapons: EquippedWeaponsByChar
   return getWeaponById(equippedWeapons['yabuko-fm'] ?? DEFAULT_YABUKO_FM_WEAPON_ID) ?? defaultWeaponDefinitions[5];
 }
 
+export function getEquippedRockelWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.rockel ?? DEFAULT_ROCKEL_WEAPON_ID) ?? defaultWeaponDefinitions[6];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -373,6 +406,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'ushimaru') return getEquippedUshimaruWeapon(equippedWeapons);
   if (characterId === 'deli') return getEquippedDeliWeapon(equippedWeapons);
   if (characterId === 'yabuko-fm') return getEquippedYabukoFmWeapon(equippedWeapons);
+  if (characterId === 'rockel') return getEquippedRockelWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -385,7 +419,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_PLAYER_WEAPON_ID ||
     weaponId === DEFAULT_USHIMARU_WEAPON_ID ||
     weaponId === DEFAULT_DELI_WEAPON_ID ||
-    weaponId === DEFAULT_YABUKO_FM_WEAPON_ID
+    weaponId === DEFAULT_YABUKO_FM_WEAPON_ID ||
+    weaponId === DEFAULT_ROCKEL_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -404,6 +439,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'ushimaru') return getUshimaruWeaponOptions(ownedWeapons);
   if (characterId === 'deli') return getDeliWeaponOptions(ownedWeapons);
   if (characterId === 'yabuko-fm') return getYabukoFmWeaponOptions(ownedWeapons);
+  if (characterId === 'rockel') return getRockelWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -505,6 +541,23 @@ export function getYabukoFmWeaponTuning(weaponId: string | undefined, level = 1)
   };
 }
 
+export function getRockelWeaponTuning(weaponId: string | undefined, level = 1): RockelWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const levelBonus = normalizedLevel - 1;
+  const hasMountainBreaker = weaponId === 'mountain-breaker-axe';
+
+  return {
+    axeCooldown: ROCKEL_AXE_COOLDOWN,
+    axeRange: ROCKEL_AXE_RANGE,
+    axeHalfWidth: ROCKEL_AXE_HALF_WIDTH,
+    hasMountainBreaker,
+    strongEvery: normalizedLevel >= 3 ? 3 : 4,
+    strongRange: hasMountainBreaker ? ROCKEL_AXE_RANGE + 22 + levelBonus * 8 : ROCKEL_AXE_RANGE,
+    strongHalfWidth: hasMountainBreaker ? ROCKEL_AXE_HALF_WIDTH + 20 + levelBonus * 8 : ROCKEL_AXE_HALF_WIDTH,
+    strongVisibleTime: MOUNTAIN_BREAKER_VISIBLE_TIME,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -540,6 +593,10 @@ export function isDeliWeapon(weaponId: string): boolean {
 
 export function isYabukoFmWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_YABUKO_FM_WEAPON_ID || weaponId === 'starbreaker-hammer';
+}
+
+export function isRockelWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_ROCKEL_WEAPON_ID || weaponId === 'mountain-breaker-axe';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -100,6 +100,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '大槌重撃',
     image: '/assets/tcg/yabuko-fm-player.png',
   },
+  rockel: {
+    id: 'rockel',
+    name: 'ROCKEL',
+    role: '広範囲ぶん回し型',
+    description: '両刃斧の横薙ぎで、前方の敵をまとめて巻き込む。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '両刃斧',
+    attackType: 'axeBerserker',
+    attackLabel: '斧ぶん回し',
+    image: '/assets/tcg/rockel-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -117,7 +129,8 @@ export function isMainCharacterId(value: unknown): value is MainCharacterId {
     value === 'player' ||
     value === 'ushimaru' ||
     value === 'deli' ||
-    value === 'yabuko-fm'
+    value === 'yabuko-fm' ||
+    value === 'rockel'
   );
 }
 

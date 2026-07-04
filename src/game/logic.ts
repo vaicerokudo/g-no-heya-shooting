@@ -15,6 +15,8 @@ import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
   HEART_PICKUP_RADIUS,
+  MOUNTAIN_BREAKER_BOSS_DAMAGE,
+  MOUNTAIN_BREAKER_DAMAGE,
   MYOUOU_GARUDA_INITIAL_DELAY,
   PLAYER_LIMITS,
   PLAYER_MAX_HP,
@@ -33,6 +35,10 @@ import {
   ROKUDO_SHADOW_SLASH_HALF_WIDTH,
   ROKUDO_SHADOW_SLASH_RADIUS,
   ROKUDO_SHADOW_SLASH_VISIBLE_TIME,
+  ROCKEL_AXE_BOSS_DAMAGE,
+  ROCKEL_AXE_BOSS_RANGE,
+  ROCKEL_AXE_DAMAGE,
+  ROCKEL_AXE_VISIBLE_TIME,
   SLASH_BOSS_RADIUS,
   SLASH_DAMAGE,
   SLASH_HALF_WIDTH,
@@ -75,6 +81,7 @@ import {
   getDeliWeaponTuning,
   getPlayerWeaponTuning,
   getRokudoWeaponTuning,
+  getRockelWeaponTuning,
   getSochoWeaponTuning,
   getTsutsuWeaponTuning,
   getUshimaruWeaponTuning,
@@ -143,6 +150,8 @@ function createPlayer(): Player {
     turretDeployCooldown: 1.0,
     hammerBreakCooldown: 0,
     hammerBreakTimer: 0,
+    axeSwingCount: 0,
+    axeBreakTimer: 0,
   };
 }
 
@@ -183,6 +192,8 @@ export function updateGame(
     next = runAutoToolGun(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'yabuko-fm') {
     next = runAutoHammerBreaker(next, weaponId, weaponLevel, supportId, supportLevel);
+  } else if (mainCharacterId === 'rockel') {
+    next = runAutoAxeBerserker(next, weaponId, weaponLevel, supportId, supportLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -233,6 +244,7 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
     turretDeployCooldown: Math.max(0, player.turretDeployCooldown - dt),
     hammerBreakCooldown: Math.max(0, player.hammerBreakCooldown - dt),
     hammerBreakTimer: Math.max(0, player.hammerBreakTimer - dt),
+    axeBreakTimer: Math.max(0, player.axeBreakTimer - dt),
   };
 }
 
@@ -741,6 +753,79 @@ function runAutoHammerBreaker(
   };
 }
 
+function runAutoAxeBerserker(
+  state: GameState,
+  weaponId: string | undefined,
+  weaponLevel: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getRockelWeaponTuning(weaponId, weaponLevel);
+  const nextSwingCount = state.player.axeSwingCount + 1;
+  const shouldMountainBreak = weaponTuning.hasMountainBreaker && nextSwingCount % weaponTuning.strongEvery === 0;
+  let nextId = state.nextId;
+
+  const enemyHit = damageEnemiesWithAxeBerserker(
+    state.enemies,
+    state.coins,
+    state.hearts,
+    state.effects,
+    nextId,
+    state.player,
+    supportId,
+    supportLevel,
+    weaponTuning,
+    shouldMountainBreak,
+  );
+  nextId = enemyHit.nextId;
+  const bossHit = damageBossWithAxeBerserker(state.boss, state.player, nextId, weaponTuning, shouldMountainBreak);
+  nextId = bossHit.nextId;
+
+  const mountainBreakEffect: FloatingEffect[] = shouldMountainBreak
+    ? [
+        {
+          id: nextId++,
+          kind: 'support',
+          x: state.player.x,
+          y: state.player.y - 92,
+          text: 'MOUNTAIN BREAK',
+          timer: 0.44,
+        },
+      ]
+    : [];
+
+  return {
+    ...state,
+    enemies: enemyHit.enemies,
+    coins: enemyHit.coins,
+    hearts: enemyHit.hearts,
+    effects: [
+      ...enemyHit.effects,
+      ...(bossHit.effect ? [bossHit.effect] : []),
+      ...mountainBreakEffect,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 48,
+        text: 'AXE',
+        timer: 0.2,
+      },
+    ],
+    boss: bossHit.boss,
+    defeatedEnemies: state.defeatedEnemies + enemyHit.defeated,
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.axeCooldown,
+      slashTimer: ROCKEL_AXE_VISIBLE_TIME,
+      axeSwingCount: nextSwingCount,
+      axeBreakTimer: shouldMountainBreak ? weaponTuning.strongVisibleTime : 0,
+    },
+  };
+}
+
 function updateDeliTurrets(
   state: GameState,
   dt: number,
@@ -1175,6 +1260,74 @@ function damageBossWithHammerBreaker(
   };
 }
 
+function damageEnemiesWithAxeBerserker(
+  enemies: Enemy[],
+  coins: Coin[],
+  hearts: GameState['hearts'],
+  effects: FloatingEffect[],
+  nextId: number,
+  player: Player,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+  shouldMountainBreak: boolean,
+) {
+  let defeated = 0;
+  const nextCoins = [...coins];
+  const nextHearts = [...hearts];
+  const nextEffects = [...effects];
+  const nextEnemies: Enemy[] = [];
+
+  for (const enemy of enemies) {
+    const axeHit = isInAxeBerserker(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    const mountainBreakHit = shouldMountainBreak && isInMountainBreaker(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    if (!axeHit && !mountainBreakHit) {
+      nextEnemies.push(enemy);
+      continue;
+    }
+
+    const damage = mountainBreakHit ? MOUNTAIN_BREAKER_DAMAGE : ROCKEL_AXE_DAMAGE;
+    const hp = enemy.hp - damage;
+    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
+
+    if (hp <= 0) {
+      defeated += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
+    } else {
+      nextEnemies.push({ ...enemy, hp, hitTimer: 0.16 });
+    }
+  }
+
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
+}
+
+function damageBossWithAxeBerserker(
+  boss: Boss | null,
+  player: Player,
+  nextId: number,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+  shouldMountainBreak: boolean,
+) {
+  if (!boss) return { boss, nextId };
+  const axeHit = isInBossAxeBerserker(player, boss, weaponTuning);
+  const mountainBreakHit = shouldMountainBreak && isInBossMountainBreaker(player, boss, weaponTuning);
+  if (!axeHit && !mountainBreakHit) return { boss, nextId };
+  const damage = (axeHit ? ROCKEL_AXE_BOSS_DAMAGE : 0) + (mountainBreakHit ? MOUNTAIN_BREAKER_BOSS_DAMAGE : 0);
+
+  return {
+    boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
+    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.18, `-${damage}`),
+    nextId,
+  };
+}
+
 function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
@@ -1434,6 +1587,61 @@ function isInBossStarbreakerShockwave(
 ): boolean {
   const bossLowerBodyY = boss.y + boss.radius * 0.58;
   return isInStarbreakerShockwave(player, boss.x, bossLowerBodyY, boss.radius * 0.5, weaponTuning);
+}
+
+function isInAxeBerserker(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.22) return false;
+  if (dy > weaponTuning.axeRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.axeHalfWidth * (0.82 + Math.max(0, dy) / weaponTuning.axeRange * 0.3);
+  return Math.abs(dx) < widthAtPoint + radius * 0.72 && Math.hypot(dx * 0.64, dy) < weaponTuning.axeRange + radius;
+}
+
+function isInBossAxeBerserker(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.56;
+  const dy = player.y - bossLowerBodyY;
+  if (dy < -boss.radius * 0.22) return false;
+  if (dy > ROCKEL_AXE_BOSS_RANGE + boss.radius * 0.44) return false;
+
+  const widthAtPoint = weaponTuning.axeHalfWidth * (0.88 + Math.max(0, dy) / ROCKEL_AXE_BOSS_RANGE * 0.28);
+  return Math.abs(boss.x - player.x) < widthAtPoint + boss.radius * 0.58;
+}
+
+function isInMountainBreaker(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.24) return false;
+  if (dy > weaponTuning.strongRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.strongHalfWidth * (0.88 + Math.max(0, dy) / weaponTuning.strongRange * 0.38);
+  return Math.abs(dx) < widthAtPoint + radius * 0.75 && Math.hypot(dx * 0.58, dy) < weaponTuning.strongRange + radius;
+}
+
+function isInBossMountainBreaker(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.58;
+  return isInMountainBreaker(player, boss.x, bossLowerBodyY, boss.radius * 0.54, weaponTuning);
 }
 
 function knockEnemyFromPlayer(player: Player, enemy: Enemy, distance: number): Enemy {

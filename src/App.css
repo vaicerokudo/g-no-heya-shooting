@@ -1917,6 +1917,8 @@ h1 {
 .field.is-paused .spear-thrust-set,
 .field.is-paused .hammer-breaker,
 .field.is-paused .starbreaker-wave,
+.field.is-paused .axe-swing,
+.field.is-paused .mountain-breaker,
 .field.is-paused .deli-turret,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
@@ -1971,6 +1973,8 @@ h1 {
 .spear-thrust-set,
 .hammer-breaker,
 .starbreaker-wave,
+.axe-swing,
+.mountain-breaker,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -2682,6 +2686,87 @@ h1 {
   transform: translate(-50%, -50%);
 }
 
+.axe-swing {
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 14px rgba(255, 109, 45, 0.74))
+    drop-shadow(0 0 18px rgba(196, 207, 218, 0.36));
+  animation: axeSwingBurst 240ms ease-out both;
+}
+
+.axe-swing-arc,
+.axe-swing-steel,
+.mountain-breaker-arc,
+.mountain-breaker-shock {
+  position: absolute;
+  pointer-events: none;
+}
+
+.axe-swing-arc {
+  left: 3%;
+  right: 3%;
+  bottom: 4%;
+  height: 86%;
+  border-radius: 58% 58% 12% 12%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 109, 45, 0.5), rgba(255, 190, 102, 0.26) 42%, transparent 74%),
+    linear-gradient(102deg, transparent 0 20%, rgba(220, 230, 238, 0.84) 30%, rgba(255, 109, 45, 0.8) 44%, transparent 66% 100%);
+  border-top: 4px solid rgba(238, 231, 214, 0.78);
+  transform: skewX(-7deg);
+}
+
+.axe-swing-steel {
+  left: 2%;
+  right: 2%;
+  top: 28%;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(238, 231, 214, 0.96) 22%, rgba(255, 109, 45, 0.9) 58%, transparent);
+  box-shadow:
+    0 0 14px rgba(255, 109, 45, 0.72),
+    0 0 18px rgba(238, 231, 214, 0.48);
+  transform: rotate(-16deg);
+}
+
+.mountain-breaker {
+  z-index: 7;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 18px rgba(255, 127, 53, 0.88))
+    drop-shadow(0 0 28px rgba(255, 211, 122, 0.58));
+  animation: mountainBreakerBurst 340ms ease-out both;
+}
+
+.mountain-breaker-arc {
+  left: -4%;
+  right: -4%;
+  bottom: 2%;
+  height: 94%;
+  border-radius: 62% 62% 14% 14%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 127, 53, 0.64), rgba(255, 211, 122, 0.34) 46%, transparent 76%),
+    linear-gradient(98deg, transparent 0 16%, rgba(255, 246, 220, 0.96) 29%, rgba(255, 92, 35, 0.9) 48%, transparent 72% 100%);
+  border-top: 6px solid rgba(255, 246, 220, 0.92);
+  transform: skewX(-10deg);
+}
+
+.mountain-breaker-shock {
+  left: 50%;
+  bottom: 0;
+  width: 112%;
+  height: 52%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 85%, rgba(255, 246, 220, 0.44), transparent 28%),
+    linear-gradient(22deg, transparent 43%, rgba(255, 211, 122, 0.7) 48%, transparent 55%),
+    linear-gradient(-18deg, transparent 38%, rgba(255, 92, 35, 0.52) 43%, transparent 50%);
+  border-top: 2px solid rgba(255, 211, 122, 0.58);
+  transform: translateX(-50%);
+}
+
 .garuda-sweep {
   z-index: 7;
   pointer-events: none;
@@ -3332,6 +3417,36 @@ h1 {
   100% {
     opacity: 0;
     transform: translateY(-16px) scale(1.24) rotate(18deg);
+  }
+}
+
+@keyframes axeSwingBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.72) rotate(-12deg);
+  }
+  42% {
+    opacity: 1;
+    transform: translateY(0) scale(1.04) rotate(5deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scale(1.12) rotate(18deg);
+  }
+}
+
+@keyframes mountainBreakerBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.62) rotate(-16deg);
+  }
+  36% {
+    opacity: 1;
+    transform: translateY(0) scale(1.08) rotate(4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(1.2) rotate(20deg);
   }
 }
 

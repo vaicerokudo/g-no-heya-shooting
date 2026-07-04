@@ -153,6 +153,8 @@ export type Player = {
   turretDeployCooldown: number;
   hammerBreakCooldown: number;
   hammerBreakTimer: number;
+  axeSwingCount: number;
+  axeBreakTimer: number;
 };
 
 export type Vector = {

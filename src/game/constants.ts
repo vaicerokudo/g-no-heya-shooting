@@ -106,6 +106,17 @@ export const STARBREAKER_SHOCKWAVE_HALF_WIDTH = 34;
 export const STARBREAKER_SHOCKWAVE_DAMAGE = 1;
 export const STARBREAKER_SHOCKWAVE_BOSS_DAMAGE = 1;
 
+export const ROCKEL_AXE_COOLDOWN = 1.05;
+export const ROCKEL_AXE_VISIBLE_TIME = 0.24;
+export const ROCKEL_AXE_RANGE = 126;
+export const ROCKEL_AXE_BOSS_RANGE = 148;
+export const ROCKEL_AXE_HALF_WIDTH = 96;
+export const ROCKEL_AXE_DAMAGE = 1;
+export const ROCKEL_AXE_BOSS_DAMAGE = 1;
+export const MOUNTAIN_BREAKER_VISIBLE_TIME = 0.34;
+export const MOUNTAIN_BREAKER_DAMAGE = 1;
+export const MOUNTAIN_BREAKER_BOSS_DAMAGE = 1;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

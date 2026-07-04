@@ -4,9 +4,11 @@ import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
   PLAYER_LIMITS,
+  MOUNTAIN_BREAKER_VISIBLE_TIME,
   ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
   ROKUDO_SHADOW_SLASH_HALF_WIDTH,
   ROKUDO_SHADOW_SLASH_RADIUS,
+  ROCKEL_AXE_BOSS_RANGE,
   SLASH_BOSS_RADIUS,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
@@ -57,6 +59,7 @@ import {
   getEquippedWeaponForCharacter,
   getEquippedSochoWeapon,
   getOwnedWeaponLevel,
+  getRockelWeaponTuning,
   getSochoWeaponTuning,
   getUshimaruWeaponTuning,
   getWeaponOptionsForCharacter,
@@ -256,7 +259,8 @@ function App() {
     mainCharacter.id === 'player' ||
     mainCharacter.id === 'ushimaru' ||
     mainCharacter.id === 'deli' ||
-    mainCharacter.id === 'yabuko-fm'
+    mainCharacter.id === 'yabuko-fm' ||
+    mainCharacter.id === 'rockel'
       ? mainCharacter.id
       : 'socho';
   const equippedMainWeapon = useMemo(
@@ -291,6 +295,10 @@ function App() {
   );
   const yabukoFmWeaponTuning = useMemo(
     () => getYabukoFmWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
+    [equippedMainWeapon.id, equippedMainWeaponLevel],
+  );
+  const rockelWeaponTuning = useMemo(
+    () => getRockelWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
     [equippedMainWeapon.id, equippedMainWeaponLevel],
   );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
@@ -1358,6 +1366,35 @@ function App() {
               >
                 <span className="starbreaker-core" />
                 <span className="starbreaker-cracks" />
+              </div>
+            )}
+            {mainCharacter.id === 'rockel' && game.player.slashTimer > 0 && (
+              <div
+                className="axe-swing"
+                style={{
+                  left: game.player.x - rockelWeaponTuning.axeHalfWidth,
+                  top: game.player.y - (game.boss ? ROCKEL_AXE_BOSS_RANGE : rockelWeaponTuning.axeRange),
+                  width: rockelWeaponTuning.axeHalfWidth * 2,
+                  height: game.boss ? ROCKEL_AXE_BOSS_RANGE : rockelWeaponTuning.axeRange,
+                }}
+              >
+                <span className="axe-swing-arc" />
+                <span className="axe-swing-steel" />
+              </div>
+            )}
+            {mainCharacter.id === 'rockel' && game.player.axeBreakTimer > 0 && (
+              <div
+                className="mountain-breaker"
+                style={{
+                  left: game.player.x - rockelWeaponTuning.strongHalfWidth,
+                  top: game.player.y - rockelWeaponTuning.strongRange,
+                  width: rockelWeaponTuning.strongHalfWidth * 2,
+                  height: rockelWeaponTuning.strongRange,
+                  opacity: Math.min(1, game.player.axeBreakTimer / MOUNTAIN_BREAKER_VISIBLE_TIME),
+                }}
+              >
+                <span className="mountain-breaker-arc" />
+                <span className="mountain-breaker-shock" />
               </div>
             )}
 
