@@ -1410,11 +1410,9 @@ function App() {
 
           {game.boss && (
             <div className="boss-hud">
-              <div
-                className="boss-hud-image"
-                aria-hidden="true"
-                style={{ backgroundImage: `url(${bossHudImage})` }}
-              />
+              <div className="boss-portrait-frame" aria-hidden="true">
+                <img className="boss-portrait-image" src={bossHudImage} alt="" />
+              </div>
               <div className="boss-hud-status">
                 <span>{game.boss.name}</span>
                 <div className="meter boss-meter">
