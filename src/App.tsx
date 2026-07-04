@@ -944,7 +944,8 @@ function App() {
             </div>
             <div className={`forge-anvil forge-image-stage ${isForging ? 'is-forging' : ''}`} aria-hidden="true">
               <img className="forge-anvil-base" src="/assets/tcg/forge-anvil-base.png" alt="" />
-              <img className="forge-hammer" src="/assets/tcg/forge-hammer.png" alt="" />
+              <img className="forge-hammer forge-hammer-idle" src="/assets/tcg/forge-hammer.png" alt="" />
+              <img className="forge-hammer forge-hammer-strike" src="/assets/tcg/forge-hammer-strike.png" alt="" />
               <span className="forge-heat-core" />
               <span className="forge-glow" />
               <span className="forge-flash" />

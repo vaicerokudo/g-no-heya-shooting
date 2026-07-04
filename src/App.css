@@ -735,14 +735,27 @@ button {
   max-height: 62%;
   object-fit: contain;
   object-position: center;
-  transform: translate(-50%, -5%) rotate(-18deg);
   filter:
     drop-shadow(0 14px 12px rgba(0, 0, 0, 0.5))
     drop-shadow(0 0 10px rgba(255, 209, 102, 0.18));
 }
 
-.forge-anvil.is-forging .forge-hammer {
-  animation: hammerStrike 360ms ease-in-out 3;
+.forge-hammer-idle {
+  opacity: 1;
+  transform: translate(-50%, -5%) rotate(-12deg);
+}
+
+.forge-hammer-strike {
+  opacity: 0;
+  transform: translate(-50%, 21%) rotate(2deg) scale(1.02);
+}
+
+.forge-anvil.is-forging .forge-hammer-idle {
+  animation: hammerIdleStrike 360ms ease-in-out 3;
+}
+
+.forge-anvil.is-forging .forge-hammer-strike {
+  animation: hammerStrikeFrame 360ms ease-in-out 3;
 }
 
 .forge-spark {
@@ -1086,19 +1099,38 @@ button {
   font-weight: 900;
 }
 
-@keyframes hammerStrike {
+@keyframes hammerIdleStrike {
   0%,
   100% {
-    transform: translate(-50%, -8%) rotate(-20deg);
+    opacity: 1;
+    transform: translate(-50%, -8%) rotate(-12deg);
   }
-  34% {
-    transform: translate(-50%, 24%) rotate(8deg) scale(1.03);
+  26% {
+    opacity: 1;
+    transform: translate(-50%, -2%) rotate(-6deg) scale(1.02);
   }
-  44% {
-    transform: translate(-50%, 29%) rotate(10deg) scale(0.98);
+  35%,
+  50% {
+    opacity: 0;
+    transform: translate(-50%, 18%) rotate(1deg) scale(0.98);
   }
   68% {
-    transform: translate(-50%, -1%) rotate(-15deg);
+    opacity: 1;
+    transform: translate(-50%, -2%) rotate(-10deg);
+  }
+}
+
+@keyframes hammerStrikeFrame {
+  0%,
+  28%,
+  64%,
+  100% {
+    opacity: 0;
+  }
+  35%,
+  50% {
+    opacity: 1;
+    transform: translate(-50%, 21%) rotate(2deg) scale(1.02);
   }
 }
 
