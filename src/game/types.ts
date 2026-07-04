@@ -87,6 +87,14 @@ export type SupportBullet = {
   life: number;
 };
 
+export type DeliTurret = {
+  id: number;
+  x: number;
+  y: number;
+  timer: number;
+  fireCooldown: number;
+};
+
 export type PlayerArrow = {
   id: number;
   x: number;
@@ -97,7 +105,7 @@ export type PlayerArrow = {
   damage: number;
   bossDamage: number;
   life: number;
-  kind?: 'arrow' | 'gun' | 'spear';
+  kind?: 'arrow' | 'gun' | 'spear' | 'turret';
   piercing?: boolean;
   hitEnemyIds?: number[];
   hasHitBoss?: boolean;
@@ -142,6 +150,7 @@ export type Player = {
   invincibleTimer: number;
   nextGunHand: 'left' | 'right';
   spearThrowCooldown: number;
+  turretDeployCooldown: number;
 };
 
 export type Vector = {
@@ -158,6 +167,7 @@ export type GameState = {
   bullets: EnemyBullet[];
   playerArrows: PlayerArrow[];
   supportBullets: SupportBullet[];
+  turrets: DeliTurret[];
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;
   effects: FloatingEffect[];

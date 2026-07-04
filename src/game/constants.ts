@@ -76,6 +76,20 @@ export const USHIMARU_SUPPORT_COUNTER_KNOCKBACK = 46;
 export const USHIMARU_SUPPORT_COUNTER_COOLDOWN = 8.0;
 export const USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN = 6.0;
 
+export const DELI_TOOL_GUN_COOLDOWN = 0.82;
+export const DELI_TOOL_GUN_DAMAGE = 1;
+export const DELI_TOOL_GUN_BOSS_DAMAGE = 1;
+export const DELI_TOOL_GUN_SPEED = 470;
+export const DELI_TOOL_GUN_RADIUS = 4;
+export const DELI_TOOL_GUN_LIFE = 1.55;
+export const DELI_TURRET_DEPLOY_INTERVAL = 8.0;
+export const DELI_TURRET_DURATION = 5.0;
+export const DELI_TURRET_FIRE_INTERVAL = 1.0;
+export const DELI_TURRET_BULLET_SPEED = 360;
+export const DELI_TURRET_BULLET_RADIUS = 4;
+export const DELI_TURRET_BULLET_LIFE = 1.35;
+export const DELI_TURRET_MAX_COUNT = 1;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

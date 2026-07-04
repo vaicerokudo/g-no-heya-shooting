@@ -1903,6 +1903,7 @@ h1 {
 .field.is-paused .slash-wave,
 .field.is-paused .shadow-slash,
 .field.is-paused .spear-thrust-set,
+.field.is-paused .deli-turret,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
 .field.is-paused .hibiki-shield,
@@ -1946,6 +1947,7 @@ h1 {
 .enemy-bullet,
 .support-bullet,
 .player-arrow,
+.deli-turret,
 .hibiki-shield,
 .garuda-sweep,
 .boss,
@@ -2458,6 +2460,41 @@ h1 {
   width: 4px;
   height: 24px;
   background: linear-gradient(180deg, rgba(255, 225, 163, 0.7), transparent);
+}
+
+.turret-shot {
+  background:
+    radial-gradient(circle at 42% 30%, #ffffff, rgba(255, 225, 163, 0.96) 40%, rgba(247, 133, 43, 0.5) 72%, transparent),
+    #ffd166;
+  box-shadow:
+    0 0 0 1px rgba(255, 247, 210, 0.72),
+    0 0 10px rgba(255, 209, 102, 0.88),
+    0 0 16px rgba(255, 119, 48, 0.32);
+}
+
+.turret-shot::after {
+  bottom: -12px;
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(180deg, rgba(255, 225, 163, 0.64), transparent);
+}
+
+.deli-turret {
+  z-index: 5;
+  border-radius: 10px 10px 12px 12px;
+  background:
+    url("/assets/tcg/weapon-prototype-turret.png") center / contain no-repeat,
+    radial-gradient(circle at 50% 70%, rgba(255, 209, 102, 0.28), transparent 62%);
+  filter:
+    drop-shadow(0 6px 7px rgba(0, 0, 0, 0.58))
+    drop-shadow(0 0 10px rgba(255, 209, 102, 0.36));
+  animation: turretPulse 1s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.deli-turret.is-fading {
+  opacity: 0.58;
+  animation: turretFlicker 180ms ease-in-out infinite alternate;
 }
 
 .garuda-sweep {
@@ -3080,6 +3117,24 @@ h1 {
     opacity: 0;
     transform: translateX(-50%) scaleY(1);
     transform-origin: bottom;
+  }
+}
+
+@keyframes turretPulse {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes turretFlicker {
+  from {
+    opacity: 0.44;
+  }
+  to {
+    opacity: 0.72;
   }
 }
 

@@ -248,7 +248,11 @@ function App() {
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
   const activeWeaponCharacterId: CharacterId =
-    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' || mainCharacter.id === 'player' || mainCharacter.id === 'ushimaru'
+    mainCharacter.id === 'tsutsu' ||
+    mainCharacter.id === 'rokudo' ||
+    mainCharacter.id === 'player' ||
+    mainCharacter.id === 'ushimaru' ||
+    mainCharacter.id === 'deli'
       ? mainCharacter.id
       : 'socho';
   const equippedMainWeapon = useMemo(
@@ -1361,10 +1365,20 @@ function App() {
               <div key={bullet.id} className="support-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2.7)} />
             ))}
 
+            {game.turrets.map((turret) => (
+              <div
+                key={turret.id}
+                className={`deli-turret ${turret.timer < 1.2 ? 'is-fading' : ''}`}
+                style={place(turret.x, turret.y, 34)}
+              />
+            ))}
+
             {game.playerArrows.map((arrow) => (
               <div
                 key={arrow.id}
-                className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''} ${arrow.kind === 'spear' ? 'player-spear' : ''}`}
+                className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''} ${arrow.kind === 'spear' ? 'player-spear' : ''} ${
+                  arrow.kind === 'turret' ? 'turret-shot' : ''
+                }`}
                 style={place(arrow.x, arrow.y, arrow.radius * 2.2, arrow.kind === 'gun' ? 18 : arrow.kind === 'spear' ? 42 : 34)}
               />
             ))}

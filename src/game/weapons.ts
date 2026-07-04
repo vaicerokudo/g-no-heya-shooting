@@ -1,4 +1,9 @@
 import {
+  DELI_TOOL_GUN_COOLDOWN,
+  DELI_TURRET_DEPLOY_INTERVAL,
+  DELI_TURRET_DURATION,
+  DELI_TURRET_FIRE_INTERVAL,
+  DELI_TURRET_MAX_COUNT,
   PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
   SLASH_COOLDOWN,
@@ -30,7 +35,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -66,11 +71,20 @@ export type UshimaruWeaponTuning = {
   thrownSpearSpeed: number;
 };
 
+export type DeliWeaponTuning = {
+  toolGunCooldown: number;
+  turretDeployInterval: number;
+  turretDuration: number;
+  turretFireInterval: number;
+  turretMaxCount: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
 export const DEFAULT_PLAYER_WEAPON_ID = 'starter-pistols';
 export const DEFAULT_USHIMARU_WEAPON_ID = 'starter-spear';
+export const DEFAULT_DELI_WEAPON_ID = 'starter-tool-gun';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -108,6 +122,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'うしまる用。最初から使える基本の槍。',
     effectDescription: '正面へ直線突きを放つ。',
+  },
+  {
+    id: DEFAULT_DELI_WEAPON_ID,
+    name: '支給工具銃',
+    owner: 'Deli',
+    type: '工具銃',
+    rarity: 'common',
+    description: 'Deli用。最初から使える工具銃。',
+    effectDescription: '単発拳銃と簡易タレットで戦う。',
   },
 ];
 
@@ -162,10 +185,10 @@ export const weaponCandidates: WeaponDefinition[] = [
     id: 'prototype-turret-unit',
     name: '試作砲台ユニット',
     owner: 'Deli',
-    type: '砲台',
+    type: '砲台ユニット',
     rarity: 'common',
     description: 'Deli用。設置砲撃用の試作兵装。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    effectDescription: 'Deliのタレット持続時間と射撃間隔を強化する。Lv5で同時設置数が2台になる。',
     imagePath: '/assets/tcg/weapon-prototype-turret.png',
   },
   {
@@ -267,6 +290,10 @@ export function getUshimaruWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeap
   return [getDefaultOwnedWeapon(DEFAULT_USHIMARU_WEAPON_ID), ...ownedWeapons.filter((weapon) => isUshimaruWeapon(weapon.id))];
 }
 
+export function getDeliWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_DELI_WEAPON_ID), ...ownedWeapons.filter((weapon) => isDeliWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -287,6 +314,10 @@ export function getEquippedUshimaruWeapon(equippedWeapons: EquippedWeaponsByChar
   return getWeaponById(equippedWeapons.ushimaru ?? DEFAULT_USHIMARU_WEAPON_ID) ?? defaultWeaponDefinitions[3];
 }
 
+export function getEquippedDeliWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.deli ?? DEFAULT_DELI_WEAPON_ID) ?? defaultWeaponDefinitions[4];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -295,6 +326,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'rokudo') return getEquippedRokudoWeapon(equippedWeapons);
   if (characterId === 'player') return getEquippedPlayerWeapon(equippedWeapons);
   if (characterId === 'ushimaru') return getEquippedUshimaruWeapon(equippedWeapons);
+  if (characterId === 'deli') return getEquippedDeliWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -305,7 +337,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_TSUTSU_WEAPON_ID ||
     weaponId === DEFAULT_ROKUDO_WEAPON_ID ||
     weaponId === DEFAULT_PLAYER_WEAPON_ID ||
-    weaponId === DEFAULT_USHIMARU_WEAPON_ID
+    weaponId === DEFAULT_USHIMARU_WEAPON_ID ||
+    weaponId === DEFAULT_DELI_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -322,6 +355,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'rokudo') return getRokudoWeaponOptions(ownedWeapons);
   if (characterId === 'player') return getPlayerWeaponOptions(ownedWeapons);
   if (characterId === 'ushimaru') return getUshimaruWeaponOptions(ownedWeapons);
+  if (characterId === 'deli') return getDeliWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -391,6 +425,20 @@ export function getUshimaruWeaponTuning(weaponId: string | undefined, level = 1)
   };
 }
 
+export function getDeliWeaponTuning(weaponId: string | undefined, level = 1): DeliWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const isPrototypeTurret = weaponId === 'prototype-turret-unit';
+  const levelBonus = normalizedLevel - 1;
+
+  return {
+    toolGunCooldown: DELI_TOOL_GUN_COOLDOWN,
+    turretDeployInterval: DELI_TURRET_DEPLOY_INTERVAL,
+    turretDuration: isPrototypeTurret ? 6 + levelBonus * 0.5 : DELI_TURRET_DURATION,
+    turretFireInterval: isPrototypeTurret ? Math.max(0.75, 0.95 - levelBonus * 0.05) : DELI_TURRET_FIRE_INTERVAL,
+    turretMaxCount: isPrototypeTurret && normalizedLevel >= 5 ? 2 : DELI_TURRET_MAX_COUNT,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -418,6 +466,10 @@ export function isPlayerWeapon(weaponId: string): boolean {
 
 export function isUshimaruWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_USHIMARU_WEAPON_ID || weaponId === 'fang-thrust-spear';
+}
+
+export function isDeliWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_DELI_WEAPON_ID || weaponId === 'prototype-turret-unit';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

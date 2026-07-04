@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -76,6 +76,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '槍突き',
     image: '/assets/tcg/ushimaru-player.png',
   },
+  deli: {
+    id: 'deli',
+    name: 'Deli',
+    role: '設置型技工士',
+    description: '単発拳銃と設置タレットで敵を迎え撃つ。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '砲台ユニット',
+    attackType: 'turretEngineer',
+    attackLabel: '工具銃 + タレット',
+    image: '/assets/tcg/deli-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -86,7 +98,7 @@ export function getMainCharacter(characterId: MainCharacterId = DEFAULT_MAIN_CHA
 }
 
 export function isMainCharacterId(value: unknown): value is MainCharacterId {
-  return value === 'socho' || value === 'tsutsu' || value === 'rokudo' || value === 'player' || value === 'ushimaru';
+  return value === 'socho' || value === 'tsutsu' || value === 'rokudo' || value === 'player' || value === 'ushimaru' || value === 'deli';
 }
 
 export function isMainCharacterAvailable(characterId: MainCharacterId): boolean {

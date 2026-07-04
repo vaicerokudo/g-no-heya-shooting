@@ -4,6 +4,14 @@ import {
   BOSS_APPEAR_TIME,
   BOSS_Y,
   COIN_MAGNET_SPEED,
+  DELI_TOOL_GUN_BOSS_DAMAGE,
+  DELI_TOOL_GUN_DAMAGE,
+  DELI_TOOL_GUN_LIFE,
+  DELI_TOOL_GUN_RADIUS,
+  DELI_TOOL_GUN_SPEED,
+  DELI_TURRET_BULLET_LIFE,
+  DELI_TURRET_BULLET_RADIUS,
+  DELI_TURRET_BULLET_SPEED,
   FIELD_HEIGHT,
   FIELD_WIDTH,
   HEART_PICKUP_RADIUS,
@@ -54,8 +62,9 @@ import {
   is7171Support,
   updateSupportEffects,
 } from './support';
-import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
+import type { Boss, Coin, DeliTurret, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
 import {
+  getDeliWeaponTuning,
   getPlayerWeaponTuning,
   getRokudoWeaponTuning,
   getSochoWeaponTuning,
@@ -73,6 +82,7 @@ export const createInitialGameState = (): GameState => ({
   bullets: [],
   playerArrows: [],
   supportBullets: [],
+  turrets: [],
   supportShield: {
     cooldown: 1.8,
     timer: 0,
@@ -119,6 +129,7 @@ function createPlayer(): Player {
     invincibleTimer: 0,
     nextGunHand: 'left',
     spearThrowCooldown: 0,
+    turretDeployCooldown: 1.0,
   };
 }
 
@@ -155,9 +166,12 @@ export function updateGame(
     next = runAutoGunfire(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'ushimaru') {
     next = runAutoSpearThrust(next, weaponId, weaponLevel, supportId, supportLevel);
+  } else if (mainCharacterId === 'deli') {
+    next = runAutoToolGun(next, weaponId, weaponLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
+  next = updateDeliTurrets(next, dt, mainCharacterId, weaponId, weaponLevel);
   next = updatePlayerArrows(next, dt, supportId, supportLevel);
   next = updateCoins(next, dt, supportId, supportLevel);
   next = collectCoins(next, supportId, supportLevel);
@@ -201,6 +215,7 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
     slashTimer: Math.max(0, player.slashTimer - dt),
     invincibleTimer: Math.max(0, player.invincibleTimer - dt),
     spearThrowCooldown: Math.max(0, player.spearThrowCooldown - dt),
+    turretDeployCooldown: Math.max(0, player.turretDeployCooldown - dt),
   };
 }
 
@@ -508,6 +523,46 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
   };
 }
 
+function runAutoToolGun(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getDeliWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const shot: PlayerArrow = {
+    id: nextId++,
+    x: state.player.x,
+    y: state.player.y - 22,
+    vx: 0,
+    vy: -DELI_TOOL_GUN_SPEED,
+    radius: DELI_TOOL_GUN_RADIUS,
+    damage: DELI_TOOL_GUN_DAMAGE,
+    bossDamage: DELI_TOOL_GUN_BOSS_DAMAGE,
+    life: DELI_TOOL_GUN_LIFE,
+    kind: 'gun',
+  };
+
+  return {
+    ...state,
+    playerArrows: [...state.playerArrows, shot],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 34,
+        text: 'TOOL',
+        timer: 0.16,
+      },
+    ],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.toolGunCooldown,
+      slashTimer: 0,
+    },
+  };
+}
+
 function runAutoSpearThrust(
   state: GameState,
   weaponId: string | undefined,
@@ -595,6 +650,105 @@ function runAutoSpearThrust(
       spearThrowCooldown: shouldThrowPiercingSpear ? USHIMARU_PIERCING_SPEAR_COOLDOWN : state.player.spearThrowCooldown,
     },
   };
+}
+
+function updateDeliTurrets(
+  state: GameState,
+  dt: number,
+  mainCharacterId: MainCharacterId,
+  weaponId: string | undefined,
+  weaponLevel: number,
+): GameState {
+  if (mainCharacterId !== 'deli') {
+    return state.turrets.length > 0 ? { ...state, turrets: [] } : state;
+  }
+
+  const weaponTuning = getDeliWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const effects = [...state.effects];
+  const bullets: PlayerArrow[] = [];
+  let turrets = state.turrets
+    .map((turret) => ({
+      ...turret,
+      timer: turret.timer - dt,
+      fireCooldown: turret.fireCooldown - dt,
+    }))
+    .filter((turret) => turret.timer > 0);
+
+  if (state.player.turretDeployCooldown <= 0) {
+    const turret: DeliTurret = {
+      id: nextId++,
+      x: clamp(state.player.x + 28, 36, FIELD_WIDTH - 36),
+      y: clamp(state.player.y + 26, FIELD_HEIGHT * 0.46, FIELD_HEIGHT - 36),
+      timer: weaponTuning.turretDuration,
+      fireCooldown: 0.2,
+    };
+    turrets = [...turrets, turret].slice(-weaponTuning.turretMaxCount);
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: turret.x,
+      y: turret.y - 28,
+      text: 'TURRET',
+      timer: 0.34,
+    });
+  }
+
+  turrets = turrets.map((turret) => {
+    if (turret.fireCooldown > 0) return turret;
+    const target = findTurretTarget(state, turret);
+    if (!target) {
+      return { ...turret, fireCooldown: weaponTuning.turretFireInterval };
+    }
+
+    const direction = normalize({ x: target.x - turret.x, y: target.y - turret.y });
+    bullets.push({
+      id: nextId++,
+      x: turret.x,
+      y: turret.y - 12,
+      vx: direction.x * DELI_TURRET_BULLET_SPEED,
+      vy: direction.y * DELI_TURRET_BULLET_SPEED,
+      radius: DELI_TURRET_BULLET_RADIUS,
+      damage: 1,
+      bossDamage: 1,
+      life: DELI_TURRET_BULLET_LIFE,
+      kind: 'turret',
+    });
+    return { ...turret, fireCooldown: weaponTuning.turretFireInterval };
+  });
+
+  return {
+    ...state,
+    turrets,
+    playerArrows: [...state.playerArrows, ...bullets],
+    effects,
+    nextId,
+    player: {
+      ...state.player,
+      turretDeployCooldown: state.player.turretDeployCooldown <= 0 ? weaponTuning.turretDeployInterval : state.player.turretDeployCooldown,
+    },
+  };
+}
+
+function findTurretTarget(state: GameState, turret: DeliTurret): Vector | null {
+  let target: Vector | null = null;
+  let distance = Number.POSITIVE_INFINITY;
+
+  for (const enemy of state.enemies) {
+    const dy = turret.y - enemy.y;
+    if (dy < -32) continue;
+    const currentDistance = Math.hypot(enemy.x - turret.x, enemy.y - turret.y);
+    if (currentDistance < distance) {
+      distance = currentDistance;
+      target = { x: enemy.x, y: enemy.y };
+    }
+  }
+
+  if (!target && state.boss) {
+    target = { x: state.boss.x, y: state.boss.y + state.boss.radius * 0.28 };
+  }
+
+  return target ?? { x: turret.x, y: turret.y - 120 };
 }
 
 function updatePlayerArrows(
