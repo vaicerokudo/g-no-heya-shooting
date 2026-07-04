@@ -141,6 +141,7 @@ export type Player = {
   slashTimer: number;
   invincibleTimer: number;
   nextGunHand: 'left' | 'right';
+  spearThrowCooldown: number;
 };
 
 export type Vector = {

@@ -68,6 +68,7 @@ export const USHIMARU_SPEAR_BOSS_DAMAGE = 1;
 export const USHIMARU_THROWN_SPEAR_SPEED = 500;
 export const USHIMARU_THROWN_SPEAR_RADIUS = 6;
 export const USHIMARU_THROWN_SPEAR_LIFE = 1.55;
+export const USHIMARU_PIERCING_SPEAR_COOLDOWN = 6.0;
 
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;

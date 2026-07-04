@@ -39,6 +39,7 @@ import {
   USHIMARU_SPEAR_BOSS_RANGE,
   USHIMARU_SPEAR_DAMAGE,
   USHIMARU_SPEAR_VISIBLE_TIME,
+  USHIMARU_PIERCING_SPEAR_COOLDOWN,
   USHIMARU_THROWN_SPEAR_LIFE,
 } from './constants';
 import type { MainCharacterId } from './characters';
@@ -116,6 +117,7 @@ function createPlayer(): Player {
     slashTimer: 0,
     invincibleTimer: 0,
     nextGunHand: 'left',
+    spearThrowCooldown: 0,
   };
 }
 
@@ -197,6 +199,7 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
     attackCooldown: Math.max(0, player.attackCooldown - dt),
     slashTimer: Math.max(0, player.slashTimer - dt),
     invincibleTimer: Math.max(0, player.invincibleTimer - dt),
+    spearThrowCooldown: Math.max(0, player.spearThrowCooldown - dt),
   };
 }
 
@@ -529,7 +532,8 @@ function runAutoSpearThrust(
   const bossHit = damageBossWithSpearThrust(state.boss, state.player, nextId, weaponTuning);
   nextId = bossHit.nextId;
 
-  const thrownSpear: PlayerArrow[] = weaponTuning.hasPiercingThrow
+  const shouldThrowPiercingSpear = weaponTuning.hasPiercingThrow && state.player.spearThrowCooldown <= 0;
+  const thrownSpear: PlayerArrow[] = shouldThrowPiercingSpear
     ? [
         {
           id: nextId++,
@@ -548,6 +552,18 @@ function runAutoSpearThrust(
         },
       ]
     : [];
+  const spearThrowEffect: FloatingEffect[] = shouldThrowPiercingSpear
+    ? [
+        {
+          id: nextId++,
+          kind: 'support',
+          x: state.player.x,
+          y: state.player.y - 72,
+          text: 'GATOTSU',
+          timer: 0.26,
+        },
+      ]
+    : [];
 
   return {
     ...state,
@@ -557,6 +573,7 @@ function runAutoSpearThrust(
     effects: [
       ...enemyHit.effects,
       ...(bossHit.effect ? [bossHit.effect] : []),
+      ...spearThrowEffect,
       {
         id: nextId++,
         kind: 'support',
@@ -574,6 +591,7 @@ function runAutoSpearThrust(
       ...state.player,
       attackCooldown: weaponTuning.spearCooldown,
       slashTimer: USHIMARU_SPEAR_VISIBLE_TIME,
+      spearThrowCooldown: shouldThrowPiercingSpear ? USHIMARU_PIERCING_SPEAR_COOLDOWN : state.player.spearThrowCooldown,
     },
   };
 }
