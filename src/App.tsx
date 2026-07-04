@@ -89,8 +89,28 @@ type ForgeResult = {
   sagLine: string;
 };
 
-type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate';
+type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate' | 'plaza';
 type GuildHotspotId = 'party' | 'summon' | 'equipment' | 'weapons' | 'map';
+
+const EXTERNAL_LINKS = {
+  gNoHeyaYouTube: 'https://www.youtube.com/',
+  rokudoLineStamps: 'https://store.line.me/stickershop/home/general',
+} as const;
+
+const trainingCharacters: Array<{
+  id: MainCharacterId;
+  name: string;
+  summary: string;
+}> = [
+  { id: 'socho', name: '\u7dcf\u9577', summary: '\u8fd1\u63a5\u7bc4\u56f2\u30fb\u5b89\u5b9a\u578b' },
+  { id: 'tsutsu', name: '\u3064\u3064', summary: '\u9060\u8ddd\u96e2\u901f\u5c04\u30fb\u5b89\u5168\u578b' },
+  { id: 'rokudo', name: 'ROKUDO', summary: '\u9ad8\u901f\u8fd1\u63a5\u30fb\u624b\u6570\u578b' },
+  { id: 'player', name: 'Player', summary: '\u4e8c\u4e01\u62f3\u9283\u30fb\u30c6\u30af\u30cb\u30ab\u30eb\u578b' },
+  { id: 'ushimaru', name: '\u3046\u3057\u307e\u308b', summary: '\u76f4\u7dda\u8cab\u901a\u30fb\u4e00\u70b9\u7a81\u7834\u578b' },
+  { id: 'deli', name: 'Deli', summary: '\u8a2d\u7f6e\u578b\u6280\u5de5\u58eb' },
+  { id: 'yabuko-fm', name: 'FM\u3084\u3076\u3053', summary: '\u91cd\u6483\u30fb\u7bc4\u56f2\u5236\u5727\u578b' },
+  { id: 'rockel', name: 'ROCKEL', summary: '\u4e21\u5203\u65a7\u30fb\u5e83\u7bc4\u56f2\u3076\u3093\u56de\u3057\u578b' },
+];
 
 const astoriaFacilities: Array<{
   id: MapFacilityId;
@@ -98,10 +118,11 @@ const astoriaFacilities: Array<{
   xPercent: number;
   yPercent: number;
 }> = [
-  { id: 'guildHouse', label: 'Gの部屋', xPercent: 75, yPercent: 22 },
-  { id: 'forge', label: '鍛冶屋', xPercent: 13, yPercent: 31 },
-  { id: 'shop', label: '雑貨屋', xPercent: 13, yPercent: 47 },
-  { id: 'gate', label: '門', xPercent: 50, yPercent: 76 },
+  { id: 'guildHouse', label: 'G\u306e\u90e8\u5c4b', xPercent: 75, yPercent: 22 },
+  { id: 'forge', label: '\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b', xPercent: 13, yPercent: 31 },
+  { id: 'shop', label: '\u96d1\u8ca8\u5c4b', xPercent: 13, yPercent: 47 },
+  { id: 'plaza', label: '\u30a2\u30b9\u30c8\u30ea\u30a2\u5e83\u5834', xPercent: 50, yPercent: 52 },
+  { id: 'gate', label: '\u51fa\u6483\u9580', xPercent: 50, yPercent: 76 },
 ];
 
 const guildLobbyHotspots: Array<{
@@ -420,6 +441,14 @@ function App() {
     setGame((current) => ({ ...current, status: 'shopSupportList' }));
   };
 
+  const goToAstoriaPlaza = () => {
+    setGame((current) => ({ ...current, status: 'astoriaPlaza' }));
+  };
+
+  const goToTrainingGround = () => {
+    setGame((current) => ({ ...current, status: 'trainingGround' }));
+  };
+
   const goToGate = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
@@ -432,6 +461,7 @@ function App() {
     if (facilityId === 'guildHouse') goToPrepare();
     if (facilityId === 'forge') goToForge();
     if (facilityId === 'shop') goToShop();
+    if (facilityId === 'plaza') goToAstoriaPlaza();
     if (facilityId === 'gate') goToGate();
   };
 
@@ -667,6 +697,86 @@ function App() {
                 <span className="map-label">{facility.label}</span>
               </button>
             ))}
+          </div>
+        </section>
+      )}
+
+      {game.status === 'astoriaPlaza' && (
+        <section className="menu-screen facility-screen plaza-screen">
+          <div className="facility-header-row">
+            <div>
+              <p className="eyebrow">ASTORIA PLAZA</p>
+              <h1>{'\u30a2\u30b9\u30c8\u30ea\u30a2\u5e83\u5834'}</h1>
+              <p>{'\u8857\u306e\u6848\u5185\u677f\u3068\u8a13\u7df4\u5834\u304c\u3042\u308b\u3001\u5192\u967a\u8005\u305f\u3061\u306e\u5c0f\u3055\u306a\u96c6\u5408\u5834\u6240\u3067\u3059\u3002'}</p>
+            </div>
+            <div className="owned-coins-panel compact-coins">
+              <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+              <strong>{ownedCoins}</strong>
+            </div>
+          </div>
+
+          <div className="plaza-grid">
+            <article className="plaza-board plaza-notice-board">
+              <span className="plaza-board-tag">{'\u6848\u5185\u677f'}</span>
+              <h2>{'\u8857\u306e\u63b2\u793a\u677f'}</h2>
+              <p>{'\u5916\u306e\u4e16\u754c\u3078\u7e4b\u304c\u308b\u6848\u5185\u672d\u3067\u3059\u3002\u5225\u30bf\u30d6\u3067\u958b\u304d\u307e\u3059\u3002'}</p>
+              <div className="plaza-link-list">
+                <a className="notice-link" href={EXTERNAL_LINKS.gNoHeyaYouTube} target="_blank" rel="noreferrer">
+                  <span>{'G\u306e\u90e8\u5c4b YouTube'}</span>
+                </a>
+                <a className="notice-link" href={EXTERNAL_LINKS.rokudoLineStamps} target="_blank" rel="noreferrer">
+                  <span>{'\u30ed\u30af\u30c9\u306eLINE\u30b9\u30bf\u30f3\u30d7'}</span>
+                </a>
+              </div>
+            </article>
+
+            <article className="plaza-board plaza-training-board">
+              <span className="plaza-board-tag">{'\u8a13\u7df4\u5834'}</span>
+              <h2>{'\u30ad\u30e3\u30e9\u6027\u80fd\u78ba\u8a8d'}</h2>
+              <p>{'\u30d7\u30ec\u30a4\u30a2\u30d6\u30eb\u30ad\u30e3\u30e9\u306e\u5f97\u610f\u5206\u91ce\u3092\u78ba\u8a8d\u3067\u304d\u307e\u3059\u3002\u5b9f\u6226\u30c6\u30b9\u30c8\u306f\u6b21\u56de\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002'}</p>
+              <button className="primary-button" onClick={goToTrainingGround}>{'\u8a13\u7df4\u5834\u3078'}</button>
+            </article>
+          </div>
+
+          <div className="facility-actions">
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'trainingGround' && (
+        <section className="menu-screen facility-screen training-screen">
+          <div className="facility-header-row">
+            <div>
+              <p className="eyebrow">TRAINING GROUND</p>
+              <h1>{'\u8a13\u7df4\u5834'}</h1>
+              <p>{'\u5404\u30d7\u30ec\u30a4\u30a2\u30d6\u30eb\u30ad\u30e3\u30e9\u306e\u6027\u80fd\u3092\u78ed\u304f\u78ba\u8a8d\u3067\u304d\u307e\u3059\u3002'}</p>
+            </div>
+            <div className="owned-coins-panel compact-coins">
+              <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+              <strong>{ownedCoins}</strong>
+            </div>
+          </div>
+
+          <div className="training-character-grid">
+            {trainingCharacters.map((character) => {
+              const definition = getMainCharacter(character.id);
+              return (
+                <article className="training-character-card" key={character.id}>
+                  {definition.image && <img src={definition.image} alt={character.name} />}
+                  <div>
+                    <h2>{character.name}</h2>
+                    <strong>{character.summary}</strong>
+                    <p>{definition.attackLabel}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <div className="facility-actions">
+            <button className="secondary-button" onClick={goToAstoriaPlaza}>{'\u30a2\u30b9\u30c8\u30ea\u30a2\u5e83\u5834\u3078\u623b\u308b'}</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
           </div>
         </section>
       )}

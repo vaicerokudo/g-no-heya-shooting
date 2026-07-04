@@ -1,6 +1,8 @@
 export type GameStatus =
   | 'title'
   | 'astoriaMap'
+  | 'astoriaPlaza'
+  | 'trainingGround'
   | 'guildLobby'
   | 'guildParty'
   | 'guildSummon'
