@@ -1586,12 +1586,12 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(3px, 1vw, 6px);
+  gap: clamp(2px, 0.75vw, 5px);
 }
 
 .summon-card {
   position: relative;
-  width: clamp(48px, 10vw, 66px);
+  width: clamp(42px, 8.5vw, 58px);
   aspect-ratio: 2 / 3;
   padding: 0;
   border: 0;
@@ -1606,31 +1606,35 @@ h1 {
 }
 
 .summon-card.pick-0 {
-  --card-rotate: -18deg;
+  --card-rotate: -21deg;
 }
 
 .summon-card.pick-1 {
-  --card-rotate: -12deg;
+  --card-rotate: -15deg;
 }
 
 .summon-card.pick-2 {
-  --card-rotate: -6deg;
+  --card-rotate: -9deg;
 }
 
 .summon-card.pick-3 {
-  --card-rotate: 0deg;
+  --card-rotate: -3deg;
 }
 
 .summon-card.pick-4 {
-  --card-rotate: 6deg;
+  --card-rotate: 3deg;
 }
 
 .summon-card.pick-5 {
-  --card-rotate: 12deg;
+  --card-rotate: 9deg;
 }
 
 .summon-card.pick-6 {
-  --card-rotate: 18deg;
+  --card-rotate: 15deg;
+}
+
+.summon-card.pick-7 {
+  --card-rotate: 21deg;
 }
 
 .summon-card:hover:not(:disabled),
@@ -3847,15 +3851,15 @@ h1 {
 
   .summon-card-row {
     min-height: 152px;
-    gap: 3px;
+    gap: 2px;
   }
 
   .summon-card {
-    width: clamp(47px, 15vw, 60px);
+    width: clamp(38px, 11.5vw, 48px);
   }
 
   .summon-card.is-revealing {
-    transform: translateY(-6px) scale(1.38) rotate(0deg);
+    transform: translateY(-6px) scale(1.28) rotate(0deg);
   }
 
   .card-front img {
