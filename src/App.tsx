@@ -93,8 +93,8 @@ type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate' | 'plaza';
 type GuildHotspotId = 'party' | 'summon' | 'equipment' | 'weapons' | 'map';
 
 const EXTERNAL_LINKS = {
-  gNoHeyaYouTube: 'https://www.youtube.com/',
-  rokudoLineStamps: 'https://store.line.me/stickershop/home/general',
+  gNoHeyaYouTube: 'https://www.youtube.com/@Gnoheya-6910',
+  rokudoLineStamps: 'https://store.line.me/stickershop/product/34241793/ja?from=sticker',
 } as const;
 
 const trainingCharacters: Array<{
