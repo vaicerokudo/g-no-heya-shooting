@@ -87,6 +87,17 @@ export type SupportBullet = {
   life: number;
 };
 
+export type PlayerArrow = {
+  id: number;
+  x: number;
+  y: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  bossDamage: number;
+  life: number;
+};
+
 export type HibikiShieldState = {
   cooldown: number;
   timer: number;
@@ -138,6 +149,7 @@ export type GameState = {
   coins: Coin[];
   hearts: HeartPickup[];
   bullets: EnemyBullet[];
+  playerArrows: PlayerArrow[];
   supportBullets: SupportBullet[];
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;

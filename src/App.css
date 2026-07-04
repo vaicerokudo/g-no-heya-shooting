@@ -1784,6 +1784,7 @@ h1 {
 .heart-pickup,
 .enemy-bullet,
 .support-bullet,
+.player-arrow,
 .hibiki-shield,
 .garuda-sweep,
 .boss,
@@ -1819,14 +1820,18 @@ h1 {
 }
 
 .player::before {
-  content: "";
+  content: none;
+}
+
+.player img {
   position: absolute;
   left: 50%;
   bottom: -4px;
   width: 48px;
   height: 62px;
   transform: translateX(-50%);
-  background: url("/assets/tcg/chibi-socho.png") center bottom / contain no-repeat;
+  object-fit: contain;
+  object-position: bottom center;
   pointer-events: none;
 }
 
@@ -2129,6 +2134,29 @@ h1 {
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, rgba(255, 247, 210, 0.72));
   filter: blur(1px);
+}
+
+.player-arrow {
+  z-index: 6;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 247, 210, 0.2), rgba(196, 255, 181, 0.95) 35%, #fff7ce 52%, rgba(118, 255, 176, 0.76) 70%, transparent),
+    #c8ffdf;
+  box-shadow:
+    0 0 0 1px rgba(216, 255, 196, 0.7),
+    0 0 12px rgba(118, 255, 176, 0.82);
+}
+
+.player-arrow::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -18px;
+  width: 3px;
+  height: 22px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 247, 210, 0.68), transparent);
 }
 
 .garuda-sweep {

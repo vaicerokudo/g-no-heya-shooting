@@ -1,5 +1,6 @@
 export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
 export type MainCharacterStatus = 'available' | 'locked';
+export type MainCharacterAttackType = 'slash' | 'bow';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -9,6 +10,8 @@ export type MainCharacterDefinition = {
   status: MainCharacterStatus;
   statusLabel: string;
   weaponType: string;
+  attackType: MainCharacterAttackType;
+  attackLabel: string;
   image?: string;
 };
 
@@ -21,6 +24,8 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     status: 'available',
     statusLabel: '使用可能',
     weaponType: '太刀',
+    attackType: 'slash',
+    attackLabel: '前方半円斬撃',
     image: '/assets/tcg/chibi-socho.png',
   },
   tsutsu: {
@@ -28,9 +33,12 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     name: 'つつ',
     role: '遠距離支援',
     description: '弓で遠くの敵を狙い撃つ。',
-    status: 'locked',
-    statusLabel: '未解放',
+    status: 'available',
+    statusLabel: '使用可能',
     weaponType: '弓',
+    attackType: 'bow',
+    attackLabel: '弓射撃',
+    image: '/assets/tcg/tsutsu-player.png',
   },
   rokudo: {
     id: 'rokudo',
@@ -40,6 +48,8 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     status: 'locked',
     statusLabel: '未解放',
     weaponType: '刀',
+    attackType: 'slash',
+    attackLabel: '未実装',
   },
   player: {
     id: 'player',
@@ -49,6 +59,8 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     status: 'locked',
     statusLabel: '未解放',
     weaponType: '拳銃',
+    attackType: 'bow',
+    attackLabel: '未実装',
     image: '/assets/tcg/support-card-player.png',
   },
 };

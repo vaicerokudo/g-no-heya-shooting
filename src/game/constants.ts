@@ -34,6 +34,13 @@ export const STAR_SLASH_WAVE_HALF_WIDTH = 26;
 export const STAR_SLASH_WAVE_DAMAGE = 1;
 export const STAR_SLASH_WAVE_BOSS_DAMAGE = 1;
 
+export const TSUTSU_ARROW_COOLDOWN = 0.64;
+export const TSUTSU_ARROW_DAMAGE = 1;
+export const TSUTSU_ARROW_BOSS_DAMAGE = 1;
+export const TSUTSU_ARROW_SPEED = 460;
+export const TSUTSU_ARROW_RADIUS = 5;
+export const TSUTSU_ARROW_LIFE = 1.7;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

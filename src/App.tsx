@@ -158,6 +158,7 @@ function App() {
   const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
   const supportId = useRef<SupportId | null>(null);
   const supportLevel = useRef(1);
+  const mainCharacterId = useRef<MainCharacterId>('socho');
   const equippedWeaponId = useRef('iron-tachi');
   const equippedWeaponLevel = useRef(1);
   const pressedKeys = useRef(new Set<string>());
@@ -222,6 +223,7 @@ function App() {
           supportLevel.current,
           equippedWeaponId.current,
           equippedWeaponLevel.current,
+          mainCharacterId.current,
         ),
       );
       frameId = requestAnimationFrame(tick);
@@ -247,6 +249,11 @@ function App() {
     () => getOwnedWeaponLevel(ownedWeapons, equippedSochoWeapon.id),
     [ownedWeapons, equippedSochoWeapon.id],
   );
+  const mainWeaponLabel = mainCharacter.id === 'tsutsu' ? '\u521d\u671f\u5f13' : `${equippedSochoWeapon.name} / Lv ${equippedSochoWeaponLevel}`;
+  const mainWeaponEffect =
+    mainCharacter.id === 'tsutsu'
+      ? '\u4e00\u5b9a\u9593\u9694\u3067\u524d\u65b9\u3078\u77e2\u3092\u653e\u3064\u3002\u3064\u3064\u7528\u6b66\u5668\u88c5\u5099\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3002'
+      : equippedSochoWeapon.effectDescription;
   const sochoWeaponTuning = useMemo(
     () => getSochoWeaponTuning(equippedSochoWeapon.id, equippedSochoWeaponLevel),
     [equippedSochoWeapon.id, equippedSochoWeaponLevel],
@@ -284,6 +291,10 @@ function App() {
   useEffect(() => {
     supportLevel.current = selectedSupportLevel;
   }, [selectedSupportLevel]);
+
+  useEffect(() => {
+    mainCharacterId.current = activeMainCharacterId;
+  }, [activeMainCharacterId]);
 
   const begin = () => {
     if (!selectedSupport) return;
@@ -697,10 +708,10 @@ function App() {
             <article className="formation-card weapon-card sortie-card">
               <span className="slot-label">装備武器</span>
               <div>
-                <h2>{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</h2>
-                <strong>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</strong>
-                <p>{equippedSochoWeapon.description}</p>
-                <p className="weapon-effect-line">効果：{equippedSochoWeapon.effectDescription}</p>
+                <h2>{mainWeaponLabel}</h2>
+                <strong>{mainCharacter.weaponType} / {mainCharacter.attackLabel}</strong>
+                <p>{mainCharacter.id === 'tsutsu' ? '\u3064\u3064\u7528\u6b66\u5668\u88c5\u5099\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002' : equippedSochoWeapon.description}</p>
+                <p className="weapon-effect-line">効果：{mainWeaponEffect}</p>
               </div>
             </article>
             <article className={`formation-card support-card sortie-card ${selectedSupport ? 'has-support' : ''}`}>
@@ -1137,7 +1148,8 @@ function App() {
             ) : (
               <p>{freeSupportSummonUsed ? '同行：なし。Gの部屋でサポートを選ぼう。' : '同行：なし。初回無料召喚は雑貨屋でできます。'}</p>
             )}
-            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</p>
+            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{mainWeaponLabel}</p>
+            <p className="equipped-weapon-label">攻撃：{mainCharacter.attackLabel}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
               アストリア草原へ出撃
             </button>
@@ -1169,7 +1181,7 @@ function App() {
             <div className="hud-stage">{STAGE_NAME}</div>
             <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
-            <div className="hud-weapon">{'\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</div>
+            <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
@@ -1200,7 +1212,7 @@ function App() {
             <div className="scroll-band band-two" />
             <div className="play-limit" />
 
-            {game.player.slashTimer > 0 && (
+            {mainCharacter.id === 'socho' && game.player.slashTimer > 0 && (
               <div
                 className="slash"
                 style={{
@@ -1216,7 +1228,7 @@ function App() {
                 <span className="slash-shock" />
               </div>
             )}
-            {game.player.slashTimer > 0 && sochoHasSlashWave && (
+            {mainCharacter.id === 'socho' && game.player.slashTimer > 0 && sochoHasSlashWave && (
               <div
                 className="slash-wave"
                 style={{
@@ -1272,6 +1284,10 @@ function App() {
               <div key={bullet.id} className="support-bullet" style={place(bullet.x, bullet.y, bullet.radius * 2.7)} />
             ))}
 
+            {game.playerArrows.map((arrow) => (
+              <div key={arrow.id} className="player-arrow" style={place(arrow.x, arrow.y, arrow.radius * 2.2, 34)} />
+            ))}
+
             {myououGaruda && (
               <div
                 className={`garuda-sweep garuda-${myououGaruda.direction}`}
@@ -1316,7 +1332,7 @@ function App() {
               className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''}`}
               style={place(game.player.x, game.player.y, game.player.radius * 2)}
             >
-              総長
+              {mainCharacter.image ? <img src={mainCharacter.image} alt={mainCharacter.name} /> : mainCharacter.name}
             </div>
 
             {game.status === 'paused' && (
@@ -1390,11 +1406,15 @@ function App() {
             </div>
             <div>
               <span>{'\u6b66\u5668'}</span>
-              <strong>{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</strong>
+              <strong>{mainWeaponLabel}</strong>
             </div>
             <div>
               <span>メイン</span>
               <strong>{mainCharacter.name}</strong>
+            </div>
+            <div>
+              <span>攻撃</span>
+              <strong>{mainCharacter.attackLabel}</strong>
             </div>
           </div>
           {rewardSummary && (

@@ -17,7 +17,14 @@ import {
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
   SLASH_VISIBLE_TIME,
+  TSUTSU_ARROW_BOSS_DAMAGE,
+  TSUTSU_ARROW_COOLDOWN,
+  TSUTSU_ARROW_DAMAGE,
+  TSUTSU_ARROW_LIFE,
+  TSUTSU_ARROW_RADIUS,
+  TSUTSU_ARROW_SPEED,
 } from './constants';
+import type { MainCharacterId } from './characters';
 import { chooseEnemyKind, createEnemy } from './enemies';
 import {
   createEnemyCoinDrops,
@@ -29,7 +36,7 @@ import {
   is7171Support,
   updateSupportEffects,
 } from './support';
-import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, SupportId, Vector } from './types';
+import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
 import { getSochoWeaponTuning, hasSochoSlashWave } from './weapons';
 
 export const createInitialGameState = (): GameState => ({
@@ -39,6 +46,7 @@ export const createInitialGameState = (): GameState => ({
   coins: [],
   hearts: [],
   bullets: [],
+  playerArrows: [],
   supportBullets: [],
   supportShield: {
     cooldown: 1.8,
@@ -93,6 +101,7 @@ export function updateGame(
   supportLevel = 1,
   weaponId: string | undefined = undefined,
   weaponLevel = 1,
+  mainCharacterId: MainCharacterId = 'socho',
 ): GameState {
   if (state.status !== 'playing') return state;
 
@@ -109,7 +118,11 @@ export function updateGame(
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
   next = updateSupportEffects(next, dt, supportId, supportLevel);
-  next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  next =
+    mainCharacterId === 'tsutsu'
+      ? runAutoBow(next)
+      : runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  next = updatePlayerArrows(next, dt, supportId, supportLevel);
   next = updateCoins(next, dt, supportId, supportLevel);
   next = collectCoins(next, supportId, supportLevel);
   next = collectHearts(next);
@@ -334,6 +347,127 @@ function runAutoSlash(
       attackCooldown: weaponTuning.slashCooldown + dt,
       slashTimer: SLASH_VISIBLE_TIME,
     },
+  };
+}
+
+function runAutoBow(state: GameState): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  let nextId = state.nextId;
+  const arrow: PlayerArrow = {
+    id: nextId++,
+    x: state.player.x,
+    y: state.player.y - 24,
+    vy: -TSUTSU_ARROW_SPEED,
+    radius: TSUTSU_ARROW_RADIUS,
+    damage: TSUTSU_ARROW_DAMAGE,
+    bossDamage: TSUTSU_ARROW_BOSS_DAMAGE,
+    life: TSUTSU_ARROW_LIFE,
+  };
+
+  return {
+    ...state,
+    playerArrows: [...state.playerArrows, arrow],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 38,
+        text: 'SHOT',
+        timer: 0.18,
+      },
+    ],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: TSUTSU_ARROW_COOLDOWN,
+      slashTimer: 0,
+    },
+  };
+}
+
+function updatePlayerArrows(
+  state: GameState,
+  dt: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  const movedArrows = state.playerArrows
+    .map((arrow) => ({
+      ...arrow,
+      y: arrow.y + arrow.vy * dt,
+      life: arrow.life - dt,
+    }))
+    .filter((arrow) => arrow.life > 0 && arrow.y > -40);
+
+  return resolvePlayerArrowHits({ ...state, playerArrows: movedArrows }, supportId, supportLevel);
+}
+
+function resolvePlayerArrowHits(
+  state: GameState,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  let nextId = state.nextId;
+  let defeatedEnemies = state.defeatedEnemies;
+  let boss = state.boss;
+  const coins = [...state.coins];
+  const hearts = [...state.hearts];
+  const effects = [...state.effects];
+  const enemies = state.enemies.map((enemy) => ({ ...enemy }));
+  const remainingArrows: PlayerArrow[] = [];
+
+  for (const arrow of state.playerArrows) {
+    const enemyIndex = enemies.findIndex(
+      (enemy) => Math.hypot(enemy.x - arrow.x, enemy.y - arrow.y) < enemy.radius + arrow.radius,
+    );
+
+    if (enemyIndex >= 0) {
+      const enemy = enemies[enemyIndex];
+      const hp = enemy.hp - arrow.damage;
+      effects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${arrow.damage}`));
+
+      if (hp <= 0) {
+        defeatedEnemies += 1;
+        const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+        coins.push(...drops.coins);
+        effects.push(...drops.effects);
+        nextId = drops.nextId;
+        const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+        hearts.push(...heartDrop.hearts);
+        effects.push(...heartDrop.effects);
+        nextId = heartDrop.nextId;
+        enemies.splice(enemyIndex, 1);
+      } else {
+        enemies[enemyIndex] = { ...enemy, hp, hitTimer: 0.12 };
+      }
+      continue;
+    }
+
+    if (boss && Math.hypot(boss.x - arrow.x, boss.y - arrow.y) < boss.radius * 0.72 + arrow.radius) {
+      boss = {
+        ...boss,
+        hp: boss.hp - arrow.bossDamage,
+        hitTimer: 0.16,
+      };
+      effects.push(createHitEffect(nextId++, arrow.x, arrow.y, `-${arrow.bossDamage}`));
+      continue;
+    }
+
+    remainingArrows.push(arrow);
+  }
+
+  return {
+    ...state,
+    enemies,
+    boss,
+    coins,
+    hearts,
+    effects,
+    defeatedEnemies,
+    nextId,
+    playerArrows: remainingArrows,
   };
 }
 
