@@ -1834,12 +1834,12 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(2px, 0.75vw, 5px);
+  gap: clamp(2px, 0.65vw, 4px);
 }
 
 .summon-card {
   position: relative;
-  width: clamp(42px, 8.5vw, 58px);
+  width: clamp(38px, 7.5vw, 52px);
   aspect-ratio: 2 / 3;
   padding: 0;
   border: 0;
@@ -1854,35 +1854,39 @@ h1 {
 }
 
 .summon-card.pick-0 {
-  --card-rotate: -21deg;
+  --card-rotate: -24deg;
 }
 
 .summon-card.pick-1 {
-  --card-rotate: -15deg;
+  --card-rotate: -18deg;
 }
 
 .summon-card.pick-2 {
-  --card-rotate: -9deg;
+  --card-rotate: -12deg;
 }
 
 .summon-card.pick-3 {
-  --card-rotate: -3deg;
+  --card-rotate: -6deg;
 }
 
 .summon-card.pick-4 {
-  --card-rotate: 3deg;
+  --card-rotate: 0deg;
 }
 
 .summon-card.pick-5 {
-  --card-rotate: 9deg;
+  --card-rotate: 6deg;
 }
 
 .summon-card.pick-6 {
-  --card-rotate: 15deg;
+  --card-rotate: 12deg;
 }
 
 .summon-card.pick-7 {
-  --card-rotate: 21deg;
+  --card-rotate: 18deg;
+}
+
+.summon-card.pick-8 {
+  --card-rotate: 24deg;
 }
 
 .summon-card:hover:not(:disabled),
@@ -2172,6 +2176,7 @@ h1 {
 .field.is-paused .axe-swing,
 .field.is-paused .mountain-breaker,
 .field.is-paused .support-rockel-break,
+.field.is-paused .support-poison-smoke,
 .field.is-paused .deli-turret,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
@@ -2229,6 +2234,7 @@ h1 {
 .axe-swing,
 .mountain-breaker,
 .support-rockel-break,
+.support-poison-smoke,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -3063,6 +3069,43 @@ h1 {
   transform: translateX(-50%);
 }
 
+.support-poison-smoke {
+  z-index: 3;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: drop-shadow(0 0 16px rgba(102, 255, 184, 0.34));
+  animation: poisonSmokePulse 900ms ease-in-out infinite alternate;
+}
+
+.support-poison-smoke::before,
+.support-poison-core,
+.support-poison-ring {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.support-poison-smoke::before {
+  background:
+    radial-gradient(circle at 42% 46%, rgba(166, 255, 180, 0.34) 0 16%, rgba(106, 75, 168, 0.3) 34%, transparent 72%),
+    radial-gradient(circle at 68% 32%, rgba(216, 255, 153, 0.22) 0 10%, transparent 34%);
+  border: 1px solid rgba(168, 255, 183, 0.28);
+}
+
+.support-poison-core {
+  inset: 16%;
+  background: radial-gradient(circle, rgba(72, 255, 154, 0.22), rgba(92, 49, 134, 0.2) 52%, transparent 72%);
+  animation: poisonCoreSwirl 1.2s linear infinite;
+}
+
+.support-poison-ring {
+  inset: 8%;
+  border: 1px dashed rgba(210, 255, 184, 0.34);
+  opacity: 0.65;
+  animation: poisonRingSpin 2.2s linear infinite;
+}
+
 .garuda-sweep {
   z-index: 7;
   pointer-events: none;
@@ -3761,6 +3804,27 @@ h1 {
   }
 }
 
+@keyframes poisonSmokePulse {
+  from {
+    transform: scale(0.96);
+  }
+  to {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes poisonCoreSwirl {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes poisonRingSpin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+
 @keyframes turretPulse {
   from {
     transform: scale(0.96);
@@ -4138,7 +4202,7 @@ h1 {
   }
 
   .summon-card {
-    width: clamp(38px, 11.5vw, 48px);
+    width: clamp(34px, 10vw, 43px);
   }
 
   .summon-card.is-revealing {

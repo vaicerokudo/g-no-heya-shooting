@@ -22,7 +22,7 @@ export type GameStatus =
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
-export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli' | 'rockel';
+export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli' | 'rockel' | 'rokudo';
 
 export type Enemy = {
   id: number;
@@ -35,6 +35,7 @@ export type Enemy = {
   speed: number;
   spawnTime: number;
   hitTimer?: number;
+  slowTimer?: number;
   chargeTarget?: Vector;
   isCharging?: boolean;
 };
@@ -95,6 +96,14 @@ export type DeliTurret = {
   y: number;
   timer: number;
   fireCooldown: number;
+};
+
+export type PoisonSmoke = {
+  id: number;
+  x: number;
+  y: number;
+  timer: number;
+  damageCooldown: number;
 };
 
 export type PlayerArrow = {
@@ -179,6 +188,7 @@ export type GameState = {
   supportBullets: SupportBullet[];
   turrets: DeliTurret[];
   supportTurrets: DeliTurret[];
+  supportPoisonSmokes: PoisonSmoke[];
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;
   supportRockelBreak: RockelSupportBreakState;
@@ -195,6 +205,7 @@ export type GameState = {
     ushimaruCounter: number;
     deliTurret: number;
     rockelBreak: number;
+    rokudoPoison: number;
   };
   message: string;
 };

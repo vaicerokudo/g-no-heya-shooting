@@ -38,6 +38,14 @@ import {
   PLAYER_SUPPORT_BULLET_SPEED,
   PLAYER_SUPPORT_FIRE_INTERVAL,
   PLAYER_SUPPORT_SHOTS_PER_BURST,
+  ROKUDO_SUPPORT_POISON_BOSS_DAMAGE,
+  ROKUDO_SUPPORT_POISON_DAMAGE,
+  ROKUDO_SUPPORT_POISON_DAMAGE_INTERVAL,
+  ROKUDO_SUPPORT_POISON_DURATION,
+  ROKUDO_SUPPORT_POISON_INTERVAL,
+  ROKUDO_SUPPORT_POISON_MAX_DURATION,
+  ROKUDO_SUPPORT_POISON_MIN_INTERVAL,
+  ROKUDO_SUPPORT_POISON_RADIUS,
   ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE,
   ROCKEL_SUPPORT_BREAK_COOLDOWN,
   ROCKEL_SUPPORT_BREAK_DAMAGE,
@@ -63,6 +71,7 @@ import type {
   HeartPickup,
   HibikiShieldState,
   MyououGarudaState,
+  PoisonSmoke,
   SupportBullet,
   SupportId,
   Vector,
@@ -82,6 +91,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   next = updateUshimaruCounter(next, dt, supportId, supportLevel);
   next = updateDeliSupportTurrets(next, dt, supportId, supportLevel);
   next = updateRockelMountainBreak(next, dt, supportId, supportLevel);
+  next = updateRokudoPoisonSmoke(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -127,6 +137,10 @@ export function isDeliSupport(supportId: SupportId | null): boolean {
 
 export function isRockelSupport(supportId: SupportId | null): boolean {
   return supportId === 'rockel';
+}
+
+export function isRokudoSupport(supportId: SupportId | null): boolean {
+  return supportId === 'rokudo';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -574,6 +588,171 @@ function isInRockelSupportBreak(state: GameState, x: number, y: number, radius: 
 
 function getRockelBreakCooldown(supportLevel: number): number {
   return Math.max(ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN, ROCKEL_SUPPORT_BREAK_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
+}
+
+function updateRokudoPoisonSmoke(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = Math.max(0, state.supportCooldowns.rokudoPoison - dt);
+  let smokes = state.supportPoisonSmokes
+    .map((smoke) => ({
+      ...smoke,
+      timer: smoke.timer - dt,
+      damageCooldown: Math.max(0, smoke.damageCooldown - dt),
+    }))
+    .filter((smoke) => smoke.timer > 0);
+
+  let baseState: GameState = {
+    ...state,
+    supportPoisonSmokes: smokes,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      rokudoPoison: cooldown,
+    },
+  };
+
+  if (!isRokudoSupport(supportId)) {
+    return smokes.length > 0 ? { ...baseState, supportPoisonSmokes: [] } : baseState;
+  }
+
+  let nextId = baseState.nextId;
+  const effects = [...baseState.effects];
+  if (cooldown <= 0) {
+    const target = choosePoisonSmokeTarget(baseState);
+    smokes = [
+      ...smokes,
+      {
+        id: nextId++,
+        x: target.x,
+        y: target.y,
+        timer: getRokudoPoisonDuration(supportLevel),
+        damageCooldown: 0.45,
+      },
+    ];
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: target.x,
+      y: target.y - 18,
+      text: '毒煙玉',
+      timer: 0.48,
+    });
+    baseState = {
+      ...baseState,
+      supportPoisonSmokes: smokes,
+      effects,
+      nextId,
+      supportCooldowns: {
+        ...baseState.supportCooldowns,
+        rokudoPoison: getRokudoPoisonInterval(supportLevel),
+      },
+    };
+  }
+
+  const shouldDamage = smokes.some((smoke) => smoke.damageCooldown <= 0);
+  let coins = baseState.coins;
+  let defeatedEnemies = baseState.defeatedEnemies;
+  let boss = baseState.boss;
+  const nextEffects = [...baseState.effects];
+  const enemies: Enemy[] = [];
+
+  for (const enemy of baseState.enemies) {
+    if (!isInAnyPoisonSmoke(smokes, enemy.x, enemy.y, enemy.radius)) {
+      enemies.push(enemy);
+      continue;
+    }
+
+    const slowedEnemy = { ...enemy, slowTimer: 0.24 };
+    if (!shouldDamage) {
+      enemies.push(slowedEnemy);
+      continue;
+    }
+
+    const hp = slowedEnemy.hp - ROKUDO_SUPPORT_POISON_DAMAGE;
+    nextEffects.push({
+      id: nextId++,
+      kind: 'support',
+      x: slowedEnemy.x,
+      y: slowedEnemy.y - 8,
+      text: `-${ROKUDO_SUPPORT_POISON_DAMAGE}`,
+      timer: 0.32,
+    });
+
+    if (hp <= 0) {
+      defeatedEnemies += 1;
+      const drops = createEnemyCoinDrops(slowedEnemy, nextId, 'rokudo');
+      coins = [...coins, ...drops.coins];
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+    } else {
+      enemies.push({ ...slowedEnemy, hp, hitTimer: 0.16 });
+    }
+  }
+
+  if (boss && shouldDamage && isInAnyPoisonSmoke(smokes, boss.x, boss.y + boss.radius * 0.36, boss.radius * 0.54)) {
+    boss = {
+      ...boss,
+      hp: boss.hp - ROKUDO_SUPPORT_POISON_BOSS_DAMAGE,
+      hitTimer: 0.16,
+      phaseTimer: boss.phaseTimer * 0.98,
+      shotTimer: boss.shotTimer + 0.08,
+    };
+    nextEffects.push({
+      id: nextId++,
+      kind: 'support',
+      x: boss.x,
+      y: boss.y,
+      text: `-${ROKUDO_SUPPORT_POISON_BOSS_DAMAGE}`,
+      timer: 0.32,
+    });
+  }
+
+  return {
+    ...baseState,
+    enemies,
+    boss,
+    coins,
+    effects: nextEffects,
+    defeatedEnemies,
+    nextId,
+    supportPoisonSmokes: shouldDamage
+      ? smokes.map((smoke) => ({ ...smoke, damageCooldown: ROKUDO_SUPPORT_POISON_DAMAGE_INTERVAL }))
+      : smokes,
+  };
+}
+
+function choosePoisonSmokeTarget(state: GameState): Vector {
+  let target: Vector | null = null;
+  let distance = Infinity;
+
+  for (const enemy of state.enemies) {
+    const dy = state.player.y - enemy.y;
+    if (dy < -28 || dy > 260) continue;
+    const currentDistance = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
+    if (currentDistance < distance) {
+      distance = currentDistance;
+      target = { x: enemy.x, y: enemy.y };
+    }
+  }
+
+  if (!target && state.boss) {
+    target = { x: state.boss.x, y: state.boss.y + state.boss.radius * 0.55 };
+  }
+
+  return target ?? {
+    x: state.player.x,
+    y: Math.max(ROKUDO_SUPPORT_POISON_RADIUS + 20, state.player.y - 138),
+  };
+}
+
+function isInAnyPoisonSmoke(smokes: PoisonSmoke[], x: number, y: number, radius: number): boolean {
+  return smokes.some((smoke) => Math.hypot(x - smoke.x, y - smoke.y) <= ROKUDO_SUPPORT_POISON_RADIUS + radius);
+}
+
+function getRokudoPoisonInterval(supportLevel: number): number {
+  return Math.max(ROKUDO_SUPPORT_POISON_MIN_INTERVAL, ROKUDO_SUPPORT_POISON_INTERVAL - getLevelBonus(supportLevel) * 0.5);
+}
+
+function getRokudoPoisonDuration(supportLevel: number): number {
+  return Math.min(ROKUDO_SUPPORT_POISON_MAX_DURATION, ROKUDO_SUPPORT_POISON_DURATION + getLevelBonus(supportLevel) * 0.375);
 }
 
 function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {

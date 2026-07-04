@@ -29,6 +29,7 @@ import {
   PLAYER_MAIN_GUN_SPEED,
   PLAYER_START,
   PLAYER_SPEED,
+  ROKUDO_SUPPORT_POISON_SLOW_MULTIPLIER,
   ROKUDO_SHADOW_SLASH_BOSS_DAMAGE,
   ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
   ROKUDO_SHADOW_SLASH_DAMAGE,
@@ -100,6 +101,7 @@ export const createInitialGameState = (): GameState => ({
   supportBullets: [],
   turrets: [],
   supportTurrets: [],
+  supportPoisonSmokes: [],
   supportShield: {
     cooldown: 1.8,
     timer: 0,
@@ -129,6 +131,7 @@ export const createInitialGameState = (): GameState => ({
     ushimaruCounter: 1.2,
     deliTurret: 1.6,
     rockelBreak: 1.4,
+    rokudoPoison: 1.2,
   },
   message: '',
 });
@@ -291,18 +294,23 @@ function maybeSpawnBoss(state: GameState): GameState {
 function updateEnemies(state: GameState, dt: number): GameState {
   const enemies = state.enemies
     .map((enemy) => moveEnemy(enemy, state.player, state.elapsed, dt))
-    .map((enemy) => ({ ...enemy, hitTimer: Math.max(0, (enemy.hitTimer ?? 0) - dt) }))
+    .map((enemy) => ({
+      ...enemy,
+      hitTimer: Math.max(0, (enemy.hitTimer ?? 0) - dt),
+      slowTimer: Math.max(0, (enemy.slowTimer ?? 0) - dt),
+    }))
     .filter((enemy) => enemy.y < FIELD_HEIGHT + 60);
 
   return { ...state, enemies };
 }
 
 function moveEnemy(enemy: Enemy, player: Player, elapsed: number, dt: number): Enemy {
+  const speedMultiplier = (enemy.slowTimer ?? 0) > 0 ? ROKUDO_SUPPORT_POISON_SLOW_MULTIPLIER : 1;
   if (enemy.kind === 'flying') {
     return {
       ...enemy,
       x: enemy.x + Math.sin((elapsed - enemy.spawnTime) * 4) * 44 * dt,
-      y: enemy.y + enemy.speed * dt,
+      y: enemy.y + enemy.speed * speedMultiplier * dt,
     };
   }
 
@@ -320,15 +328,15 @@ function moveEnemy(enemy: Enemy, player: Player, elapsed: number, dt: number): E
     if (enemy.isCharging && enemy.chargeTarget) {
       return {
         ...enemy,
-        x: enemy.x + enemy.chargeTarget.x * dt,
-        y: enemy.y + enemy.chargeTarget.y * dt,
+        x: enemy.x + enemy.chargeTarget.x * speedMultiplier * dt,
+        y: enemy.y + enemy.chargeTarget.y * speedMultiplier * dt,
       };
     }
   }
 
   return {
     ...enemy,
-    y: enemy.y + enemy.speed * dt,
+    y: enemy.y + enemy.speed * speedMultiplier * dt,
   };
 }
 

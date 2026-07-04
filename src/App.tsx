@@ -5,6 +5,7 @@ import {
   FIELD_WIDTH,
   PLAYER_LIMITS,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
+  ROKUDO_SUPPORT_POISON_RADIUS,
   ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
   ROKUDO_SHADOW_SLASH_HALF_WIDTH,
   ROKUDO_SHADOW_SLASH_RADIUS,
@@ -1551,6 +1552,23 @@ function App() {
                 <span className="support-rockel-break-spark" />
               </div>
             )}
+
+            {game.supportPoisonSmokes.map((smoke) => (
+              <div
+                className="support-poison-smoke"
+                key={smoke.id}
+                style={{
+                  left: smoke.x - ROKUDO_SUPPORT_POISON_RADIUS,
+                  top: smoke.y - ROKUDO_SUPPORT_POISON_RADIUS,
+                  width: ROKUDO_SUPPORT_POISON_RADIUS * 2,
+                  height: ROKUDO_SUPPORT_POISON_RADIUS * 2,
+                  opacity: Math.min(1, smoke.timer / 0.7),
+                }}
+              >
+                <span className="support-poison-core" />
+                <span className="support-poison-ring" />
+              </div>
+            ))}
 
             {game.coins.map((coin) => (
               <div

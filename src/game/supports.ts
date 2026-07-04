@@ -80,6 +80,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '一定間隔でMOUNTAIN BREAKを放ち、前方から左右にかけて広めの敵に1ダメージを与える。',
     image: '/assets/tcg/support-card-rockel.webp',
   },
+  {
+    id: 'rokudo',
+    name: 'ROKUDO',
+    role: '毒煙玉',
+    description: '毒煙玉で敵の進軍を鈍らせる妨害サポート。',
+    effectDescription: '一定間隔で毒煙玉を投げ、範囲内の敵をスロウにしながら小さな継続ダメージを与える。',
+    image: '/assets/tcg/support-card-rokudo.webp',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -91,6 +99,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   ushimaru: '前に出るなら、頼れる槍使いだね。',
   deli: '設置で支えるなら、この子の工夫が光るよ。',
   rockel: '派手にいくなら、頼れる斧使いだね。',
+  rokudo: '足止めが欲しいなら、影の煙が効くはずだよ。',
 };
 
 export function drawRandomSupport(): SupportCharacter {
