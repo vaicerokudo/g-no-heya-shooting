@@ -1411,12 +1411,12 @@ function App() {
           {game.boss && (
             <div className="boss-hud">
               <div className="boss-portrait-frame" aria-hidden="true">
-                <img className="boss-portrait-image" src={bossHudImage} alt="" />
+                <img className="boss-portrait-image" src={bossHudImage} alt="boss portrait" />
               </div>
               <div className="boss-hud-status">
                 <span>{game.boss.name}</span>
                 <div className="meter boss-meter">
-                  <div className="meter-fill boss" style={{ width: `${bossHpPercent}%` }} />
+                  <div className="meter-fill boss-hp-fill" style={{ width: `${bossHpPercent}%` }} />
                 </div>
               </div>
             </div>

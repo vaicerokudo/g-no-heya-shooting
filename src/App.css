@@ -2198,7 +2198,7 @@ h1 {
   background: linear-gradient(90deg, #68d391, #f6e05e);
 }
 
-.meter-fill.boss {
+.meter-fill.boss-hp-fill {
   background: linear-gradient(90deg, #ef476f, #ffd166);
 }
 
