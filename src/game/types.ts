@@ -158,6 +158,7 @@ export type GameState = {
   elapsed: number;
   coinsCollected: number;
   defeatedEnemies: number;
+  hasTakenDamage: boolean;
   nextId: number;
   spawnTimer: number;
   supportCooldowns: {

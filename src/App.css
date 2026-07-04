@@ -1633,7 +1633,8 @@ h1 {
 
 .hud-main,
 .hud-support,
-.hud-weapon {
+.hud-weapon,
+.hud-no-damage {
   min-height: 34px;
   display: grid;
   place-items: center start;
@@ -1648,6 +1649,16 @@ h1 {
 .hud-main {
   background: rgba(143, 220, 255, 0.1);
   color: #bfefff;
+}
+
+.hud-no-damage {
+  background: rgba(200, 255, 223, 0.1);
+  color: #c8ffdf;
+}
+
+.hud-no-damage.is-failed {
+  background: rgba(255, 112, 112, 0.1);
+  color: #ffb3a3;
 }
 
 .hud-weapon {
@@ -2492,6 +2503,20 @@ h1 {
   padding: 10px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.07);
+}
+
+.reward-breakdown .no-damage-reward {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.reward-breakdown .no-damage-reward.achieved {
+  border-color: rgba(200, 255, 223, 0.38);
+  background: rgba(87, 174, 121, 0.14);
+}
+
+.reward-breakdown .no-damage-reward.achieved strong {
+  color: #c8ffdf;
 }
 
 .result-grid {

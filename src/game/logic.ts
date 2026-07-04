@@ -66,6 +66,7 @@ export const createInitialGameState = (): GameState => ({
   elapsed: 0,
   coinsCollected: 0,
   defeatedEnemies: 0,
+  hasTakenDamage: false,
   nextId: 1,
   spawnTimer: 0.6,
   supportCooldowns: {
@@ -637,6 +638,7 @@ function resolvePlayerDamage(state: GameState): GameState {
   return {
     ...state,
     bullets: hitBullet ? state.bullets.filter((bullet) => bullet.id !== hitBullet.id) : state.bullets,
+    hasTakenDamage: true,
     player: {
       ...state.player,
       hp: Math.max(0, state.player.hp - (hitEnemy?.kind === 'charger' ? 18 : 12)),

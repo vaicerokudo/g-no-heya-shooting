@@ -264,7 +264,10 @@ function App() {
     if (game.status === 'gameOver') return '撤退。';
     return 'Gの部屋：星門シューティング';
   }, [game.status]);
-  const rewardSummary = useMemo(() => calculateCoinReward(game.status, game.coinsCollected), [game.status, game.coinsCollected]);
+  const rewardSummary = useMemo(
+    () => calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage),
+    [game.status, game.coinsCollected, game.hasTakenDamage],
+  );
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
     (summonPhase === 'idle' || summonPhase === 'done') && (shopSummonCost === 0 || ownedCoins >= shopSummonCost);
@@ -272,7 +275,7 @@ function App() {
   useEffect(() => {
     if (!rewardSummary) return;
 
-    const resultKey = `${rewardSummary.status}:${Math.floor(game.elapsed * 1000)}:${game.defeatedEnemies}:${rewardSummary.stageCoins}`;
+    const resultKey = `${rewardSummary.status}:${Math.floor(game.elapsed * 1000)}:${game.defeatedEnemies}:${rewardSummary.stageCoins}:${rewardSummary.addedCoins}:${rewardSummary.isNoDamageClear}`;
     if (rewardedResultKey.current === resultKey) return;
     rewardedResultKey.current = resultKey;
 
@@ -1182,6 +1185,9 @@ function App() {
             <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
             <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>
+            <div className={`hud-no-damage ${game.hasTakenDamage ? 'is-failed' : ''}`}>
+              {game.hasTakenDamage ? 'ノーダメ失敗' : 'ノーダメ継続中'}
+            </div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
@@ -1432,6 +1438,22 @@ function App() {
                 <div>
                   <span>持ち帰り率</span>
                   <strong>{Math.round(rewardSummary.keepRate * 100)}%</strong>
+                </div>
+              )}
+              {rewardSummary.status === 'clear' && (
+                <div className={rewardSummary.isNoDamageClear ? 'no-damage-reward achieved' : 'no-damage-reward'}>
+                  <span>{rewardSummary.isNoDamageClear ? 'ノーダメージクリア！' : 'ノーダメージボーナス'}</span>
+                  <strong>
+                    {rewardSummary.isNoDamageClear
+                      ? `x${rewardSummary.noDamageMultiplier} / +${rewardSummary.noDamageBonus}`
+                      : '未達成'}
+                  </strong>
+                </div>
+              )}
+              {rewardSummary.status === 'clear' && (
+                <div>
+                  <span>通常クリア報酬</span>
+                  <strong>{rewardSummary.baseClearReward}</strong>
                 </div>
               )}
               <div>

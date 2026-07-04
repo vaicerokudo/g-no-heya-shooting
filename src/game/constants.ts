@@ -55,6 +55,7 @@ export const NANA_SUPPORT_BONUS_COIN_CHANCE = 0.25;
 export const NANA_SUPPORT_BOSS_BONUS_COINS = 3;
 
 export const CLEAR_COIN_BONUS = 10;
+export const NO_DAMAGE_CLEAR_BONUS_MULTIPLIER = 1.5;
 // Future 7171 Lv growth can raise this keep rate after game over.
 export const GAME_OVER_COIN_KEEP_RATE = 0.5;
 
