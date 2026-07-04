@@ -151,6 +151,8 @@ export type Player = {
   nextGunHand: 'left' | 'right';
   spearThrowCooldown: number;
   turretDeployCooldown: number;
+  hammerBreakCooldown: number;
+  hammerBreakTimer: number;
 };
 
 export type Vector = {

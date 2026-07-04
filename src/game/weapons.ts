@@ -7,6 +7,10 @@ import {
   PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
   SLASH_COOLDOWN,
+  STARBREAKER_SHOCKWAVE_COOLDOWN,
+  STARBREAKER_SHOCKWAVE_HALF_WIDTH,
+  STARBREAKER_SHOCKWAVE_MIN_COOLDOWN,
+  STARBREAKER_SHOCKWAVE_RANGE,
   STAR_SLASH_WAVE_BOSS_DAMAGE,
   STAR_SLASH_WAVE_DAMAGE,
   STAR_SLASH_WAVE_HALF_WIDTH,
@@ -15,6 +19,9 @@ import {
   USHIMARU_SPEAR_COOLDOWN,
   USHIMARU_SPEAR_HALF_WIDTH,
   USHIMARU_SPEAR_RANGE,
+  YABUKO_FM_HAMMER_COOLDOWN,
+  YABUKO_FM_HAMMER_HALF_WIDTH,
+  YABUKO_FM_HAMMER_RANGE,
 } from './constants';
 
 export type WeaponRarity = 'common' | 'rare' | 'epic';
@@ -35,7 +42,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -79,12 +86,23 @@ export type DeliWeaponTuning = {
   turretMaxCount: number;
 };
 
+export type YabukoFmWeaponTuning = {
+  hammerCooldown: number;
+  hammerRange: number;
+  hammerHalfWidth: number;
+  hasStarbreakerShockwave: boolean;
+  starbreakerCooldown: number;
+  starbreakerRange: number;
+  starbreakerHalfWidth: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
 export const DEFAULT_PLAYER_WEAPON_ID = 'starter-pistols';
 export const DEFAULT_USHIMARU_WEAPON_ID = 'starter-spear';
 export const DEFAULT_DELI_WEAPON_ID = 'starter-tool-gun';
+export const DEFAULT_YABUKO_FM_WEAPON_ID = 'starter-war-hammer';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -131,6 +149,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'Deli用。最初から使える工具銃。',
     effectDescription: '単発拳銃と簡易タレットで戦う。',
+  },
+  {
+    id: DEFAULT_YABUKO_FM_WEAPON_ID,
+    name: '支給大槌',
+    owner: 'FMやぶこ',
+    type: '大槌',
+    rarity: 'common',
+    description: 'FMやぶこ用。最初から使える基本の大槌。',
+    effectDescription: '遅めの大槌重撃で前方範囲の敵を叩き、通常敵を少し押し返す。',
   },
 ];
 
@@ -231,6 +258,15 @@ export const weaponCandidates: WeaponDefinition[] = [
     effectDescription: 'Playerの射撃間隔を少し短くする。Lvでさらに少し短縮。',
     imagePath: '/assets/tcg/weapon-twin-fang-pistols.png',
   },
+  {
+    id: 'starbreaker-hammer',
+    name: '星砕きの大槌',
+    owner: 'FMやぶこ',
+    type: '大槌',
+    rarity: 'rare',
+    description: 'FMやぶこ用。星脈の力を込めて地面ごと叩き割る大槌。',
+    effectDescription: '一定間隔で前方へ地割れのような星砕き衝撃波を放つ。Lvで発動間隔、射程、幅が少し強化される。',
+  },
 ];
 
 export const FORGE_RESULT_LINES: Record<WeaponRarity, string> = {
@@ -294,6 +330,10 @@ export function getDeliWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[]
   return [getDefaultOwnedWeapon(DEFAULT_DELI_WEAPON_ID), ...ownedWeapons.filter((weapon) => isDeliWeapon(weapon.id))];
 }
 
+export function getYabukoFmWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_YABUKO_FM_WEAPON_ID), ...ownedWeapons.filter((weapon) => isYabukoFmWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -318,6 +358,10 @@ export function getEquippedDeliWeapon(equippedWeapons: EquippedWeaponsByCharacte
   return getWeaponById(equippedWeapons.deli ?? DEFAULT_DELI_WEAPON_ID) ?? defaultWeaponDefinitions[4];
 }
 
+export function getEquippedYabukoFmWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons['yabuko-fm'] ?? DEFAULT_YABUKO_FM_WEAPON_ID) ?? defaultWeaponDefinitions[5];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -327,6 +371,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'player') return getEquippedPlayerWeapon(equippedWeapons);
   if (characterId === 'ushimaru') return getEquippedUshimaruWeapon(equippedWeapons);
   if (characterId === 'deli') return getEquippedDeliWeapon(equippedWeapons);
+  if (characterId === 'yabuko-fm') return getEquippedYabukoFmWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -338,7 +383,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_ROKUDO_WEAPON_ID ||
     weaponId === DEFAULT_PLAYER_WEAPON_ID ||
     weaponId === DEFAULT_USHIMARU_WEAPON_ID ||
-    weaponId === DEFAULT_DELI_WEAPON_ID
+    weaponId === DEFAULT_DELI_WEAPON_ID ||
+    weaponId === DEFAULT_YABUKO_FM_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -356,6 +402,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'player') return getPlayerWeaponOptions(ownedWeapons);
   if (characterId === 'ushimaru') return getUshimaruWeaponOptions(ownedWeapons);
   if (characterId === 'deli') return getDeliWeaponOptions(ownedWeapons);
+  if (characterId === 'yabuko-fm') return getYabukoFmWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -439,6 +486,24 @@ export function getDeliWeaponTuning(weaponId: string | undefined, level = 1): De
   };
 }
 
+export function getYabukoFmWeaponTuning(weaponId: string | undefined, level = 1): YabukoFmWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const levelBonus = normalizedLevel - 1;
+  const hasStarbreakerShockwave = weaponId === 'starbreaker-hammer';
+
+  return {
+    hammerCooldown: YABUKO_FM_HAMMER_COOLDOWN,
+    hammerRange: YABUKO_FM_HAMMER_RANGE,
+    hammerHalfWidth: YABUKO_FM_HAMMER_HALF_WIDTH,
+    hasStarbreakerShockwave,
+    starbreakerCooldown: hasStarbreakerShockwave
+      ? Math.max(STARBREAKER_SHOCKWAVE_MIN_COOLDOWN, STARBREAKER_SHOCKWAVE_COOLDOWN - levelBonus * 0.3)
+      : STARBREAKER_SHOCKWAVE_COOLDOWN,
+    starbreakerRange: hasStarbreakerShockwave ? STARBREAKER_SHOCKWAVE_RANGE + levelBonus * 8 : STARBREAKER_SHOCKWAVE_RANGE,
+    starbreakerHalfWidth: hasStarbreakerShockwave ? STARBREAKER_SHOCKWAVE_HALF_WIDTH + levelBonus * 3 : STARBREAKER_SHOCKWAVE_HALF_WIDTH,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -470,6 +535,10 @@ export function isUshimaruWeapon(weaponId: string): boolean {
 
 export function isDeliWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_DELI_WEAPON_ID || weaponId === 'prototype-turret-unit';
+}
+
+export function isYabukoFmWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_YABUKO_FM_WEAPON_ID || weaponId === 'starbreaker-hammer';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

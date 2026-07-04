@@ -90,6 +90,22 @@ export const DELI_TURRET_BULLET_RADIUS = 4;
 export const DELI_TURRET_BULLET_LIFE = 1.35;
 export const DELI_TURRET_MAX_COUNT = 1;
 
+export const YABUKO_FM_HAMMER_COOLDOWN = 1.2;
+export const YABUKO_FM_HAMMER_VISIBLE_TIME = 0.24;
+export const YABUKO_FM_HAMMER_RANGE = 116;
+export const YABUKO_FM_HAMMER_BOSS_RANGE = 136;
+export const YABUKO_FM_HAMMER_HALF_WIDTH = 68;
+export const YABUKO_FM_HAMMER_DAMAGE = 1;
+export const YABUKO_FM_HAMMER_BOSS_DAMAGE = 1;
+export const YABUKO_FM_HAMMER_KNOCKBACK = 38;
+export const STARBREAKER_SHOCKWAVE_VISIBLE_TIME = 0.34;
+export const STARBREAKER_SHOCKWAVE_COOLDOWN = 5.8;
+export const STARBREAKER_SHOCKWAVE_MIN_COOLDOWN = 4.6;
+export const STARBREAKER_SHOCKWAVE_RANGE = 178;
+export const STARBREAKER_SHOCKWAVE_HALF_WIDTH = 34;
+export const STARBREAKER_SHOCKWAVE_DAMAGE = 1;
+export const STARBREAKER_SHOCKWAVE_BOSS_DAMAGE = 1;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

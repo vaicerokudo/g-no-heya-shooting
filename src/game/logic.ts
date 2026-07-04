@@ -49,6 +49,14 @@ import {
   USHIMARU_SPEAR_VISIBLE_TIME,
   USHIMARU_PIERCING_SPEAR_COOLDOWN,
   USHIMARU_THROWN_SPEAR_LIFE,
+  STARBREAKER_SHOCKWAVE_BOSS_DAMAGE,
+  STARBREAKER_SHOCKWAVE_DAMAGE,
+  STARBREAKER_SHOCKWAVE_VISIBLE_TIME,
+  YABUKO_FM_HAMMER_BOSS_DAMAGE,
+  YABUKO_FM_HAMMER_BOSS_RANGE,
+  YABUKO_FM_HAMMER_DAMAGE,
+  YABUKO_FM_HAMMER_KNOCKBACK,
+  YABUKO_FM_HAMMER_VISIBLE_TIME,
 } from './constants';
 import type { MainCharacterId } from './characters';
 import { chooseEnemyKind, createEnemy } from './enemies';
@@ -70,6 +78,7 @@ import {
   getSochoWeaponTuning,
   getTsutsuWeaponTuning,
   getUshimaruWeaponTuning,
+  getYabukoFmWeaponTuning,
   hasSochoSlashWave,
 } from './weapons';
 
@@ -132,6 +141,8 @@ function createPlayer(): Player {
     nextGunHand: 'left',
     spearThrowCooldown: 0,
     turretDeployCooldown: 1.0,
+    hammerBreakCooldown: 0,
+    hammerBreakTimer: 0,
   };
 }
 
@@ -170,6 +181,8 @@ export function updateGame(
     next = runAutoSpearThrust(next, weaponId, weaponLevel, supportId, supportLevel);
   } else if (mainCharacterId === 'deli') {
     next = runAutoToolGun(next, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'yabuko-fm') {
+    next = runAutoHammerBreaker(next, weaponId, weaponLevel, supportId, supportLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -218,6 +231,8 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
     invincibleTimer: Math.max(0, player.invincibleTimer - dt),
     spearThrowCooldown: Math.max(0, player.spearThrowCooldown - dt),
     turretDeployCooldown: Math.max(0, player.turretDeployCooldown - dt),
+    hammerBreakCooldown: Math.max(0, player.hammerBreakCooldown - dt),
+    hammerBreakTimer: Math.max(0, player.hammerBreakTimer - dt),
   };
 }
 
@@ -654,6 +669,78 @@ function runAutoSpearThrust(
   };
 }
 
+function runAutoHammerBreaker(
+  state: GameState,
+  weaponId: string | undefined,
+  weaponLevel: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getYabukoFmWeaponTuning(weaponId, weaponLevel);
+  const shouldStarBreak = weaponTuning.hasStarbreakerShockwave && state.player.hammerBreakCooldown <= 0;
+  let nextId = state.nextId;
+
+  const enemyHit = damageEnemiesWithHammerBreaker(
+    state.enemies,
+    state.coins,
+    state.hearts,
+    state.effects,
+    nextId,
+    state.player,
+    supportId,
+    supportLevel,
+    weaponTuning,
+    shouldStarBreak,
+  );
+  nextId = enemyHit.nextId;
+  const bossHit = damageBossWithHammerBreaker(state.boss, state.player, nextId, weaponTuning, shouldStarBreak);
+  nextId = bossHit.nextId;
+
+  const starBreakEffect: FloatingEffect[] = shouldStarBreak
+    ? [
+        {
+          id: nextId++,
+          kind: 'support',
+          x: state.player.x,
+          y: state.player.y - 88,
+          text: 'STAR BREAK',
+          timer: 0.42,
+        },
+      ]
+    : [];
+
+  return {
+    ...state,
+    enemies: enemyHit.enemies,
+    coins: enemyHit.coins,
+    hearts: enemyHit.hearts,
+    effects: [
+      ...enemyHit.effects,
+      ...(bossHit.effect ? [bossHit.effect] : []),
+      ...starBreakEffect,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 48,
+        text: 'HAMMER',
+        timer: 0.2,
+      },
+    ],
+    boss: bossHit.boss,
+    defeatedEnemies: state.defeatedEnemies + enemyHit.defeated,
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.hammerCooldown,
+      slashTimer: YABUKO_FM_HAMMER_VISIBLE_TIME,
+      hammerBreakCooldown: shouldStarBreak ? weaponTuning.starbreakerCooldown : state.player.hammerBreakCooldown,
+      hammerBreakTimer: shouldStarBreak ? STARBREAKER_SHOCKWAVE_VISIBLE_TIME : 0,
+    },
+  };
+}
+
 function updateDeliTurrets(
   state: GameState,
   dt: number,
@@ -1020,6 +1107,74 @@ function damageBossWithSpearThrust(
   };
 }
 
+function damageEnemiesWithHammerBreaker(
+  enemies: Enemy[],
+  coins: Coin[],
+  hearts: GameState['hearts'],
+  effects: FloatingEffect[],
+  nextId: number,
+  player: Player,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+  shouldStarBreak: boolean,
+) {
+  let defeated = 0;
+  const nextCoins = [...coins];
+  const nextHearts = [...hearts];
+  const nextEffects = [...effects];
+  const nextEnemies: Enemy[] = [];
+
+  for (const enemy of enemies) {
+    const hammerHit = isInHammerBreaker(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    const starBreakHit = shouldStarBreak && isInStarbreakerShockwave(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    if (!hammerHit && !starBreakHit) {
+      nextEnemies.push(enemy);
+      continue;
+    }
+
+    const damage = (hammerHit ? YABUKO_FM_HAMMER_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_DAMAGE : 0);
+    const hp = enemy.hp - damage;
+    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
+
+    if (hp <= 0) {
+      defeated += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
+    } else {
+      nextEnemies.push(knockEnemyFromPlayer(player, { ...enemy, hp, hitTimer: 0.18 }, hammerHit ? YABUKO_FM_HAMMER_KNOCKBACK : YABUKO_FM_HAMMER_KNOCKBACK * 0.45));
+    }
+  }
+
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
+}
+
+function damageBossWithHammerBreaker(
+  boss: Boss | null,
+  player: Player,
+  nextId: number,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+  shouldStarBreak: boolean,
+) {
+  if (!boss) return { boss, nextId };
+  const hammerHit = isInBossHammerBreaker(player, boss, weaponTuning);
+  const starBreakHit = shouldStarBreak && isInBossStarbreakerShockwave(player, boss, weaponTuning);
+  if (!hammerHit && !starBreakHit) return { boss, nextId };
+  const damage = (hammerHit ? YABUKO_FM_HAMMER_BOSS_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_BOSS_DAMAGE : 0);
+
+  return {
+    boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
+    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.18, `-${damage}`),
+    nextId,
+  };
+}
+
 function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
@@ -1224,6 +1379,73 @@ function isInBossSpearThrust(
   if (dy > USHIMARU_SPEAR_BOSS_RANGE + boss.radius * 0.4) return false;
 
   return weaponTuning.thrustOffsets.some((offset) => Math.abs(boss.x - (player.x + offset)) < weaponTuning.spearHalfWidth + boss.radius * 0.5);
+}
+
+function isInHammerBreaker(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.18) return false;
+  if (dy > weaponTuning.hammerRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.hammerHalfWidth * (0.7 + Math.max(0, dy) / weaponTuning.hammerRange * 0.35);
+  return Math.abs(dx) < widthAtPoint + radius * 0.72 && Math.hypot(dx * 0.72, dy) < weaponTuning.hammerRange + radius;
+}
+
+function isInBossHammerBreaker(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.56;
+  const dy = player.y - bossLowerBodyY;
+  if (dy < -boss.radius * 0.2) return false;
+  if (dy > YABUKO_FM_HAMMER_BOSS_RANGE + boss.radius * 0.42) return false;
+
+  const widthAtPoint = weaponTuning.hammerHalfWidth * (0.8 + Math.max(0, dy) / YABUKO_FM_HAMMER_BOSS_RANGE * 0.32);
+  return Math.abs(boss.x - player.x) < widthAtPoint + boss.radius * 0.55;
+}
+
+function isInStarbreakerShockwave(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.15) return false;
+  if (dy > weaponTuning.starbreakerRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.starbreakerHalfWidth * (0.72 + Math.max(0, dy) / weaponTuning.starbreakerRange * 0.56);
+  return Math.abs(dx) < widthAtPoint + radius * 0.62;
+}
+
+function isInBossStarbreakerShockwave(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.58;
+  return isInStarbreakerShockwave(player, boss.x, bossLowerBodyY, boss.radius * 0.5, weaponTuning);
+}
+
+function knockEnemyFromPlayer(player: Player, enemy: Enemy, distance: number): Enemy {
+  const dx = enemy.x - player.x;
+  const dy = enemy.y - player.y;
+  const length = Math.hypot(dx, dy) || 1;
+
+  return {
+    ...enemy,
+    x: clamp(enemy.x + (dx / length) * distance, enemy.radius, FIELD_WIDTH - enemy.radius),
+    y: clamp(enemy.y + (dy / length) * distance, -enemy.radius, FIELD_HEIGHT + enemy.radius),
+  };
 }
 
 function updateEffects(state: GameState, dt: number): GameState {

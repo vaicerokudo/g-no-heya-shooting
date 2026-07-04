@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -88,6 +88,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '工具銃 + タレット',
     image: '/assets/tcg/deli-player.png',
   },
+  'yabuko-fm': {
+    id: 'yabuko-fm',
+    name: 'FMやぶこ',
+    role: '重撃・範囲制圧型',
+    description: '大槌を振り下ろし、前方の敵をまとめて押し返す。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '大槌',
+    attackType: 'hammerBreaker',
+    attackLabel: '大槌重撃',
+    image: '/assets/tcg/yabuko-fm-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -98,7 +110,15 @@ export function getMainCharacter(characterId: MainCharacterId = DEFAULT_MAIN_CHA
 }
 
 export function isMainCharacterId(value: unknown): value is MainCharacterId {
-  return value === 'socho' || value === 'tsutsu' || value === 'rokudo' || value === 'player' || value === 'ushimaru' || value === 'deli';
+  return (
+    value === 'socho' ||
+    value === 'tsutsu' ||
+    value === 'rokudo' ||
+    value === 'player' ||
+    value === 'ushimaru' ||
+    value === 'deli' ||
+    value === 'yabuko-fm'
+  );
 }
 
 export function isMainCharacterAvailable(characterId: MainCharacterId): boolean {

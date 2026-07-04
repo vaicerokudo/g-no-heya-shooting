@@ -15,6 +15,8 @@ import {
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
   SHOP_SUPPORT_SUMMON_COST,
+  STARBREAKER_SHOCKWAVE_VISIBLE_TIME,
+  YABUKO_FM_HAMMER_BOSS_RANGE,
 } from './game/constants';
 import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveActiveMainCharacterId } from './game/characters';
 import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
@@ -58,6 +60,7 @@ import {
   getSochoWeaponTuning,
   getUshimaruWeaponTuning,
   getWeaponOptionsForCharacter,
+  getYabukoFmWeaponTuning,
   hasSochoSlashWave,
   WEAPON_RARITY_WEIGHTS,
 } from './game/weapons';
@@ -252,7 +255,8 @@ function App() {
     mainCharacter.id === 'rokudo' ||
     mainCharacter.id === 'player' ||
     mainCharacter.id === 'ushimaru' ||
-    mainCharacter.id === 'deli'
+    mainCharacter.id === 'deli' ||
+    mainCharacter.id === 'yabuko-fm'
       ? mainCharacter.id
       : 'socho';
   const equippedMainWeapon = useMemo(
@@ -283,6 +287,10 @@ function App() {
   );
   const ushimaruWeaponTuning = useMemo(
     () => getUshimaruWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
+    [equippedMainWeapon.id, equippedMainWeaponLevel],
+  );
+  const yabukoFmWeaponTuning = useMemo(
+    () => getYabukoFmWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
     [equippedMainWeapon.id, equippedMainWeaponLevel],
   );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
@@ -1321,6 +1329,35 @@ function App() {
                     <i />
                   </span>
                 ))}
+              </div>
+            )}
+            {mainCharacter.id === 'yabuko-fm' && game.player.slashTimer > 0 && (
+              <div
+                className="hammer-breaker"
+                style={{
+                  left: game.player.x - yabukoFmWeaponTuning.hammerHalfWidth,
+                  top: game.player.y - (game.boss ? YABUKO_FM_HAMMER_BOSS_RANGE : yabukoFmWeaponTuning.hammerRange),
+                  width: yabukoFmWeaponTuning.hammerHalfWidth * 2,
+                  height: game.boss ? YABUKO_FM_HAMMER_BOSS_RANGE : yabukoFmWeaponTuning.hammerRange,
+                }}
+              >
+                <span className="hammer-breaker-head" />
+                <span className="hammer-breaker-shock" />
+              </div>
+            )}
+            {mainCharacter.id === 'yabuko-fm' && game.player.hammerBreakTimer > 0 && (
+              <div
+                className="starbreaker-wave"
+                style={{
+                  left: game.player.x - yabukoFmWeaponTuning.starbreakerHalfWidth,
+                  top: game.player.y - yabukoFmWeaponTuning.starbreakerRange,
+                  width: yabukoFmWeaponTuning.starbreakerHalfWidth * 2,
+                  height: yabukoFmWeaponTuning.starbreakerRange,
+                  opacity: Math.min(1, game.player.hammerBreakTimer / STARBREAKER_SHOCKWAVE_VISIBLE_TIME),
+                }}
+              >
+                <span className="starbreaker-core" />
+                <span className="starbreaker-cracks" />
               </div>
             )}
 
