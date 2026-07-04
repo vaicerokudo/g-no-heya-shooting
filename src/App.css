@@ -2203,7 +2203,27 @@ h1 {
 }
 
 .boss-hud {
+  display: flex;
+  gap: 10px;
+  align-items: center;
   padding: 10px;
+}
+
+.boss-hud-image {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  padding: 3px;
+  border: 1px solid rgba(255, 209, 102, 0.34);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.42));
+}
+
+.boss-hud-status {
+  flex: 1;
+  min-width: 0;
 }
 
 .field {

@@ -1409,16 +1409,19 @@ function App() {
 
           {game.boss && (
             <div className="boss-hud">
-              <span>{game.boss.name}</span>
-              <div className="meter boss-meter">
-                <div className="meter-fill boss" style={{ width: `${bossHpPercent}%` }} />
+              <img className="boss-hud-image" src={game.boss.image} alt="" aria-hidden="true" />
+              <div className="boss-hud-status">
+                <span>{game.boss.name}</span>
+                <div className="meter boss-meter">
+                  <div className="meter-fill boss" style={{ width: `${bossHpPercent}%` }} />
+                </div>
               </div>
             </div>
           )}
 
           {game.bossIntroTimer > 0 && (
             <div className="boss-cutin" role="status" aria-live="polite">
-              <strong>BOSS\u51fa\u73fe\uff01</strong>
+              <strong>BOSS APPEARS!</strong>
               <span>{getStageById(game.stageId).bossName}</span>
             </div>
           )}

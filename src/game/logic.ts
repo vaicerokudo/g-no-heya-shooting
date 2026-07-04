@@ -289,7 +289,7 @@ function maybeSpawnBoss(state: GameState): GameState {
     ...state,
     enemies: [],
     bossIntroTimer: 1.25,
-    message: 'BOSS\u51fa\u73fe\uff01',
+    message: 'BOSS APPEARS!',
   };
 }
 
@@ -387,7 +387,7 @@ function updateBoss(state: GameState, dt: number): GameState {
   let bullets = state.bullets;
   let nextId = state.nextId;
 
-  if (boss.shotTimer <= 0) {
+  if (boss.shotTimer <= 0 && (boss.type === 'goblin' || boss.type === 'bear')) {
     const spread = [-0.75, 0, 0.75];
     const newBullets = spread.map((offset) => ({
       id: nextId++,
@@ -401,7 +401,7 @@ function updateBoss(state: GameState, dt: number): GameState {
     boss = { ...boss, shotTimer: 1.25 };
   }
 
-  if (boss.slamTimer <= 0) {
+  if (boss.slamTimer <= 0 && (boss.type === 'boar' || boss.type === 'bear')) {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
     bullets = [
       ...bullets,
@@ -414,6 +414,14 @@ function updateBoss(state: GameState, dt: number): GameState {
         radius: 13,
       },
     ];
+    boss = { ...boss, slamTimer: 3.6 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'boar') {
+    boss = { ...boss, shotTimer: 1.25 };
+  }
+
+  if (boss.slamTimer <= 0 && boss.type === 'goblin') {
     boss = { ...boss, slamTimer: 3.6 };
   }
 
