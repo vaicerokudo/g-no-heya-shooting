@@ -67,6 +67,8 @@ import {
 } from './constants';
 import type { MainCharacterId } from './characters';
 import { chooseEnemyKind, createEnemy } from './enemies';
+import { DEFAULT_STAGE_ID, getStageById } from './stages';
+import type { StageId } from './stages';
 import {
   createEnemyCoinDrops,
   createYabukoHeartDrop,
@@ -92,6 +94,8 @@ import {
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
+  stageId: DEFAULT_STAGE_ID,
+  stageName: getStageById(DEFAULT_STAGE_ID).name,
   player: createPlayer(),
   enemies: [],
   coins: [],
@@ -120,6 +124,7 @@ export const createInitialGameState = (): GameState => ({
   },
   effects: [],
   boss: null,
+  bossIntroTimer: 0,
   elapsed: 0,
   coinsCollected: 0,
   defeatedEnemies: 0,
@@ -136,11 +141,16 @@ export const createInitialGameState = (): GameState => ({
   message: '',
 });
 
-export const startGame = (): GameState => ({
-  ...createInitialGameState(),
-  status: 'playing',
-  message: '星門反応を確認。総長、出撃。',
-});
+export const startGame = (stageId: StageId = DEFAULT_STAGE_ID): GameState => {
+  const stage = getStageById(stageId);
+  return {
+    ...createInitialGameState(),
+    status: 'playing',
+    stageId: stage.id,
+    stageName: stage.name,
+    message: '\u30b9\u30c6\u30fc\u30b8\u958b\u59cb',
+  };
+};
 
 function createPlayer(): Player {
   return {
@@ -183,6 +193,7 @@ export function updateGame(
 
   next = maybeSpawnEnemy(next);
   next = maybeSpawnBoss(next);
+  next = updateBossIntro(next, dt);
   next = updateEnemies(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
@@ -256,7 +267,7 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
 }
 
 function maybeSpawnEnemy(state: GameState): GameState {
-  if (state.boss || state.elapsed > BOSS_APPEAR_TIME + 6 || state.spawnTimer > 0) return state;
+  if (state.boss || state.bossIntroTimer > 0 || state.elapsed > BOSS_APPEAR_TIME + 6 || state.spawnTimer > 0) return state;
 
   const kind = chooseEnemyKind(state.elapsed, state.defeatedEnemies);
   const enemy = createEnemy(state.nextId, kind, state.elapsed);
@@ -271,23 +282,44 @@ function maybeSpawnEnemy(state: GameState): GameState {
 }
 
 function maybeSpawnBoss(state: GameState): GameState {
-  if (state.boss) return state;
+  if (state.boss || state.bossIntroTimer > 0) return state;
   if (state.elapsed < BOSS_APPEAR_TIME && state.defeatedEnemies < BOSS_APPEAR_KILLS) return state;
 
   return {
     ...state,
     enemies: [],
+    bossIntroTimer: 1.25,
+    message: 'BOSS\u51fa\u73fe\uff01',
+  };
+}
+
+function updateBossIntro(state: GameState, dt: number): GameState {
+  if (state.bossIntroTimer <= 0 || state.boss) return state;
+
+  const timer = Math.max(0, state.bossIntroTimer - dt);
+  if (timer > 0) {
+    return { ...state, bossIntroTimer: timer };
+  }
+
+  const stage = getStageById(state.stageId);
+  return {
+    ...state,
+    enemies: [],
+    bossIntroTimer: 0,
     boss: {
+      type: stage.bossType,
+      name: stage.bossName,
+      image: stage.bossImage,
       x: FIELD_WIDTH / 2,
       y: BOSS_Y,
-      radius: 54,
-      hp: 34,
-      maxHp: 34,
+      radius: stage.bossRadius,
+      hp: stage.bossHp,
+      maxHp: stage.bossHp,
       phaseTimer: 0,
       shotTimer: 1.1,
       slamTimer: 3.2,
     },
-    message: '星門から大型魔獣が出現！',
+    message: `${stage.bossName} BOSS`,
   };
 }
 

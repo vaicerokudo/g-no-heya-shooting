@@ -17,9 +17,10 @@ export function calculateCoinReward(
   status: GameStatus,
   stageCoins: number,
   hasTakenDamage = true,
+  clearCoinBonus = CLEAR_COIN_BONUS,
 ): CoinRewardResult | null {
   if (status === 'clear') {
-    const baseClearReward = stageCoins + CLEAR_COIN_BONUS;
+    const baseClearReward = stageCoins + clearCoinBonus;
     const isNoDamageClear = !hasTakenDamage;
     const addedCoins = isNoDamageClear
       ? Math.floor(baseClearReward * NO_DAMAGE_CLEAR_BONUS_MULTIPLIER)
@@ -28,7 +29,7 @@ export function calculateCoinReward(
     return {
       status,
       stageCoins,
-      clearBonus: CLEAR_COIN_BONUS,
+      clearBonus: clearCoinBonus,
       keepRate: 1,
       baseClearReward,
       noDamageMultiplier: isNoDamageClear ? NO_DAMAGE_CLEAR_BONUS_MULTIPLIER : 1,

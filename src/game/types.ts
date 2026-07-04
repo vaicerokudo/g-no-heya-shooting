@@ -1,3 +1,5 @@
+import type { BossType, StageId } from './stages';
+
 export type GameStatus =
   | 'title'
   | 'astoriaMap'
@@ -41,6 +43,9 @@ export type Enemy = {
 };
 
 export type Boss = {
+  type: BossType;
+  name: string;
+  image: string;
   x: number;
   y: number;
   radius: number;
@@ -179,6 +184,8 @@ export type Vector = {
 
 export type GameState = {
   status: GameStatus;
+  stageId: StageId;
+  stageName: string;
   player: Player;
   enemies: Enemy[];
   coins: Coin[];
@@ -194,6 +201,7 @@ export type GameState = {
   supportRockelBreak: RockelSupportBreakState;
   effects: FloatingEffect[];
   boss: Boss | null;
+  bossIntroTimer: number;
   elapsed: number;
   coinsCollected: number;
   defeatedEnemies: number;

@@ -16,7 +16,6 @@ import {
   SLASH_BOSS_RADIUS,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
-  STAGE_NAME,
   USHIMARU_SPEAR_BOSS_RANGE,
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
@@ -28,6 +27,8 @@ import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveA
 import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
+import { ASTORIA_GRASSLAND_STAGES, DEFAULT_STAGE_ID, getStageById } from './game/stages';
+import type { StageId } from './game/stages';
 import {
   loadOwnedCoins,
   loadOwnedWeapons,
@@ -187,6 +188,7 @@ function App() {
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
+  const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
   const [lockedMainCharacterNotice, setLockedMainCharacterNotice] = useState('');
   const [freeSupportSummonUsed, setFreeSupportSummonUsed] = useState(() => loadFreeSupportSummonUsed());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
@@ -279,6 +281,7 @@ function App() {
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
+  const selectedStage = useMemo(() => getStageById(selectedStageId), [selectedStageId]);
   const activeWeaponCharacterId: CharacterId =
     mainCharacter.id === 'tsutsu' ||
     mainCharacter.id === 'rokudo' ||
@@ -334,8 +337,8 @@ function App() {
     return 'G\u306e\u90e8\u5c4b STG';
   }, [game.status]);
   const rewardSummary = useMemo(
-    () => calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage),
-    [game.status, game.coinsCollected, game.hasTakenDamage],
+    () => calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage, getStageById(game.stageId).clearBonus),
+    [game.status, game.coinsCollected, game.hasTakenDamage, game.stageId],
   );
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
@@ -379,7 +382,7 @@ function App() {
     resetJoystick();
     rewardedResultKey.current = null;
     lastFrame.current = null;
-    setGame(startGame());
+    setGame(startGame(selectedStageId));
   };
 
   const goToAstoriaMap = () => {
@@ -1330,32 +1333,52 @@ function App() {
             <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <article className="stage-card">
-            <span>Stage 1</span>
-            <h2>アストリア草原</h2>
-            <p>{`メイン：${mainCharacter.name}`}</p>
+          <div className="stage-select-list">
+            {ASTORIA_GRASSLAND_STAGES.map((stage, index) => {
+              const isSelected = selectedStageId === stage.id;
+              return (
+                <button
+                  className={`stage-select-card ${isSelected ? 'is-selected' : ''}`}
+                  key={stage.id}
+                  type="button"
+                  onClick={() => setSelectedStageId(stage.id)}
+                >
+                  <span>Stage {index + 1}</span>
+                  <h2>{stage.name}</h2>
+                  <p>{`\u96e3\u6613\u5ea6\uff1a${stage.difficultyLabel}`}</p>
+                  <p>{`BOSS\uff1a${stage.bossName}`}</p>
+                  <p>{`\u30af\u30ea\u30a2\u30dc\u30fc\u30ca\u30b9\uff1a+${stage.clearBonus}`}</p>
+                </button>
+              );
+            })}
+          </div>
+          <article className="stage-card selected-stage-card">
+            <span>{selectedStage.difficultyLabel}</span>
+            <h2>{selectedStage.name}</h2>
+            <p>{`BOSS\uff1a${selectedStage.bossName}`}</p>
+            <p>{`\u30e1\u30a4\u30f3\uff1a${mainCharacter.name}`}</p>
             {selectedSupport ? (
               <>
-                <p>{`同行：${selectedSupport.name} Lv ${selectedSupportLevel}`}</p>
-                <p>{`効果：${selectedSupport.effectDescription}`}</p>
+                <p>{`\u540c\u884c\uff1a${selectedSupport.name} Lv ${selectedSupportLevel}`}</p>
+                <p>{`\u52b9\u679c\uff1a${selectedSupport.effectDescription}`}</p>
               </>
             ) : (
-              <p>{freeSupportSummonUsed ? '同行：なし。Gの部屋でサポートを選ぼう。' : '同行：なし。初回無料召喚は雑貨屋でできます。'}</p>
+              <p>{freeSupportSummonUsed ? '\u540c\u884c\uff1a\u306a\u3057\u3002G\u306e\u90e8\u5c4b\u3067\u30b5\u30dd\u30fc\u30c8\u3092\u9078\u307c\u3046\u3002' : '\u540c\u884c\uff1a\u306a\u3057\u3002\u521d\u56de\u7121\u6599\u53ec\u559a\u306f\u96d1\u8ca8\u5c4b\u3067\u3067\u304d\u307e\u3059\u3002'}</p>
             )}
-            <p className="equipped-weapon-label">{'\u6b66\u5668'}：{mainWeaponLabel}</p>
-            <p className="equipped-weapon-label">攻撃：{mainCharacter.attackLabel}</p>
+            <p className="equipped-weapon-label">{`\u6b66\u5668\uff1a${mainWeaponLabel}`}</p>
+            <p className="equipped-weapon-label">{`\u653b\u6483\uff1a${mainCharacter.attackLabel}`}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
-              アストリア草原へ出撃
+              {`${selectedStage.name}\u3078\u51fa\u6483`}
             </button>
           </article>
           <div className="prepare-actions">
             {!selectedSupport && (
               <button className="secondary-button" onClick={freeSupportSummonUsed ? goToPrepare : goToShopSupportSummon}>
-                {freeSupportSummonUsed ? 'Gの部屋で選ぶ' : '雑貨屋で初回無料召喚'}
+                {freeSupportSummonUsed ? 'G\u306e\u90e8\u5c4b\u3067\u9078\u3076' : '\u96d1\u8ca8\u5c4b\u3067\u521d\u56de\u7121\u6599\u53ec\u559a'}
               </button>
             )}
             <button className="secondary-button" onClick={goToAstoriaMap}>
-              MAPへ戻る
+              MAP\u3078\u623b\u308b
             </button>
           </div>
         </section>
@@ -1372,7 +1395,7 @@ function App() {
             </div>
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
-            <div className="hud-stage">{STAGE_NAME}</div>
+            <div className="hud-stage">{game.stageName}</div>
             <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
             <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>
@@ -1386,10 +1409,17 @@ function App() {
 
           {game.boss && (
             <div className="boss-hud">
-              <span>大型魔獣</span>
+              <span>{game.boss.name}</span>
               <div className="meter boss-meter">
                 <div className="meter-fill boss" style={{ width: `${bossHpPercent}%` }} />
               </div>
+            </div>
+          )}
+
+          {game.bossIntroTimer > 0 && (
+            <div className="boss-cutin" role="status" aria-live="polite">
+              <strong>BOSS\u51fa\u73fe\uff01</strong>
+              <span>{getStageById(game.stageId).bossName}</span>
             </div>
           )}
 
@@ -1660,9 +1690,12 @@ function App() {
             {game.boss && (
               <div
                 className={`boss ${(game.boss.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
-                style={place(game.boss.x, game.boss.y, game.boss.radius * 2)}
+                style={{
+                  ...place(game.boss.x, game.boss.y, game.boss.radius * 2),
+                  backgroundImage: `url(${game.boss.image})`,
+                }}
               >
-                大型魔獣
+                {game.boss.name}
               </div>
             )}
 
@@ -1737,7 +1770,7 @@ function App() {
 
       {(game.status === 'clear' || game.status === 'gameOver') && (
         <section className={`menu-screen result-screen ${game.status}`}>
-          <p className="eyebrow">{STAGE_NAME}</p>
+          <p className="eyebrow">{game.stageName}</p>
           <h1>{screenTitle}</h1>
           <p className="lead">{game.message}</p>
           <div className="result-grid">
