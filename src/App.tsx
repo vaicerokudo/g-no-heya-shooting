@@ -11,6 +11,7 @@ import {
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
   STAGE_NAME,
+  USHIMARU_SPEAR_BOSS_RANGE,
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
   SHOP_SUPPORT_SUMMON_COST,
@@ -55,6 +56,7 @@ import {
   getEquippedSochoWeapon,
   getOwnedWeaponLevel,
   getSochoWeaponTuning,
+  getUshimaruWeaponTuning,
   getWeaponOptionsForCharacter,
   hasSochoSlashWave,
   WEAPON_RARITY_WEIGHTS,
@@ -246,7 +248,9 @@ function App() {
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
   const activeWeaponCharacterId: CharacterId =
-    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' || mainCharacter.id === 'player' ? mainCharacter.id : 'socho';
+    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' || mainCharacter.id === 'player' || mainCharacter.id === 'ushimaru'
+      ? mainCharacter.id
+      : 'socho';
   const equippedMainWeapon = useMemo(
     () => getEquippedWeaponForCharacter(equippedWeapons, activeWeaponCharacterId),
     [equippedWeapons, activeWeaponCharacterId],
@@ -272,6 +276,10 @@ function App() {
   const sochoWeaponTuning = useMemo(
     () => getSochoWeaponTuning(equippedSochoWeapon.id, equippedSochoWeaponLevel),
     [equippedSochoWeapon.id, equippedSochoWeaponLevel],
+  );
+  const ushimaruWeaponTuning = useMemo(
+    () => getUshimaruWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
+    [equippedMainWeapon.id, equippedMainWeaponLevel],
   );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
   const screenTitle = useMemo(() => {
@@ -1287,6 +1295,30 @@ function App() {
                 <span className="shadow-slash-smoke" />
               </div>
             )}
+            {mainCharacter.id === 'ushimaru' && game.player.slashTimer > 0 && (
+              <div
+                className="spear-thrust-set"
+                style={{
+                  left: game.player.x - ushimaruWeaponTuning.spearHalfWidth - 24,
+                  top: game.player.y - (game.boss ? USHIMARU_SPEAR_BOSS_RANGE : ushimaruWeaponTuning.spearRange),
+                  width: ushimaruWeaponTuning.spearHalfWidth * 2 + 48,
+                  height: game.boss ? USHIMARU_SPEAR_BOSS_RANGE : ushimaruWeaponTuning.spearRange,
+                }}
+              >
+                {ushimaruWeaponTuning.thrustOffsets.map((offset) => (
+                  <span
+                    key={offset}
+                    className="spear-thrust"
+                    style={{
+                      left: `calc(50% + ${offset}px)`,
+                      width: ushimaruWeaponTuning.spearHalfWidth * 2,
+                    }}
+                  >
+                    <i />
+                  </span>
+                ))}
+              </div>
+            )}
 
             {game.coins.map((coin) => (
               <div
@@ -1332,8 +1364,8 @@ function App() {
             {game.playerArrows.map((arrow) => (
               <div
                 key={arrow.id}
-                className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''}`}
-                style={place(arrow.x, arrow.y, arrow.radius * 2.2, arrow.kind === 'gun' ? 18 : 34)}
+                className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''} ${arrow.kind === 'spear' ? 'player-spear' : ''}`}
+                style={place(arrow.x, arrow.y, arrow.radius * 2.2, arrow.kind === 'gun' ? 18 : arrow.kind === 'spear' ? 42 : 34)}
               />
             ))}
 

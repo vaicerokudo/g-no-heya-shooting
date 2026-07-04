@@ -35,6 +35,11 @@ import {
   TSUTSU_ARROW_LIFE,
   TSUTSU_ARROW_RADIUS,
   TSUTSU_ARROW_SPEED,
+  USHIMARU_SPEAR_BOSS_DAMAGE,
+  USHIMARU_SPEAR_BOSS_RANGE,
+  USHIMARU_SPEAR_DAMAGE,
+  USHIMARU_SPEAR_VISIBLE_TIME,
+  USHIMARU_THROWN_SPEAR_LIFE,
 } from './constants';
 import type { MainCharacterId } from './characters';
 import { chooseEnemyKind, createEnemy } from './enemies';
@@ -49,7 +54,14 @@ import {
   updateSupportEffects,
 } from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
-import { getPlayerWeaponTuning, getRokudoWeaponTuning, getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
+import {
+  getPlayerWeaponTuning,
+  getRokudoWeaponTuning,
+  getSochoWeaponTuning,
+  getTsutsuWeaponTuning,
+  getUshimaruWeaponTuning,
+  hasSochoSlashWave,
+} from './weapons';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -138,6 +150,8 @@ export function updateGame(
     next = runAutoShadowSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   } else if (mainCharacterId === 'player') {
     next = runAutoGunfire(next, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'ushimaru') {
+    next = runAutoSpearThrust(next, weaponId, weaponLevel, supportId, supportLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -490,6 +504,80 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
   };
 }
 
+function runAutoSpearThrust(
+  state: GameState,
+  weaponId: string | undefined,
+  weaponLevel: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getUshimaruWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const enemyHit = damageEnemiesWithSpearThrust(
+    state.enemies,
+    state.coins,
+    state.hearts,
+    state.effects,
+    nextId,
+    state.player,
+    supportId,
+    supportLevel,
+    weaponTuning,
+  );
+  nextId = enemyHit.nextId;
+  const bossHit = damageBossWithSpearThrust(state.boss, state.player, nextId, weaponTuning);
+  nextId = bossHit.nextId;
+
+  const thrownSpear: PlayerArrow[] = weaponTuning.hasPiercingThrow
+    ? [
+        {
+          id: nextId++,
+          x: state.player.x,
+          y: state.player.y - 34,
+          vx: 0,
+          vy: -weaponTuning.thrownSpearSpeed,
+          radius: weaponTuning.thrownSpearRadius,
+          damage: 1,
+          bossDamage: 1,
+          life: USHIMARU_THROWN_SPEAR_LIFE,
+          kind: 'spear',
+          piercing: true,
+          hitEnemyIds: [],
+          hasHitBoss: false,
+        },
+      ]
+    : [];
+
+  return {
+    ...state,
+    enemies: enemyHit.enemies,
+    coins: enemyHit.coins,
+    hearts: enemyHit.hearts,
+    effects: [
+      ...enemyHit.effects,
+      ...(bossHit.effect ? [bossHit.effect] : []),
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 46,
+        text: 'THRUST',
+        timer: 0.16,
+      },
+    ],
+    boss: bossHit.boss,
+    defeatedEnemies: state.defeatedEnemies + enemyHit.defeated,
+    playerArrows: [...state.playerArrows, ...thrownSpear],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.spearCooldown,
+      slashTimer: USHIMARU_SPEAR_VISIBLE_TIME,
+    },
+  };
+}
+
 function updatePlayerArrows(
   state: GameState,
   dt: number,
@@ -524,13 +612,15 @@ function resolvePlayerArrowHits(
 
   for (const arrow of state.playerArrows) {
     const enemyIndex = enemies.findIndex(
-      (enemy) => Math.hypot(enemy.x - arrow.x, enemy.y - arrow.y) < enemy.radius + arrow.radius,
+      (enemy) => !(arrow.hitEnemyIds ?? []).includes(enemy.id) && Math.hypot(enemy.x - arrow.x, enemy.y - arrow.y) < enemy.radius + arrow.radius,
     );
+    let nextArrow = arrow;
 
     if (enemyIndex >= 0) {
       const enemy = enemies[enemyIndex];
       const hp = enemy.hp - arrow.damage;
       effects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${arrow.damage}`));
+      nextArrow = arrow.piercing ? { ...arrow, hitEnemyIds: [...(arrow.hitEnemyIds ?? []), enemy.id] } : arrow;
 
       if (hp <= 0) {
         defeatedEnemies += 1;
@@ -546,16 +636,22 @@ function resolvePlayerArrowHits(
       } else {
         enemies[enemyIndex] = { ...enemy, hp, hitTimer: 0.12 };
       }
+      if (arrow.piercing) {
+        remainingArrows.push(nextArrow);
+      }
       continue;
     }
 
-    if (boss && Math.hypot(boss.x - arrow.x, boss.y - arrow.y) < boss.radius * 0.72 + arrow.radius) {
+    if (!arrow.hasHitBoss && boss && Math.hypot(boss.x - arrow.x, boss.y - arrow.y) < boss.radius * 0.72 + arrow.radius) {
       boss = {
         ...boss,
         hp: boss.hp - arrow.bossDamage,
         hitTimer: 0.16,
       };
       effects.push(createHitEffect(nextId++, arrow.x, arrow.y, `-${arrow.bossDamage}`));
+      if (arrow.piercing) {
+        remainingArrows.push({ ...arrow, hasHitBoss: true });
+      }
       continue;
     }
 
@@ -688,6 +784,63 @@ function damageBossWithShadowSlash(boss: Boss | null, player: Player, nextId: nu
   return {
     boss: { ...boss, hp: boss.hp - ROKUDO_SHADOW_SLASH_BOSS_DAMAGE, hitTimer: 0.16 },
     effect: createShadowHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${ROKUDO_SHADOW_SLASH_BOSS_DAMAGE}`),
+    nextId,
+  };
+}
+
+function damageEnemiesWithSpearThrust(
+  enemies: Enemy[],
+  coins: Coin[],
+  hearts: GameState['hearts'],
+  effects: FloatingEffect[],
+  nextId: number,
+  player: Player,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponTuning: ReturnType<typeof getUshimaruWeaponTuning>,
+) {
+  let defeated = 0;
+  const nextCoins = [...coins];
+  const nextHearts = [...hearts];
+  const nextEffects = [...effects];
+  const nextEnemies: Enemy[] = [];
+
+  for (const enemy of enemies) {
+    if (!isInSpearThrust(player, enemy.x, enemy.y, enemy.radius, weaponTuning)) {
+      nextEnemies.push(enemy);
+      continue;
+    }
+
+    const hp = enemy.hp - USHIMARU_SPEAR_DAMAGE;
+    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${USHIMARU_SPEAR_DAMAGE}`));
+    if (hp <= 0) {
+      defeated += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
+    } else {
+      nextEnemies.push({ ...enemy, hp, hitTimer: 0.14 });
+    }
+  }
+
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
+}
+
+function damageBossWithSpearThrust(
+  boss: Boss | null,
+  player: Player,
+  nextId: number,
+  weaponTuning: ReturnType<typeof getUshimaruWeaponTuning>,
+) {
+  if (!boss || !isInBossSpearThrust(player, boss, weaponTuning)) return { boss, nextId };
+  return {
+    boss: { ...boss, hp: boss.hp - USHIMARU_SPEAR_BOSS_DAMAGE, hitTimer: 0.16 },
+    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${USHIMARU_SPEAR_BOSS_DAMAGE}`),
     nextId,
   };
 }
@@ -869,6 +1022,33 @@ function isInBossShadowSlash(player: Player, boss: Boss): boolean {
     Math.abs(dx) < widthAtPoint + boss.radius * 0.48 &&
     Math.hypot(dx, dy) < ROKUDO_SHADOW_SLASH_BOSS_RADIUS + boss.radius * 0.42
   );
+}
+
+function isInSpearThrust(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getUshimaruWeaponTuning>,
+): boolean {
+  const dy = player.y - y;
+  if (dy < -radius * 0.18) return false;
+  if (dy > weaponTuning.spearRange + radius) return false;
+
+  return weaponTuning.thrustOffsets.some((offset) => Math.abs(x - (player.x + offset)) < weaponTuning.spearHalfWidth + radius * 0.64);
+}
+
+function isInBossSpearThrust(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getUshimaruWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.56;
+  const dy = player.y - bossLowerBodyY;
+  if (dy < -boss.radius * 0.2) return false;
+  if (dy > USHIMARU_SPEAR_BOSS_RANGE + boss.radius * 0.4) return false;
+
+  return weaponTuning.thrustOffsets.some((offset) => Math.abs(boss.x - (player.x + offset)) < weaponTuning.spearHalfWidth + boss.radius * 0.5);
 }
 
 function updateEffects(state: GameState, dt: number): GameState {

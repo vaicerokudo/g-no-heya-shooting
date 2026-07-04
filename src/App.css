@@ -1902,6 +1902,7 @@ h1 {
 .field.is-paused .slash,
 .field.is-paused .slash-wave,
 .field.is-paused .shadow-slash,
+.field.is-paused .spear-thrust-set,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
 .field.is-paused .hibiki-shield,
@@ -1951,6 +1952,7 @@ h1 {
 .slash,
 .slash-wave,
 .shadow-slash,
+.spear-thrust-set,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -2192,6 +2194,43 @@ h1 {
   animation: shadowSmoke 170ms ease-out both;
 }
 
+.spear-thrust-set {
+  z-index: 5;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 12px rgba(255, 236, 190, 0.8))
+    drop-shadow(0 0 18px rgba(255, 142, 58, 0.42));
+  animation: spearThrustBurst 170ms ease-out both;
+}
+
+.spear-thrust {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 247, 206, 0.95) 16%, rgba(255, 178, 86, 0.88) 62%, rgba(255, 255, 255, 0));
+  clip-path: polygon(50% 0, 78% 16%, 62% 100%, 38% 100%, 22% 16%);
+  opacity: 0;
+  animation: spearLineDrive 170ms ease-out both;
+}
+
+.spear-thrust i {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #ffe1a3 45%, rgba(255, 148, 61, 0));
+  box-shadow:
+    0 0 12px rgba(255, 255, 255, 0.9),
+    0 0 18px rgba(255, 142, 58, 0.62);
+}
+
 .enemy {
   color: #fff;
   overflow: visible;
@@ -2401,6 +2440,24 @@ h1 {
   width: 2px;
   height: 12px;
   background: linear-gradient(180deg, rgba(184, 247, 255, 0.62), transparent);
+}
+
+.player-spear {
+  border-radius: 999px 999px 8px 8px;
+  background:
+    linear-gradient(180deg, #ffffff 0 12%, #ffe1a3 20% 56%, rgba(255, 148, 61, 0.82) 68%, transparent 100%),
+    #ffcf7a;
+  box-shadow:
+    0 0 0 1px rgba(255, 247, 210, 0.72),
+    0 0 12px rgba(255, 209, 102, 0.88),
+    0 0 20px rgba(255, 142, 58, 0.48);
+}
+
+.player-spear::after {
+  bottom: -18px;
+  width: 4px;
+  height: 24px;
+  background: linear-gradient(180deg, rgba(255, 225, 163, 0.7), transparent);
 }
 
 .garuda-sweep {
@@ -2993,6 +3050,36 @@ h1 {
   100% {
     opacity: 0;
     transform: scale(1.18) translateY(-12px);
+  }
+}
+
+@keyframes spearThrustBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scaleY(0.7);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(1.04);
+  }
+}
+
+@keyframes spearLineDrive {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0.2);
+    transform-origin: bottom;
+  }
+  40% {
+    opacity: 0.98;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(1);
+    transform-origin: bottom;
   }
 }
 

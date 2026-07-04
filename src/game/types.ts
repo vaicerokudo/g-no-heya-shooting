@@ -97,7 +97,10 @@ export type PlayerArrow = {
   damage: number;
   bossDamage: number;
   life: number;
-  kind?: 'arrow' | 'gun';
+  kind?: 'arrow' | 'gun' | 'spear';
+  piercing?: boolean;
+  hitEnemyIds?: number[];
+  hasHitBoss?: boolean;
 };
 
 export type HibikiShieldState = {

@@ -7,6 +7,9 @@ import {
   STAR_SLASH_WAVE_HALF_WIDTH,
   STAR_SLASH_WAVE_RANGE,
   TSUTSU_ARROW_COOLDOWN,
+  USHIMARU_SPEAR_COOLDOWN,
+  USHIMARU_SPEAR_HALF_WIDTH,
+  USHIMARU_SPEAR_RANGE,
 } from './constants';
 
 export type WeaponRarity = 'common' | 'rare' | 'epic';
@@ -27,7 +30,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -53,10 +56,21 @@ export type PlayerWeaponTuning = {
   gunCooldown: number;
 };
 
+export type UshimaruWeaponTuning = {
+  spearCooldown: number;
+  spearRange: number;
+  spearHalfWidth: number;
+  thrustOffsets: number[];
+  hasPiercingThrow: boolean;
+  thrownSpearRadius: number;
+  thrownSpearSpeed: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
 export const DEFAULT_PLAYER_WEAPON_ID = 'starter-pistols';
+export const DEFAULT_USHIMARU_WEAPON_ID = 'starter-spear';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -85,6 +99,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'Player用。最初から使える支給品の二丁拳銃。',
     effectDescription: '二丁拳銃で前方へ弾を放つ。',
+  },
+  {
+    id: DEFAULT_USHIMARU_WEAPON_ID,
+    name: '支給槍',
+    owner: 'うしまる',
+    type: '槍',
+    rarity: 'common',
+    description: 'うしまる用。最初から使える基本の槍。',
+    effectDescription: '正面へ直線突きを放つ。',
   },
 ];
 
@@ -162,7 +185,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '槍',
     rarity: 'common',
     description: 'うしまる用。直線突破に向いた槍。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    effectDescription: '槍突きの後に、前方へ貫通する槍を投げる。Lvで突き位置と投げ槍が少し強化。',
     imagePath: '/assets/tcg/weapon-fang-spear.png',
   },
   {
@@ -240,6 +263,10 @@ export function getPlayerWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon
   return [getDefaultOwnedWeapon(DEFAULT_PLAYER_WEAPON_ID), ...ownedWeapons.filter((weapon) => isPlayerWeapon(weapon.id))];
 }
 
+export function getUshimaruWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_USHIMARU_WEAPON_ID), ...ownedWeapons.filter((weapon) => isUshimaruWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -256,6 +283,10 @@ export function getEquippedPlayerWeapon(equippedWeapons: EquippedWeaponsByCharac
   return getWeaponById(equippedWeapons.player ?? DEFAULT_PLAYER_WEAPON_ID) ?? defaultWeaponDefinitions[2];
 }
 
+export function getEquippedUshimaruWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.ushimaru ?? DEFAULT_USHIMARU_WEAPON_ID) ?? defaultWeaponDefinitions[3];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -263,6 +294,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'tsutsu') return getEquippedTsutsuWeapon(equippedWeapons);
   if (characterId === 'rokudo') return getEquippedRokudoWeapon(equippedWeapons);
   if (characterId === 'player') return getEquippedPlayerWeapon(equippedWeapons);
+  if (characterId === 'ushimaru') return getEquippedUshimaruWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -272,7 +304,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_SOCHO_WEAPON_ID ||
     weaponId === DEFAULT_TSUTSU_WEAPON_ID ||
     weaponId === DEFAULT_ROKUDO_WEAPON_ID ||
-    weaponId === DEFAULT_PLAYER_WEAPON_ID
+    weaponId === DEFAULT_PLAYER_WEAPON_ID ||
+    weaponId === DEFAULT_USHIMARU_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -288,6 +321,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'tsutsu') return getTsutsuWeaponOptions(ownedWeapons);
   if (characterId === 'rokudo') return getRokudoWeaponOptions(ownedWeapons);
   if (characterId === 'player') return getPlayerWeaponOptions(ownedWeapons);
+  if (characterId === 'ushimaru') return getUshimaruWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -340,6 +374,23 @@ export function getPlayerWeaponTuning(weaponId: string | undefined, level = 1): 
   };
 }
 
+export function getUshimaruWeaponTuning(weaponId: string | undefined, level = 1): UshimaruWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const isFangSpear = weaponId === 'fang-thrust-spear';
+  const levelBonus = normalizedLevel - 1;
+  const thrustOffsets = normalizedLevel >= 5 ? [0, -18, 18] : normalizedLevel >= 4 ? [0, -16] : normalizedLevel >= 3 ? [0, 16] : [0];
+
+  return {
+    spearCooldown: Math.max(0.5, USHIMARU_SPEAR_COOLDOWN - (isFangSpear ? Math.min(0.04, levelBonus * 0.01) : 0)),
+    spearRange: USHIMARU_SPEAR_RANGE + (normalizedLevel >= 2 ? 8 : 0) + (isFangSpear ? levelBonus * 3 : 0),
+    spearHalfWidth: USHIMARU_SPEAR_HALF_WIDTH + (normalizedLevel >= 2 ? 2 : 0),
+    thrustOffsets,
+    hasPiercingThrow: isFangSpear,
+    thrownSpearRadius: 6 + Math.floor(levelBonus / 3),
+    thrownSpearSpeed: 500 + levelBonus * 14,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -363,6 +414,10 @@ export function isRokudoWeapon(weaponId: string): boolean {
 
 export function isPlayerWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_PLAYER_WEAPON_ID || weaponId === 'twin-fang-pistols';
+}
+
+export function isUshimaruWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_USHIMARU_WEAPON_ID || weaponId === 'fang-thrust-spear';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

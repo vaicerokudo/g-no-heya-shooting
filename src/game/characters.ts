@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -64,6 +64,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '二丁拳銃',
     image: '/assets/tcg/player-player.png',
   },
+  ushimaru: {
+    id: 'ushimaru',
+    name: 'うしまる',
+    role: '槍の一点突破',
+    description: '槍の直線突きで前方の敵を貫く。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '槍',
+    attackType: 'spearThrust',
+    attackLabel: '槍突き',
+    image: '/assets/tcg/ushimaru-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -74,7 +86,7 @@ export function getMainCharacter(characterId: MainCharacterId = DEFAULT_MAIN_CHA
 }
 
 export function isMainCharacterId(value: unknown): value is MainCharacterId {
-  return value === 'socho' || value === 'tsutsu' || value === 'rokudo' || value === 'player';
+  return value === 'socho' || value === 'tsutsu' || value === 'rokudo' || value === 'player' || value === 'ushimaru';
 }
 
 export function isMainCharacterAvailable(characterId: MainCharacterId): boolean {

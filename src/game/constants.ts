@@ -58,6 +58,17 @@ export const PLAYER_MAIN_GUN_LIFE = 1.35;
 export const PLAYER_MAIN_GUN_SPREAD_X = 42;
 export const PLAYER_MAIN_GUN_HAND_OFFSET = 10;
 
+export const USHIMARU_SPEAR_COOLDOWN = 0.58;
+export const USHIMARU_SPEAR_VISIBLE_TIME = 0.17;
+export const USHIMARU_SPEAR_RANGE = 142;
+export const USHIMARU_SPEAR_BOSS_RANGE = 166;
+export const USHIMARU_SPEAR_HALF_WIDTH = 20;
+export const USHIMARU_SPEAR_DAMAGE = 1;
+export const USHIMARU_SPEAR_BOSS_DAMAGE = 1;
+export const USHIMARU_THROWN_SPEAR_SPEED = 500;
+export const USHIMARU_THROWN_SPEAR_RADIUS = 6;
+export const USHIMARU_THROWN_SPEAR_LIFE = 1.55;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

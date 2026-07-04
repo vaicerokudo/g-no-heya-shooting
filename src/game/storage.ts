@@ -71,6 +71,7 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
       ...(typeof equipped.tsutsu === 'string' ? { tsutsu: equipped.tsutsu } : {}),
       ...(typeof equipped.rokudo === 'string' ? { rokudo: equipped.rokudo } : {}),
       ...(typeof equipped.player === 'string' ? { player: equipped.player } : {}),
+      ...(typeof equipped.ushimaru === 'string' ? { ushimaru: equipped.ushimaru } : {}),
     };
   } catch {
     return {};
