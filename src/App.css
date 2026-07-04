@@ -1586,12 +1586,12 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(4px, 1.5vw, 10px);
+  gap: clamp(3px, 1vw, 6px);
 }
 
 .summon-card {
   position: relative;
-  width: clamp(54px, 13vw, 78px);
+  width: clamp(48px, 10vw, 66px);
   aspect-ratio: 2 / 3;
   padding: 0;
   border: 0;
@@ -1606,19 +1606,31 @@ h1 {
 }
 
 .summon-card.pick-0 {
-  --card-rotate: -12deg;
+  --card-rotate: -18deg;
 }
 
 .summon-card.pick-1 {
+  --card-rotate: -12deg;
+}
+
+.summon-card.pick-2 {
   --card-rotate: -6deg;
 }
 
 .summon-card.pick-3 {
-  --card-rotate: 6deg;
+  --card-rotate: 0deg;
 }
 
 .summon-card.pick-4 {
+  --card-rotate: 6deg;
+}
+
+.summon-card.pick-5 {
   --card-rotate: 12deg;
+}
+
+.summon-card.pick-6 {
+  --card-rotate: 18deg;
 }
 
 .summon-card:hover:not(:disabled),
