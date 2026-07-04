@@ -70,6 +70,12 @@ export const USHIMARU_THROWN_SPEAR_RADIUS = 6;
 export const USHIMARU_THROWN_SPEAR_LIFE = 1.55;
 export const USHIMARU_PIERCING_SPEAR_COOLDOWN = 6.0;
 
+export const USHIMARU_SUPPORT_COUNTER_RANGE = 102;
+export const USHIMARU_SUPPORT_COUNTER_DAMAGE = 1;
+export const USHIMARU_SUPPORT_COUNTER_KNOCKBACK = 46;
+export const USHIMARU_SUPPORT_COUNTER_COOLDOWN = 8.0;
+export const USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN = 6.0;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

@@ -20,7 +20,7 @@ export type GameStatus =
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
-export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou';
+export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru';
 
 export type Enemy = {
   id: number;
@@ -170,6 +170,7 @@ export type GameState = {
   spawnTimer: number;
   supportCooldowns: {
     playerGunfire: number;
+    ushimaruCounter: number;
   };
   message: string;
 };

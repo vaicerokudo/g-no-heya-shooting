@@ -96,6 +96,7 @@ export const createInitialGameState = (): GameState => ({
   spawnTimer: 0.6,
   supportCooldowns: {
     playerGunfire: 0.8,
+    ushimaruCounter: 1.2,
   },
   message: '',
 });

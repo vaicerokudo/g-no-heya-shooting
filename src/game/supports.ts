@@ -56,6 +56,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '迦楼羅を呼び、敵と敵弾を薙ぎ払う。',
     image: '/assets/tcg/support-card-myouou.png',
   },
+  {
+    id: 'ushimaru',
+    name: 'うしまる',
+    role: '牙突カウンター',
+    description: '接近してきた敵を槍で迎撃する防御寄りサポート。',
+    effectDescription: '接近してきた敵を牙突カウンターで迎撃し、通常敵を少し押し返す。',
+    image: '/assets/tcg/ushimaru-player.png',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -64,6 +72,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   player: '手数が欲しいなら、いい引きだよ。',
   hibiki: '守りを固めたい時に頼れるカードだね。',
   myouou: 'おお、強い気配だ。これは大事にしなよ。',
+  ushimaru: '前に出るなら、頼れる槍使いだね。',
 };
 
 export function drawRandomSupport(): SupportCharacter {
@@ -102,5 +111,5 @@ export function getOwnedSupportLevel(ownedSupports: OwnedSupport[], supportId: S
 }
 
 export function normalizeSupportLevel(level: number | undefined): number {
-  return Math.max(1, Math.floor(level ?? 1));
+  return Math.min(5, Math.max(1, Math.floor(level ?? 1)));
 }

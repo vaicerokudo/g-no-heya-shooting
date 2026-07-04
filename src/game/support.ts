@@ -29,6 +29,11 @@ import {
   PLAYER_SUPPORT_BULLET_SPEED,
   PLAYER_SUPPORT_FIRE_INTERVAL,
   PLAYER_SUPPORT_SHOTS_PER_BURST,
+  USHIMARU_SUPPORT_COUNTER_COOLDOWN,
+  USHIMARU_SUPPORT_COUNTER_DAMAGE,
+  USHIMARU_SUPPORT_COUNTER_KNOCKBACK,
+  USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN,
+  USHIMARU_SUPPORT_COUNTER_RANGE,
   YABUKO_HEART_DROP_CHANCE,
   YABUKO_RED_HEART_HEAL,
 } from './constants';
@@ -57,6 +62,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   let next = updateSupportBullets(state, dt);
   next = updateHibikiShield(next, dt, supportId, supportLevel);
   next = updateMyououGaruda(next, dt, supportId, supportLevel);
+  next = updateUshimaruCounter(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -90,6 +96,10 @@ export function isHibikiSupport(supportId: SupportId | null): boolean {
 
 export function isMyououSupport(supportId: SupportId | null): boolean {
   return supportId === 'myouou';
+}
+
+export function isUshimaruSupport(supportId: SupportId | null): boolean {
+  return supportId === 'ushimaru';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -207,6 +217,118 @@ export function getMyououGarudaView(state: GameState) {
     direction: state.supportGaruda.direction,
     frameSrc: MYOUOU_GARUDA_FRAME_PATHS[frameIndex],
   };
+}
+
+function updateUshimaruCounter(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = Math.max(0, state.supportCooldowns.ushimaruCounter - dt);
+  const baseState: GameState = {
+    ...state,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      ushimaruCounter: cooldown,
+    },
+  };
+
+  if (!isUshimaruSupport(supportId) || cooldown > 0) return baseState;
+
+  const targetIndex = findUshimaruCounterTarget(baseState);
+  const bossInRange = baseState.boss && isPointNearPlayer(baseState, baseState.boss.x, baseState.boss.y + baseState.boss.radius * 0.32, baseState.boss.radius * 0.35);
+  if (targetIndex < 0 && !bossInRange) return baseState;
+
+  let nextId = baseState.nextId;
+  const effects = [...baseState.effects];
+  let enemies = baseState.enemies;
+  let boss = baseState.boss;
+  let defeatedEnemies = baseState.defeatedEnemies;
+  let coins = baseState.coins;
+
+  if (targetIndex >= 0) {
+    const enemy = enemies[targetIndex];
+    const hp = enemy.hp - USHIMARU_SUPPORT_COUNTER_DAMAGE;
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: enemy.x,
+      y: enemy.y - 10,
+      text: '牙突カウンター',
+      timer: 0.42,
+    });
+
+    if (hp <= 0) {
+      defeatedEnemies += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      coins = [...coins, ...drops.coins];
+      effects.push(...drops.effects);
+      nextId = drops.nextId;
+      enemies = enemies.filter((_, index) => index !== targetIndex);
+    } else {
+      const knockedEnemy = knockEnemyBack(baseState, { ...enemy, hp, hitTimer: 0.16 });
+      enemies = enemies.map((currentEnemy, index) => (index === targetIndex ? knockedEnemy : currentEnemy));
+    }
+  } else if (boss) {
+    boss = {
+      ...boss,
+      hp: boss.hp - USHIMARU_SUPPORT_COUNTER_DAMAGE,
+      hitTimer: 0.16,
+    };
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: boss.x,
+      y: boss.y + boss.radius * 0.12,
+      text: '牙突カウンター',
+      timer: 0.42,
+    });
+  }
+
+  return {
+    ...baseState,
+    enemies,
+    boss,
+    coins,
+    effects,
+    defeatedEnemies,
+    nextId,
+    supportCooldowns: {
+      ...baseState.supportCooldowns,
+      ushimaruCounter: getUshimaruCounterCooldown(supportLevel),
+    },
+  };
+}
+
+function findUshimaruCounterTarget(state: GameState): number {
+  let targetIndex = -1;
+  let targetDistance = Number.POSITIVE_INFINITY;
+
+  state.enemies.forEach((enemy, index) => {
+    if (!isPointNearPlayer(state, enemy.x, enemy.y, enemy.radius)) return;
+    const distance = Math.hypot(enemy.x - state.player.x, enemy.y - state.player.y);
+    if (distance < targetDistance) {
+      targetDistance = distance;
+      targetIndex = index;
+    }
+  });
+
+  return targetIndex;
+}
+
+function isPointNearPlayer(state: GameState, x: number, y: number, radius: number): boolean {
+  return Math.hypot(x - state.player.x, y - state.player.y) < USHIMARU_SUPPORT_COUNTER_RANGE + radius;
+}
+
+function knockEnemyBack(state: GameState, enemy: Enemy): Enemy {
+  const dx = enemy.x - state.player.x;
+  const dy = enemy.y - state.player.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  return {
+    ...enemy,
+    x: clamp(enemy.x + (dx / distance) * USHIMARU_SUPPORT_COUNTER_KNOCKBACK, enemy.radius, FIELD_WIDTH - enemy.radius),
+    y: clamp(enemy.y + (dy / distance) * USHIMARU_SUPPORT_COUNTER_KNOCKBACK, -enemy.radius, FIELD_HEIGHT + enemy.radius),
+  };
+}
+
+function getUshimaruCounterCooldown(supportLevel: number): number {
+  return Math.max(USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN, USHIMARU_SUPPORT_COUNTER_COOLDOWN - getLevelBonus(supportLevel) * 0.5);
 }
 
 function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
@@ -621,4 +743,8 @@ function chooseDirection(): Vector {
 
 function getLevelBonus(level: number): number {
   return Math.max(0, Math.floor(level) - 1);
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
