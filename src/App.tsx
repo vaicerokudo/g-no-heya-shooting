@@ -942,10 +942,12 @@ function App() {
               </button>
               {ownedCoins < FORGE_WEAPON_COST && <p className="forge-warning">{'\u30b3\u30a4\u30f3\u304c\u8db3\u308a\u307e\u305b\u3093'}</p>}
             </div>
-            <div className={`forge-anvil ${isForging ? 'is-forging' : ''}`} aria-hidden="true">
+            <div className={`forge-anvil forge-image-stage ${isForging ? 'is-forging' : ''}`} aria-hidden="true">
+              <img className="forge-anvil-base" src="/assets/tcg/forge-anvil-base.png" alt="" />
+              <img className="forge-hammer" src="/assets/tcg/forge-hammer.png" alt="" />
+              <span className="forge-heat-core" />
               <span className="forge-glow" />
               <span className="forge-flash" />
-              <span className="forge-hammer">Hammer</span>
               <span className="forge-spark spark-one" />
               <span className="forge-spark spark-two" />
               <span className="forge-spark spark-three" />

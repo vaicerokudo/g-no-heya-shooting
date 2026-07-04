@@ -545,6 +545,9 @@ button {
 
 .forge-work-screen {
   gap: 18px;
+  background:
+    linear-gradient(180deg, rgba(13, 10, 8, 0.72), rgba(10, 9, 8, 0.9)),
+    url("/assets/tcg/forge-workshop-bg.png") center / cover;
 }
 
 .forge-mini-dialogue {
@@ -575,15 +578,18 @@ button {
 .forge-panel {
   width: min(560px, 100%);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 150px;
+  grid-template-columns: minmax(0, 1fr) minmax(210px, 0.82fr);
   gap: 16px;
   align-items: center;
   padding: 16px;
   border: 1px solid rgba(255, 209, 102, 0.28);
   border-radius: 8px;
   background:
-    linear-gradient(180deg, rgba(52, 33, 20, 0.86), rgba(20, 18, 15, 0.9));
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+    radial-gradient(circle at 73% 62%, rgba(255, 100, 30, 0.16), transparent 42%),
+    linear-gradient(180deg, rgba(52, 33, 20, 0.82), rgba(20, 18, 15, 0.9));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 16px 38px rgba(0, 0, 0, 0.28);
 }
 
 .forge-panel h2,
@@ -625,52 +631,91 @@ button {
 
 .forge-anvil {
   position: relative;
-  min-height: 132px;
+  min-height: 210px;
   display: grid;
   place-items: center;
   border-radius: 8px;
   background:
-    radial-gradient(circle at 50% 70%, rgba(255, 209, 102, 0.28), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(10, 9, 8, 0.5));
+    radial-gradient(circle at 50% 72%, rgba(255, 110, 28, 0.24), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(10, 9, 8, 0.58));
   overflow: hidden;
 }
 
 .forge-anvil.is-forging {
+  animation: forgeStageShake 1100ms ease-in-out both;
   box-shadow:
     inset 0 0 34px rgba(255, 88, 35, 0.38),
     0 0 34px rgba(255, 159, 28, 0.24);
 }
 
-.forge-anvil::after {
+.forge-image-stage::before {
   content: "";
-  position: relative;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(255, 210, 115, 0.16), transparent 34%),
+    linear-gradient(180deg, transparent 0 58%, rgba(0, 0, 0, 0.2));
+  z-index: 1;
+}
+
+.forge-anvil-base {
+  position: absolute;
   z-index: 2;
-  width: 92px;
-  height: 36px;
-  border-radius: 12px 12px 18px 18px;
-  background: linear-gradient(180deg, #76706a, #2d2b2a);
-  box-shadow: 0 16px 24px rgba(0, 0, 0, 0.34);
+  left: 50%;
+  bottom: -5%;
+  width: min(96%, 280px);
+  max-height: 82%;
+  object-fit: contain;
+  object-position: bottom center;
+  transform: translateX(-50%);
+  filter:
+    drop-shadow(0 18px 18px rgba(0, 0, 0, 0.5))
+    saturate(1.08);
 }
 
 .forge-glow,
-.forge-flash {
+.forge-flash,
+.forge-heat-core {
   position: absolute;
   pointer-events: none;
 }
 
+.forge-heat-core {
+  z-index: 3;
+  left: 50%;
+  bottom: 26%;
+  width: min(42%, 120px);
+  aspect-ratio: 1.35 / 1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 247, 206, 0.76), rgba(255, 117, 43, 0.55) 28%, rgba(185, 28, 28, 0.2) 58%, transparent 72%);
+  opacity: 0.38;
+  filter: blur(5px);
+  transform: translateX(-50%);
+  mix-blend-mode: screen;
+}
+
 .forge-glow {
+  z-index: 4;
   inset: 18px;
   border-radius: 999px;
   background:
-    radial-gradient(circle at 50% 70%, rgba(255, 80, 28, 0.58), rgba(255, 209, 102, 0.2) 38%, transparent 64%);
-  opacity: 0;
-  filter: blur(2px);
+    radial-gradient(circle at 50% 72%, rgba(255, 80, 28, 0.62), rgba(255, 209, 102, 0.2) 38%, transparent 64%);
+  opacity: 0.16;
+  filter: blur(3px);
+  mix-blend-mode: screen;
 }
 
 .forge-flash {
+  z-index: 8;
   inset: 0;
   background: radial-gradient(circle, rgba(255, 247, 206, 0.92), rgba(255, 159, 28, 0.22) 36%, transparent 62%);
   opacity: 0;
+}
+
+.forge-anvil.is-forging .forge-heat-core {
+  animation: forgeCorePulse 1100ms ease-in-out both;
 }
 
 .forge-anvil.is-forging .forge-glow {
@@ -683,12 +728,17 @@ button {
 
 .forge-hammer {
   position: absolute;
-  z-index: 3;
-  top: 24px;
-  color: #fff7ce;
-  font-size: 0.74rem;
-  font-weight: 900;
-  transform: rotate(-16deg);
+  z-index: 5;
+  left: 52%;
+  top: 0;
+  width: min(54%, 150px);
+  max-height: 62%;
+  object-fit: contain;
+  object-position: center;
+  transform: translate(-50%, -5%) rotate(-18deg);
+  filter:
+    drop-shadow(0 14px 12px rgba(0, 0, 0, 0.5))
+    drop-shadow(0 0 10px rgba(255, 209, 102, 0.18));
 }
 
 .forge-anvil.is-forging .forge-hammer {
@@ -697,7 +747,7 @@ button {
 
 .forge-spark {
   position: absolute;
-  z-index: 4;
+  z-index: 7;
   width: 8px;
   height: 8px;
   border-radius: 999px;
@@ -712,30 +762,30 @@ button {
 
 .spark-one {
   left: 45%;
-  top: 58%;
+  top: 61%;
 }
 
 .spark-two {
   left: 54%;
-  top: 56%;
+  top: 58%;
   animation-delay: 90ms !important;
 }
 
 .spark-three {
   left: 50%;
-  top: 64%;
+  top: 66%;
   animation-delay: 160ms !important;
 }
 
 .spark-four {
   left: 42%;
-  top: 62%;
+  top: 64%;
   animation-delay: 210ms !important;
 }
 
 .spark-five {
   left: 58%;
-  top: 62%;
+  top: 64%;
   animation-delay: 260ms !important;
 }
 
@@ -1039,10 +1089,16 @@ button {
 @keyframes hammerStrike {
   0%,
   100% {
-    transform: translateY(-8px) rotate(-16deg);
+    transform: translate(-50%, -8%) rotate(-20deg);
   }
-  52% {
-    transform: translateY(28px) rotate(8deg);
+  34% {
+    transform: translate(-50%, 24%) rotate(8deg) scale(1.03);
+  }
+  44% {
+    transform: translate(-50%, 29%) rotate(10deg) scale(0.98);
+  }
+  68% {
+    transform: translate(-50%, -1%) rotate(-15deg);
   }
 }
 
@@ -1056,22 +1112,38 @@ button {
   }
   100% {
     opacity: 0;
-    transform: translate(18px, -22px) scale(1.2);
+    transform: translate(22px, -30px) scale(1.2);
   }
 }
 
 @keyframes forgeHeat {
   0% {
-    opacity: 0.18;
+    opacity: 0.2;
     transform: scale(0.72);
   }
   52% {
-    opacity: 0.86;
+    opacity: 0.92;
     transform: scale(1.08);
   }
   100% {
-    opacity: 0.28;
+    opacity: 0.26;
     transform: scale(1.2);
+  }
+}
+
+@keyframes forgeCorePulse {
+  0% {
+    opacity: 0.38;
+    transform: translateX(-50%) scale(0.9);
+  }
+  38%,
+  68% {
+    opacity: 0.96;
+    transform: translateX(-50%) scale(1.14);
+  }
+  100% {
+    opacity: 0.46;
+    transform: translateX(-50%) scale(1.02);
   }
 }
 
@@ -1085,6 +1157,22 @@ button {
   }
   100% {
     opacity: 0;
+  }
+}
+
+@keyframes forgeStageShake {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  34% {
+    transform: translate(-1px, 1px);
+  }
+  44% {
+    transform: translate(2px, 0);
+  }
+  68% {
+    transform: translate(-1px, -1px);
   }
 }
 
@@ -2968,7 +3056,15 @@ h1 {
   }
 
   .forge-anvil {
-    min-height: 108px;
+    min-height: 190px;
+  }
+
+  .forge-anvil-base {
+    width: min(92%, 240px);
+  }
+
+  .forge-hammer {
+    width: min(48%, 126px);
   }
 
   .weapon-inventory-header {
