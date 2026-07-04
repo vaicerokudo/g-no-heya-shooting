@@ -813,7 +813,6 @@ function App() {
               aria-expanded={guildReceptionOpen}
               aria-label="7171\u53d7\u4ed8"
             >
-              <img className="guild-lobby-7171" src="/assets/tcg/support-7171.png" alt="7171" />
               <span>{'7171\u53d7\u4ed8'}</span>
             </button>
             {guildReceptionOpen && (

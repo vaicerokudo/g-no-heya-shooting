@@ -496,12 +496,13 @@ button {
   z-index: 2;
   left: 55%;
   top: 52%;
-  width: clamp(58px, 10vw, 104px);
-  min-height: 88px;
+  width: clamp(92px, 14vw, 132px);
+  min-height: 120px;
   display: grid;
+  align-content: end;
   justify-items: center;
   gap: 4px;
-  padding: 0;
+  padding: 0 0 10px;
   border: 0;
   color: #fff7ce;
   background: transparent;
@@ -532,13 +533,6 @@ button {
 .guild-receptionist-button.is-open {
   filter: drop-shadow(0 0 16px rgba(255, 209, 102, 0.62));
   outline: none;
-}
-
-.guild-lobby-7171 {
-  width: 100%;
-  min-width: 58px;
-  max-width: 104px;
-  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.46));
 }
 
 .guild-reception-menu {
@@ -4038,8 +4032,8 @@ h1 {
   .guild-receptionist-button {
     left: 55%;
     top: 49%;
-    width: clamp(68px, 18vw, 90px);
-    min-height: 96px;
+    width: clamp(96px, 24vw, 126px);
+    min-height: 128px;
   }
 
   .guild-reception-menu {
