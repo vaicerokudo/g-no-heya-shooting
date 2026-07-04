@@ -122,6 +122,9 @@ export const createInitialGameState = (): GameState => ({
   supportRockelBreak: {
     timer: 0,
   },
+  supportSochoSlash: {
+    timer: 0,
+  },
   effects: [],
   boss: null,
   bossIntroTimer: 0,
@@ -138,6 +141,7 @@ export const createInitialGameState = (): GameState => ({
     rockelBreak: 1.4,
     rokudoPoison: 1.2,
     tsutsuArrow: 1.0,
+    sochoSlash: 1.1,
   },
   message: '',
 });

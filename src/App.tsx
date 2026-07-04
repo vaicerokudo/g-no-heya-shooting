@@ -16,6 +16,9 @@ import {
   SLASH_BOSS_RADIUS,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
+  SOCHO_SUPPORT_SLASH_DURATION,
+  SOCHO_SUPPORT_SLASH_HALF_WIDTH,
+  SOCHO_SUPPORT_SLASH_RANGE,
   USHIMARU_SPEAR_BOSS_RANGE,
   FORGE_ANIMATION_DURATION,
   FORGE_WEAPON_COST,
@@ -1586,6 +1589,22 @@ function App() {
               >
                 <span className="support-rockel-break-arc" />
                 <span className="support-rockel-break-spark" />
+              </div>
+            )}
+            {game.supportSochoSlash.timer > 0 && (
+              <div
+                className="support-socho-slash"
+                style={{
+                  left: game.player.x - SOCHO_SUPPORT_SLASH_HALF_WIDTH,
+                  top: game.player.y - SOCHO_SUPPORT_SLASH_RANGE,
+                  width: SOCHO_SUPPORT_SLASH_HALF_WIDTH * 2,
+                  height: SOCHO_SUPPORT_SLASH_RANGE,
+                  opacity: Math.min(1, game.supportSochoSlash.timer / SOCHO_SUPPORT_SLASH_DURATION),
+                }}
+              >
+                <span className="support-socho-slash-core" />
+                <span className="support-socho-slash-line line-one" />
+                <span className="support-socho-slash-line line-two" />
               </div>
             )}
 

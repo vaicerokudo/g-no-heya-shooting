@@ -96,6 +96,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '一定間隔で中央・左斜め・右斜めの3方向へ矢を放ち、通常敵とボスに1ダメージを与える。',
     image: '/assets/tcg/support-card-tsutsu.webp',
   },
+  {
+    id: 'socho',
+    name: '総長',
+    role: '前方斬撃援護',
+    description: '前方へ安定した斬撃を放つ基準型サポート。',
+    effectDescription: '一定間隔でプレイヤー前方へ青白い斬撃を放ち、通常敵とボスに1ダメージを与える。',
+    image: '/assets/tcg/support-card-socho.webp',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -109,6 +117,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   rockel: '派手にいくなら、頼れる斧使いだね。',
   rokudo: '足止めが欲しいなら、影の煙が効くはずだよ。',
   tsutsu: '遠くを任せたいなら、この弓の援護が頼りになるよ。',
+  socho: 'まっすぐ斬り開くなら、この一枚が頼りになるね。',
 };
 
 export function drawRandomSupport(): SupportCharacter {

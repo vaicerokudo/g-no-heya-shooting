@@ -53,6 +53,13 @@ import {
   ROCKEL_SUPPORT_BREAK_HALF_WIDTH,
   ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN,
   ROCKEL_SUPPORT_BREAK_RANGE,
+  SOCHO_SUPPORT_SLASH_BOSS_DAMAGE,
+  SOCHO_SUPPORT_SLASH_COOLDOWN,
+  SOCHO_SUPPORT_SLASH_DAMAGE,
+  SOCHO_SUPPORT_SLASH_DURATION,
+  SOCHO_SUPPORT_SLASH_HALF_WIDTH,
+  SOCHO_SUPPORT_SLASH_MIN_COOLDOWN,
+  SOCHO_SUPPORT_SLASH_RANGE,
   TSUTSU_SUPPORT_ARROW_COOLDOWN,
   TSUTSU_SUPPORT_ARROW_DAMAGE,
   TSUTSU_SUPPORT_ARROW_LIFE,
@@ -105,6 +112,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   next = updateRockelMountainBreak(next, dt, supportId, supportLevel);
   next = updateRokudoPoisonSmoke(next, dt, supportId, supportLevel);
   next = updateTsutsuArrowSupport(next, dt, supportId, supportLevel);
+  next = updateSochoSlashSupport(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -158,6 +166,10 @@ export function isRokudoSupport(supportId: SupportId | null): boolean {
 
 export function isTsutsuSupport(supportId: SupportId | null): boolean {
   return supportId === 'tsutsu';
+}
+
+export function isSochoSupport(supportId: SupportId | null): boolean {
+  return supportId === 'socho';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -1048,6 +1060,120 @@ function spawnTsutsuArrowVolley(state: GameState, cooldownRemainder: number, sup
 
 function getTsutsuArrowCooldown(supportLevel: number): number {
   return Math.max(TSUTSU_SUPPORT_ARROW_MIN_COOLDOWN, TSUTSU_SUPPORT_ARROW_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
+}
+
+function updateSochoSlashSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = Math.max(0, state.supportCooldowns.sochoSlash - dt);
+  const slashState = {
+    timer: Math.max(0, state.supportSochoSlash.timer - dt),
+  };
+  const baseState: GameState = {
+    ...state,
+    supportSochoSlash: slashState,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      sochoSlash: cooldown,
+    },
+  };
+
+  if (!isSochoSupport(supportId)) {
+    return slashState.timer > 0 ? { ...baseState, supportSochoSlash: { timer: 0 } } : baseState;
+  }
+
+  if (cooldown > 0) return baseState;
+  return activateSochoSupportSlash(baseState, supportId, supportLevel);
+}
+
+function activateSochoSupportSlash(state: GameState, supportId: SupportId | null, supportLevel: number): GameState {
+  let nextId = state.nextId;
+  let defeatedEnemies = state.defeatedEnemies;
+  let boss = state.boss;
+  let coins = state.coins;
+  const effects = [...state.effects];
+  const enemies: Enemy[] = [];
+
+  for (const enemy of state.enemies) {
+    if (!isInSochoSupportSlash(state, enemy.x, enemy.y, enemy.radius)) {
+      enemies.push(enemy);
+      continue;
+    }
+
+    const hp = enemy.hp - SOCHO_SUPPORT_SLASH_DAMAGE;
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: enemy.x,
+      y: enemy.y - 8,
+      text: `-${SOCHO_SUPPORT_SLASH_DAMAGE}`,
+      timer: 0.32,
+    });
+
+    if (hp <= 0) {
+      defeatedEnemies += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      coins = [...coins, ...drops.coins];
+      effects.push(...drops.effects);
+      nextId = drops.nextId;
+    } else {
+      enemies.push({ ...enemy, hp, hitTimer: 0.14 });
+    }
+  }
+
+  if (boss && isInSochoSupportSlash(state, boss.x, boss.y + boss.radius * 0.52, boss.radius * 0.56)) {
+    boss = {
+      ...boss,
+      hp: boss.hp - SOCHO_SUPPORT_SLASH_BOSS_DAMAGE,
+      hitTimer: 0.16,
+    };
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: boss.x,
+      y: boss.y + boss.radius * 0.12,
+      text: `-${SOCHO_SUPPORT_SLASH_BOSS_DAMAGE}`,
+      timer: 0.34,
+    });
+  }
+
+  effects.push({
+    id: nextId++,
+    kind: 'support',
+    x: state.player.x,
+    y: state.player.y - 70,
+    text: 'SOCHO SLASH',
+    timer: 0.4,
+  });
+
+  return {
+    ...state,
+    enemies,
+    boss,
+    coins,
+    effects,
+    defeatedEnemies,
+    nextId,
+    supportSochoSlash: {
+      timer: SOCHO_SUPPORT_SLASH_DURATION,
+    },
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      sochoSlash: getSochoSlashCooldown(supportLevel),
+    },
+  };
+}
+
+function isInSochoSupportSlash(state: GameState, x: number, y: number, radius: number): boolean {
+  const dx = x - state.player.x;
+  const dy = state.player.y - y;
+  if (dy < -radius * 0.24) return false;
+  if (dy > SOCHO_SUPPORT_SLASH_RANGE + radius) return false;
+
+  const widthAtPoint = SOCHO_SUPPORT_SLASH_HALF_WIDTH * (0.82 + Math.max(0, dy) / SOCHO_SUPPORT_SLASH_RANGE * 0.26);
+  return Math.abs(dx) < widthAtPoint + radius * 0.7 && Math.hypot(dx * 0.74, dy) < SOCHO_SUPPORT_SLASH_RANGE + radius;
+}
+
+function getSochoSlashCooldown(supportLevel: number): number {
+  return Math.max(SOCHO_SUPPORT_SLASH_MIN_COOLDOWN, SOCHO_SUPPORT_SLASH_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
 }
 
 function blockEnemyBulletsWithShield(state: GameState): GameState {

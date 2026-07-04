@@ -34,7 +34,8 @@ export type SupportId =
   | 'deli'
   | 'rockel'
   | 'rokudo'
-  | 'tsutsu';
+  | 'tsutsu'
+  | 'socho';
 
 export type Enemy = {
   id: number;
@@ -158,6 +159,10 @@ export type RockelSupportBreakState = {
   timer: number;
 };
 
+export type SochoSupportSlashState = {
+  timer: number;
+};
+
 export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus' | 'heal';
 
 export type FloatingEffect = {
@@ -209,6 +214,7 @@ export type GameState = {
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;
   supportRockelBreak: RockelSupportBreakState;
+  supportSochoSlash: SochoSupportSlashState;
   effects: FloatingEffect[];
   boss: Boss | null;
   bossIntroTimer: number;
@@ -225,6 +231,7 @@ export type GameState = {
     rockelBreak: number;
     rokudoPoison: number;
     tsutsuArrow: number;
+    sochoSlash: number;
   };
   message: string;
 };
