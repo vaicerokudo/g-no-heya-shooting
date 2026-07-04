@@ -266,6 +266,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'rare',
     description: 'FMやぶこ用。星脈の力を込めて地面ごと叩き割る大槌。',
     effectDescription: '一定間隔で前方へ地割れのような星砕き衝撃波を放つ。Lvで発動間隔、射程、幅が少し強化される。',
+    imagePath: '/assets/tcg/weapon-starbreaker-hammer.png',
   },
 ];
 
