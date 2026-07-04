@@ -1919,6 +1919,7 @@ h1 {
 .field.is-paused .starbreaker-wave,
 .field.is-paused .axe-swing,
 .field.is-paused .mountain-breaker,
+.field.is-paused .support-rockel-break,
 .field.is-paused .deli-turret,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
@@ -1975,6 +1976,7 @@ h1 {
 .starbreaker-wave,
 .axe-swing,
 .mountain-breaker,
+.support-rockel-break,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -2767,6 +2769,48 @@ h1 {
   transform: translateX(-50%);
 }
 
+.support-rockel-break {
+  z-index: 7;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 18px rgba(255, 114, 48, 0.82))
+    drop-shadow(0 0 24px rgba(255, 214, 130, 0.42));
+  animation: supportRockelBreakBurst 340ms ease-out both;
+}
+
+.support-rockel-break-arc,
+.support-rockel-break-spark {
+  position: absolute;
+  pointer-events: none;
+}
+
+.support-rockel-break-arc {
+  left: -2%;
+  right: -2%;
+  bottom: 3%;
+  height: 90%;
+  border-radius: 62% 62% 14% 14%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(255, 105, 45, 0.56), rgba(255, 202, 118, 0.3) 44%, transparent 74%),
+    linear-gradient(101deg, transparent 0 18%, rgba(255, 244, 215, 0.92) 30%, rgba(255, 105, 45, 0.82) 48%, transparent 70% 100%);
+  border-top: 5px solid rgba(255, 235, 190, 0.82);
+  transform: skewX(-9deg);
+}
+
+.support-rockel-break-spark {
+  left: 50%;
+  bottom: 2%;
+  width: 106%;
+  height: 46%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 82%, rgba(255, 244, 215, 0.42), transparent 30%),
+    linear-gradient(28deg, transparent 42%, rgba(255, 202, 118, 0.6) 48%, transparent 55%),
+    linear-gradient(-20deg, transparent 38%, rgba(255, 105, 45, 0.48) 43%, transparent 51%);
+  transform: translateX(-50%);
+}
+
 .garuda-sweep {
   z-index: 7;
   pointer-events: none;
@@ -3447,6 +3491,21 @@ h1 {
   100% {
     opacity: 0;
     transform: translateY(-12px) scale(1.2) rotate(20deg);
+  }
+}
+
+@keyframes supportRockelBreakBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.66) rotate(-14deg);
+  }
+  38% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05) rotate(4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px) scale(1.16) rotate(16deg);
   }
 }
 

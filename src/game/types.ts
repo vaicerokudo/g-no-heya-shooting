@@ -20,7 +20,7 @@ export type GameStatus =
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
-export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli';
+export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli' | 'rockel';
 
 export type Enemy = {
   id: number;
@@ -128,6 +128,10 @@ export type MyououGarudaState = {
   hasHitBoss: boolean;
 };
 
+export type RockelSupportBreakState = {
+  timer: number;
+};
+
 export type EffectKind = 'hit' | 'damage' | 'coin' | 'support' | 'bonus' | 'heal';
 
 export type FloatingEffect = {
@@ -175,6 +179,7 @@ export type GameState = {
   supportTurrets: DeliTurret[];
   supportShield: HibikiShieldState;
   supportGaruda: MyououGarudaState;
+  supportRockelBreak: RockelSupportBreakState;
   effects: FloatingEffect[];
   boss: Boss | null;
   elapsed: number;
@@ -187,6 +192,7 @@ export type GameState = {
     playerGunfire: number;
     ushimaruCounter: number;
     deliTurret: number;
+    rockelBreak: number;
   };
   message: string;
 };

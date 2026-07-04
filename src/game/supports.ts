@@ -72,6 +72,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '一定間隔で小型タレットを設置し、近い敵または前方へ控えめな自動射撃を行う。',
     image: '/assets/tcg/support-card-deli.webp',
   },
+  {
+    id: 'rockel',
+    name: 'ROCKEL',
+    role: '山砕き援護',
+    description: '定期的なMOUNTAIN BREAKで前方の敵をまとめて薙ぎ払う火力サポート。',
+    effectDescription: '一定間隔でMOUNTAIN BREAKを放ち、前方から左右にかけて広めの敵に1ダメージを与える。',
+    image: '/assets/tcg/support-card-rockel.webp',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -82,6 +90,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   myouou: 'おお、強い気配だ。これは大事にしなよ。',
   ushimaru: '前に出るなら、頼れる槍使いだね。',
   deli: '設置で支えるなら、この子の工夫が光るよ。',
+  rockel: '派手にいくなら、頼れる斧使いだね。',
 };
 
 export function drawRandomSupport(): SupportCharacter {

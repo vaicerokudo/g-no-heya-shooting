@@ -9,6 +9,9 @@ import {
   ROKUDO_SHADOW_SLASH_HALF_WIDTH,
   ROKUDO_SHADOW_SLASH_RADIUS,
   ROCKEL_AXE_BOSS_RANGE,
+  ROCKEL_SUPPORT_BREAK_DURATION,
+  ROCKEL_SUPPORT_BREAK_HALF_WIDTH,
+  ROCKEL_SUPPORT_BREAK_RANGE,
   SLASH_BOSS_RADIUS,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
@@ -1395,6 +1398,21 @@ function App() {
               >
                 <span className="mountain-breaker-arc" />
                 <span className="mountain-breaker-shock" />
+              </div>
+            )}
+            {game.supportRockelBreak.timer > 0 && (
+              <div
+                className="support-rockel-break"
+                style={{
+                  left: game.player.x - ROCKEL_SUPPORT_BREAK_HALF_WIDTH,
+                  top: game.player.y - ROCKEL_SUPPORT_BREAK_RANGE,
+                  width: ROCKEL_SUPPORT_BREAK_HALF_WIDTH * 2,
+                  height: ROCKEL_SUPPORT_BREAK_RANGE,
+                  opacity: Math.min(1, game.supportRockelBreak.timer / ROCKEL_SUPPORT_BREAK_DURATION),
+                }}
+              >
+                <span className="support-rockel-break-arc" />
+                <span className="support-rockel-break-spark" />
               </div>
             )}
 

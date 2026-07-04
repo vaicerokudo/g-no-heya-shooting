@@ -113,6 +113,9 @@ export const createInitialGameState = (): GameState => ({
     hitEnemyIds: [],
     hasHitBoss: false,
   },
+  supportRockelBreak: {
+    timer: 0,
+  },
   effects: [],
   boss: null,
   elapsed: 0,
@@ -125,6 +128,7 @@ export const createInitialGameState = (): GameState => ({
     playerGunfire: 0.8,
     ushimaruCounter: 1.2,
     deliTurret: 1.6,
+    rockelBreak: 1.4,
   },
   message: '',
 });

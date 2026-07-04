@@ -38,6 +38,13 @@ import {
   PLAYER_SUPPORT_BULLET_SPEED,
   PLAYER_SUPPORT_FIRE_INTERVAL,
   PLAYER_SUPPORT_SHOTS_PER_BURST,
+  ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE,
+  ROCKEL_SUPPORT_BREAK_COOLDOWN,
+  ROCKEL_SUPPORT_BREAK_DAMAGE,
+  ROCKEL_SUPPORT_BREAK_DURATION,
+  ROCKEL_SUPPORT_BREAK_HALF_WIDTH,
+  ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN,
+  ROCKEL_SUPPORT_BREAK_RANGE,
   USHIMARU_SUPPORT_COUNTER_COOLDOWN,
   USHIMARU_SUPPORT_COUNTER_DAMAGE,
   USHIMARU_SUPPORT_COUNTER_KNOCKBACK,
@@ -74,6 +81,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   next = updateMyououGaruda(next, dt, supportId, supportLevel);
   next = updateUshimaruCounter(next, dt, supportId, supportLevel);
   next = updateDeliSupportTurrets(next, dt, supportId, supportLevel);
+  next = updateRockelMountainBreak(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -115,6 +123,10 @@ export function isUshimaruSupport(supportId: SupportId | null): boolean {
 
 export function isDeliSupport(supportId: SupportId | null): boolean {
   return supportId === 'deli';
+}
+
+export function isRockelSupport(supportId: SupportId | null): boolean {
+  return supportId === 'rockel';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -451,6 +463,117 @@ function findDeliSupportTurretTarget(state: GameState, turret: DeliTurret): Vect
   }
 
   return target ?? { x: turret.x, y: turret.y - 112 };
+}
+
+function updateRockelMountainBreak(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = Math.max(0, state.supportCooldowns.rockelBreak - dt);
+  const breakState = {
+    timer: Math.max(0, state.supportRockelBreak.timer - dt),
+  };
+  const baseState: GameState = {
+    ...state,
+    supportRockelBreak: breakState,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      rockelBreak: cooldown,
+    },
+  };
+
+  if (!isRockelSupport(supportId)) {
+    return breakState.timer > 0 ? { ...baseState, supportRockelBreak: { timer: 0 } } : baseState;
+  }
+
+  if (cooldown > 0) return baseState;
+
+  let nextId = baseState.nextId;
+  let defeatedEnemies = baseState.defeatedEnemies;
+  let boss = baseState.boss;
+  let coins = baseState.coins;
+  const effects = [...baseState.effects];
+  const enemies: Enemy[] = [];
+
+  for (const enemy of baseState.enemies) {
+    if (!isInRockelSupportBreak(baseState, enemy.x, enemy.y, enemy.radius)) {
+      enemies.push(enemy);
+      continue;
+    }
+
+    const hp = enemy.hp - ROCKEL_SUPPORT_BREAK_DAMAGE;
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: enemy.x,
+      y: enemy.y - 8,
+      text: `-${ROCKEL_SUPPORT_BREAK_DAMAGE}`,
+      timer: 0.34,
+    });
+
+    if (hp <= 0) {
+      defeatedEnemies += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, 'rockel');
+      coins = [...coins, ...drops.coins];
+      effects.push(...drops.effects);
+      nextId = drops.nextId;
+    } else {
+      enemies.push({ ...enemy, hp, hitTimer: 0.16 });
+    }
+  }
+
+  if (boss && isInRockelSupportBreak(baseState, boss.x, boss.y + boss.radius * 0.54, boss.radius * 0.58)) {
+    boss = {
+      ...boss,
+      hp: boss.hp - ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE,
+      hitTimer: 0.18,
+    };
+    effects.push({
+      id: nextId++,
+      kind: 'support',
+      x: boss.x,
+      y: boss.y + boss.radius * 0.12,
+      text: `-${ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE}`,
+      timer: 0.36,
+    });
+  }
+
+  effects.push({
+    id: nextId++,
+    kind: 'support',
+    x: baseState.player.x,
+    y: baseState.player.y - 84,
+    text: 'MOUNTAIN BREAK',
+    timer: 0.44,
+  });
+
+  return {
+    ...baseState,
+    enemies,
+    boss,
+    coins,
+    effects,
+    defeatedEnemies,
+    nextId,
+    supportRockelBreak: {
+      timer: ROCKEL_SUPPORT_BREAK_DURATION,
+    },
+    supportCooldowns: {
+      ...baseState.supportCooldowns,
+      rockelBreak: getRockelBreakCooldown(supportLevel),
+    },
+  };
+}
+
+function isInRockelSupportBreak(state: GameState, x: number, y: number, radius: number): boolean {
+  const dx = x - state.player.x;
+  const dy = state.player.y - y;
+  if (dy < -radius * 0.24) return false;
+  if (dy > ROCKEL_SUPPORT_BREAK_RANGE + radius) return false;
+
+  const widthAtPoint = ROCKEL_SUPPORT_BREAK_HALF_WIDTH * (0.86 + Math.max(0, dy) / ROCKEL_SUPPORT_BREAK_RANGE * 0.34);
+  return Math.abs(dx) < widthAtPoint + radius * 0.72 && Math.hypot(dx * 0.6, dy) < ROCKEL_SUPPORT_BREAK_RANGE + radius;
+}
+
+function getRockelBreakCooldown(supportLevel: number): number {
+  return Math.max(ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN, ROCKEL_SUPPORT_BREAK_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
 }
 
 function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
