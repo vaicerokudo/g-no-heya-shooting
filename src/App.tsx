@@ -275,6 +275,7 @@ function App() {
 
   const hpPercent = Math.max(0, (game.player.hp / game.player.maxHp) * 100);
   const bossHpPercent = game.boss ? Math.max(0, (game.boss.hp / game.boss.maxHp) * 100) : 0;
+  const bossHudImage = game.boss?.image || getStageById(game.stageId).bossImage || assetPaths.boss;
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
   const activeShadowSlashRadius = game.boss ? ROKUDO_SHADOW_SLASH_BOSS_RADIUS : ROKUDO_SHADOW_SLASH_RADIUS;
   const hibikiShield = getHibikiShieldView(game);
@@ -1409,7 +1410,11 @@ function App() {
 
           {game.boss && (
             <div className="boss-hud">
-              <img className="boss-hud-image" src={game.boss.image} alt="" aria-hidden="true" />
+              <div
+                className="boss-hud-image"
+                aria-hidden="true"
+                style={{ backgroundImage: `url(${bossHudImage})` }}
+              />
               <div className="boss-hud-status">
                 <span>{game.boss.name}</span>
                 <div className="meter boss-meter">
