@@ -53,6 +53,12 @@ import {
   ROCKEL_SUPPORT_BREAK_HALF_WIDTH,
   ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN,
   ROCKEL_SUPPORT_BREAK_RANGE,
+  TSUTSU_SUPPORT_ARROW_COOLDOWN,
+  TSUTSU_SUPPORT_ARROW_DAMAGE,
+  TSUTSU_SUPPORT_ARROW_LIFE,
+  TSUTSU_SUPPORT_ARROW_MIN_COOLDOWN,
+  TSUTSU_SUPPORT_ARROW_RADIUS,
+  TSUTSU_SUPPORT_ARROW_SPEED,
   USHIMARU_SUPPORT_COUNTER_COOLDOWN,
   USHIMARU_SUPPORT_COUNTER_DAMAGE,
   USHIMARU_SUPPORT_COUNTER_KNOCKBACK,
@@ -84,6 +90,12 @@ const PLAYER_SUPPORT_DIRECTIONS: Vector[] = [
   { x: 0.72, y: -0.7 },
 ];
 
+const TSUTSU_SUPPORT_DIRECTIONS: Vector[] = [
+  { x: 0, y: -1 },
+  { x: -0.34, y: -0.94 },
+  { x: 0.34, y: -0.94 },
+];
+
 export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null, supportLevel = 1): GameState {
   let next = updateSupportBullets(state, dt);
   next = updateHibikiShield(next, dt, supportId, supportLevel);
@@ -92,6 +104,7 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   next = updateDeliSupportTurrets(next, dt, supportId, supportLevel);
   next = updateRockelMountainBreak(next, dt, supportId, supportLevel);
   next = updateRokudoPoisonSmoke(next, dt, supportId, supportLevel);
+  next = updateTsutsuArrowSupport(next, dt, supportId, supportLevel);
 
   if (supportId !== 'player') {
     return next;
@@ -141,6 +154,10 @@ export function isRockelSupport(supportId: SupportId | null): boolean {
 
 export function isRokudoSupport(supportId: SupportId | null): boolean {
   return supportId === 'rokudo';
+}
+
+export function isTsutsuSupport(supportId: SupportId | null): boolean {
+  return supportId === 'tsutsu';
 }
 
 export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
@@ -963,6 +980,74 @@ function activateHibikiShield(state: GameState, supportLevel: number): GameState
     ],
     nextId,
   };
+}
+
+function updateTsutsuArrowSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+  const cooldown = state.supportCooldowns.tsutsuArrow - dt;
+  if (!isTsutsuSupport(supportId)) {
+    return {
+      ...state,
+      supportCooldowns: {
+        ...state.supportCooldowns,
+        tsutsuArrow: Math.max(0, cooldown),
+      },
+    };
+  }
+
+  if (cooldown > 0) {
+    return {
+      ...state,
+      supportCooldowns: {
+        ...state.supportCooldowns,
+        tsutsuArrow: cooldown,
+      },
+    };
+  }
+
+  return spawnTsutsuArrowVolley(state, cooldown, supportLevel);
+}
+
+function spawnTsutsuArrowVolley(state: GameState, cooldownRemainder: number, supportLevel: number): GameState {
+  let nextId = state.nextId;
+  const bullets: SupportBullet[] = TSUTSU_SUPPORT_DIRECTIONS.map((direction, index) => {
+    const normalized = normalize(direction);
+    const xOffset = (index - 1) * 10;
+    return {
+      id: nextId++,
+      x: state.player.x + xOffset,
+      y: state.player.y - 24,
+      vx: normalized.x * TSUTSU_SUPPORT_ARROW_SPEED,
+      vy: normalized.y * TSUTSU_SUPPORT_ARROW_SPEED,
+      radius: TSUTSU_SUPPORT_ARROW_RADIUS,
+      damage: TSUTSU_SUPPORT_ARROW_DAMAGE,
+      life: TSUTSU_SUPPORT_ARROW_LIFE,
+    };
+  });
+
+  return {
+    ...state,
+    supportBullets: [...state.supportBullets, ...bullets],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 44,
+        text: '3WAY ARROW',
+        timer: 0.38,
+      },
+    ],
+    nextId,
+    supportCooldowns: {
+      ...state.supportCooldowns,
+      tsutsuArrow: getTsutsuArrowCooldown(supportLevel) + cooldownRemainder,
+    },
+  };
+}
+
+function getTsutsuArrowCooldown(supportLevel: number): number {
+  return Math.max(TSUTSU_SUPPORT_ARROW_MIN_COOLDOWN, TSUTSU_SUPPORT_ARROW_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
 }
 
 function blockEnemyBulletsWithShield(state: GameState): GameState {

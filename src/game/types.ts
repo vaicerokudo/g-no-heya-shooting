@@ -24,7 +24,17 @@ export type GameStatus =
 
 export type EnemyKind = 'small' | 'flying' | 'charger';
 
-export type SupportId = '7171' | 'yabuko' | 'player' | 'hibiki' | 'myouou' | 'ushimaru' | 'deli' | 'rockel' | 'rokudo';
+export type SupportId =
+  | '7171'
+  | 'yabuko'
+  | 'player'
+  | 'hibiki'
+  | 'myouou'
+  | 'ushimaru'
+  | 'deli'
+  | 'rockel'
+  | 'rokudo'
+  | 'tsutsu';
 
 export type Enemy = {
   id: number;
@@ -214,6 +224,7 @@ export type GameState = {
     deliTurret: number;
     rockelBreak: number;
     rokudoPoison: number;
+    tsutsuArrow: number;
   };
   message: string;
 };

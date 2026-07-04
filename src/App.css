@@ -1895,7 +1895,7 @@ h1 {
 
 .summon-card {
   position: relative;
-  width: clamp(38px, 7.5vw, 52px);
+  width: clamp(34px, 6.8vw, 50px);
   aspect-ratio: 2 / 3;
   padding: 0;
   border: 0;
@@ -1943,6 +1943,10 @@ h1 {
 
 .summon-card.pick-8 {
   --card-rotate: 24deg;
+}
+
+.summon-card.pick-9 {
+  --card-rotate: 30deg;
 }
 
 .summon-card:hover:not(:disabled),

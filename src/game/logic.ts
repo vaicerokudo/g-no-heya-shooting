@@ -137,6 +137,7 @@ export const createInitialGameState = (): GameState => ({
     deliTurret: 1.6,
     rockelBreak: 1.4,
     rokudoPoison: 1.2,
+    tsutsuArrow: 1.0,
   },
   message: '',
 });

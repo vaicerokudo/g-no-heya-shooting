@@ -88,6 +88,14 @@ export const supportCandidates: SupportCharacter[] = [
     effectDescription: '一定間隔で毒煙玉を投げ、範囲内の敵をスロウにしながら小さな継続ダメージを与える。',
     image: '/assets/tcg/support-card-rokudo.webp',
   },
+  {
+    id: 'tsutsu',
+    name: 'つつ',
+    role: '3way弓援護',
+    description: '遠距離から3wayの矢で前方を支援するサポート。',
+    effectDescription: '一定間隔で中央・左斜め・右斜めの3方向へ矢を放ち、通常敵とボスに1ダメージを与える。',
+    image: '/assets/tcg/support-card-tsutsu.webp',
+  },
 ];
 
 export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
@@ -100,6 +108,7 @@ export const SHOPKEEPER_SUPPORT_LINES: Record<SupportId, string> = {
   deli: '設置で支えるなら、この子の工夫が光るよ。',
   rockel: '派手にいくなら、頼れる斧使いだね。',
   rokudo: '足止めが欲しいなら、影の煙が効くはずだよ。',
+  tsutsu: '遠くを任せたいなら、この弓の援護が頼りになるよ。',
 };
 
 export function drawRandomSupport(): SupportCharacter {

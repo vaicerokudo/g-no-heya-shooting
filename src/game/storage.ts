@@ -170,7 +170,8 @@ function isOwnedSupport(value: unknown): value is OwnedSupport {
       support.id === 'ushimaru' ||
       support.id === 'deli' ||
       support.id === 'rockel' ||
-      support.id === 'rokudo') &&
+      support.id === 'rokudo' ||
+      support.id === 'tsutsu') &&
     typeof support.count === 'number' &&
     support.count > 0
   );
@@ -186,6 +187,7 @@ function isSupportId(value: unknown): value is SupportId {
     value === 'ushimaru' ||
     value === 'deli' ||
     value === 'rockel' ||
-    value === 'rokudo'
+    value === 'rokudo' ||
+    value === 'tsutsu'
   );
 }
