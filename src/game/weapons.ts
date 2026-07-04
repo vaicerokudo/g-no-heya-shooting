@@ -332,11 +332,11 @@ export function getRokudoWeaponTuning(weaponId: string | undefined, level = 1): 
 export function getPlayerWeaponTuning(weaponId: string | undefined, level = 1): PlayerWeaponTuning {
   const normalizedLevel = normalizeWeaponLevel(level);
   const isTwinFangPistols = weaponId === 'twin-fang-pistols';
-  const baseCooldown = isTwinFangPistols ? 0.38 : PLAYER_MAIN_GUN_COOLDOWN;
-  const levelReduction = isTwinFangPistols ? Math.min(0.04, (normalizedLevel - 1) * 0.01) : 0;
+  const baseCooldown = isTwinFangPistols ? 0.72 : PLAYER_MAIN_GUN_COOLDOWN;
+  const levelReduction = isTwinFangPistols ? Math.min(0.08, (normalizedLevel - 1) * 0.02) : 0;
 
   return {
-    gunCooldown: Math.max(0.34, baseCooldown - levelReduction),
+    gunCooldown: Math.max(0.64, baseCooldown - levelReduction),
   };
 }
 

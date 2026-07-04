@@ -137,6 +137,7 @@ export type Player = {
   attackCooldown: number;
   slashTimer: number;
   invincibleTimer: number;
+  nextGunHand: 'left' | 'right';
 };
 
 export type Vector = {

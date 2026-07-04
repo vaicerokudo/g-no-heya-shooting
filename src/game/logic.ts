@@ -13,7 +13,9 @@ import {
   PLAYER_MAIN_GUN_BOSS_DAMAGE,
   PLAYER_MAIN_GUN_DAMAGE,
   PLAYER_MAIN_GUN_LIFE,
+  PLAYER_MAIN_GUN_HAND_OFFSET,
   PLAYER_MAIN_GUN_RADIUS,
+  PLAYER_MAIN_GUN_SPREAD_X,
   PLAYER_MAIN_GUN_SPEED,
   PLAYER_START,
   PLAYER_SPEED,
@@ -101,6 +103,7 @@ function createPlayer(): Player {
     attackCooldown: 0.2,
     slashTimer: 0,
     invincibleTimer: 0,
+    nextGunHand: 'left',
   };
 }
 
@@ -448,11 +451,13 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
   if (state.player.attackCooldown > 0) return state;
   const weaponTuning = getPlayerWeaponTuning(weaponId, weaponLevel);
   let nextId = state.nextId;
-  const leftShot: PlayerArrow = {
+  const isLeftShot = state.player.nextGunHand === 'left';
+  const handOffset = isLeftShot ? -PLAYER_MAIN_GUN_HAND_OFFSET : PLAYER_MAIN_GUN_HAND_OFFSET;
+  const shot: PlayerArrow = {
     id: nextId++,
-    x: state.player.x - 9,
+    x: state.player.x + handOffset,
     y: state.player.y - 22,
-    vx: -10,
+    vx: isLeftShot ? -PLAYER_MAIN_GUN_SPREAD_X : PLAYER_MAIN_GUN_SPREAD_X,
     vy: -PLAYER_MAIN_GUN_SPEED,
     radius: PLAYER_MAIN_GUN_RADIUS,
     damage: PLAYER_MAIN_GUN_DAMAGE,
@@ -460,22 +465,16 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
     life: PLAYER_MAIN_GUN_LIFE,
     kind: 'gun',
   };
-  const rightShot: PlayerArrow = {
-    ...leftShot,
-    id: nextId++,
-    x: state.player.x + 9,
-    vx: 10,
-  };
 
   return {
     ...state,
-    playerArrows: [...state.playerArrows, leftShot, rightShot],
+    playerArrows: [...state.playerArrows, shot],
     effects: [
       ...state.effects,
       {
         id: nextId++,
         kind: 'support',
-        x: state.player.x,
+        x: state.player.x + handOffset,
         y: state.player.y - 34,
         text: 'BANG',
         timer: 0.16,
@@ -486,6 +485,7 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
       ...state.player,
       attackCooldown: weaponTuning.gunCooldown,
       slashTimer: 0,
+      nextGunHand: isLeftShot ? 'right' : 'left',
     },
   };
 }
