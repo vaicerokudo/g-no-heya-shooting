@@ -62,7 +62,7 @@ export const supportCandidates: SupportCharacter[] = [
     role: '牙突カウンター',
     description: '接近してきた敵を槍で迎撃する防御寄りサポート。',
     effectDescription: '接近してきた敵を牙突カウンターで迎撃し、通常敵を少し押し返す。',
-    image: '/assets/tcg/ushimaru-player.png',
+    image: '/assets/tcg/support-card-ushimaru.webp',
   },
 ];
 

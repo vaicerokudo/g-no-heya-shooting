@@ -1369,7 +1369,7 @@ function App() {
               <div
                 key={turret.id}
                 className={`deli-turret ${turret.timer < 1.2 ? 'is-fading' : ''}`}
-                style={place(turret.x, turret.y, 34)}
+                style={place(turret.x, turret.y, 44)}
               />
             ))}
 
