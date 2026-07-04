@@ -18,7 +18,7 @@ export type WeaponDefinition = {
   rarity: WeaponRarity;
   description: string;
   effectDescription: string;
-  image?: string;
+  imagePath?: string;
 };
 
 export type OwnedWeapon = WeaponDefinition & {
@@ -88,6 +88,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'common',
     description: '総長用。基本の太刀。',
     effectDescription: '標準の前方半円斬撃。',
+    imagePath: '/assets/tcg/weapon-iron-tachi.png',
   },
   {
     id: 'star-vein-tachi',
@@ -97,6 +98,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'rare',
     description: '総長用。斬撃に星脈の力を宿す。',
     effectDescription: '斬撃時に、前方へ細い星脈の斬撃波を放つ。',
+    imagePath: '/assets/tcg/weapon-star-vein-tachi.png',
   },
   {
     id: 'repeating-crossbow-bow',
@@ -106,7 +108,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'rare',
     description: 'つつ用。風をまとい、素早く矢を番えられる弓。',
     effectDescription: '風のような速さで矢を放つ弓。つつの攻撃間隔を少し短縮する。Lvでさらに少し短縮。',
-    image: '/assets/tcg/weapon-shippu-bow.png',
+    imagePath: '/assets/tcg/weapon-shippu-bow.png',
   },
   {
     id: 'shadow-stitch-blade',
@@ -116,6 +118,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'rare',
     description: 'ROKUDO用。影をまとった刀。',
     effectDescription: 'ROKUDOの影斬りの間隔を少し短くする。Lvでさらに少し短縮。',
+    imagePath: '/assets/tcg/weapon-shadow-stitch-blade.png',
   },
   {
     id: 'prototype-turret-unit',
@@ -125,6 +128,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'common',
     description: 'Deli用。設置砲撃用の試作兵装。',
     effectDescription: '今後、対応キャラ実装時に反映予定。',
+    imagePath: '/assets/tcg/weapon-prototype-turret.png',
   },
   {
     id: 'ironwall-greatshield',
@@ -134,6 +138,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'common',
     description: 'hibiki用。前方防御に優れた大盾。',
     effectDescription: '今後、対応キャラ実装時に反映予定。',
+    imagePath: '/assets/tcg/weapon-ironwall-shield.png',
   },
   {
     id: 'fang-thrust-spear',
@@ -143,6 +148,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'common',
     description: 'うしまる用。直線突破に向いた槍。',
     effectDescription: '今後、対応キャラ実装時に反映予定。',
+    imagePath: '/assets/tcg/weapon-fang-spear.png',
   },
   {
     id: 'mountain-breaker-axe',
@@ -152,6 +158,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'epic',
     description: 'ROCKEL用。広範囲を薙ぎ払う斧。',
     effectDescription: '今後、対応キャラ実装時に反映予定。',
+    imagePath: '/assets/tcg/weapon-mountain-breaker-axe.png',
   },
   {
     id: 'twin-fang-pistols',
@@ -161,6 +168,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'common',
     description: 'Player用。2丁拳銃の基礎武器。',
     effectDescription: '今後、対応キャラ実装時に反映予定。',
+    imagePath: '/assets/tcg/weapon-twin-fang-pistols.png',
   },
 ];
 

@@ -725,7 +725,7 @@ function App() {
             </article>
             <article className="formation-card weapon-card sortie-card">
               <span className="slot-label">装備武器</span>
-              {equippedMainWeapon.image && <img className="weapon-card-image featured" src={equippedMainWeapon.image} alt={equippedMainWeapon.name} />}
+              {equippedMainWeapon.imagePath && <img className="weapon-card-image featured" src={equippedMainWeapon.imagePath} alt={equippedMainWeapon.name} />}
               <div>
                 <h2>{mainWeaponLabel}</h2>
                 <strong>{mainCharacter.weaponType} / {mainCharacter.attackLabel}</strong>
@@ -844,7 +844,7 @@ function App() {
                 const isEquipped = equippedMainWeapon.id === weapon.id;
                 return (
                   <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''}`}>
-                    {weapon.image && <img className="weapon-card-image" src={weapon.image} alt={weapon.name} />}
+                    {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                     <div>
                       <h3>{weapon.name}</h3>
                       <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
@@ -878,7 +878,7 @@ function App() {
             ) : (
               ownedWeapons.map((weapon) => (
                 <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
-                  {weapon.image && <img className="weapon-card-image" src={weapon.image} alt={weapon.name} />}
+                  {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
@@ -967,7 +967,7 @@ function App() {
           {forgeResult && (
             <article className={`forge-result forge-result-card rarity-${forgeResult.weapon.rarity}`}> 
               <p className="forge-success-title">{'\u935b\u9020\u6210\u529f\uff01'} {forgeResult.isNew ? '\u65b0\u898f\u5165\u624b' : '\u6240\u6301\u6570+1'}</p>
-              {forgeResult.weapon.image && <img className="weapon-card-image result-image" src={forgeResult.weapon.image} alt={forgeResult.weapon.name} />}
+              {forgeResult.weapon.imagePath && <img className="weapon-card-image result-image" src={forgeResult.weapon.imagePath} alt={forgeResult.weapon.name} />}
               <h2>{forgeResult.weapon.name}</h2>
               <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.type} / {forgeResult.weapon.rarity}</strong>
               <p className="summon-success">Lv {forgeResult.level} / 所持数 x{forgeResult.count}</p>
@@ -1009,7 +1009,7 @@ function App() {
             ) : (
               ownedWeapons.map((weapon) => (
                 <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
-                  {weapon.image && <img className="weapon-card-image" src={weapon.image} alt={weapon.name} />}
+                  {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
