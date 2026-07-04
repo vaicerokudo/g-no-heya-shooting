@@ -18,6 +18,7 @@ export type WeaponDefinition = {
   rarity: WeaponRarity;
   description: string;
   effectDescription: string;
+  image?: string;
 };
 
 export type OwnedWeapon = WeaponDefinition & {
@@ -99,12 +100,13 @@ export const weaponCandidates: WeaponDefinition[] = [
   },
   {
     id: 'repeating-crossbow-bow',
-    name: '連弩式の弓',
+    name: '疾風の弓',
     owner: 'つつ',
     type: '弓',
     rarity: 'rare',
-    description: 'つつ用。連射しやすい弓。',
-    effectDescription: 'つつの矢の発射間隔を少し短くする。Lvでさらに少し短縮。',
+    description: 'つつ用。風をまとい、素早く矢を番えられる弓。',
+    effectDescription: '風のような速さで矢を放つ弓。つつの攻撃間隔を少し短縮する。Lvでさらに少し短縮。',
+    image: '/assets/tcg/weapon-shippu-bow.png',
   },
   {
     id: 'shadow-stitch-blade',
