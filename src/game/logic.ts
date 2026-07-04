@@ -18,6 +18,12 @@ import {
   MOUNTAIN_BREAKER_BOSS_DAMAGE,
   MOUNTAIN_BREAKER_DAMAGE,
   MYOUOU_GARUDA_INITIAL_DELAY,
+  NANAICHI_ICE_SHARD_BOSS_DAMAGE,
+  NANAICHI_ICE_SHARD_DAMAGE,
+  NANAICHI_ICE_SHARD_LIFE,
+  NANAICHI_ICE_SHARD_RADIUS,
+  NANAICHI_ICE_SHARD_SLOW_TIME,
+  NANAICHI_ICE_SHARD_SPEED,
   PLAYER_LIMITS,
   PLAYER_MAX_HP,
   PLAYER_MAIN_GUN_BOSS_DAMAGE,
@@ -82,6 +88,7 @@ import {
 import type { Boss, Coin, DeliTurret, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
 import {
   getDeliWeaponTuning,
+  getNanaichiWeaponTuning,
   getPlayerWeaponTuning,
   getRokudoWeaponTuning,
   getRockelWeaponTuning,
@@ -217,6 +224,8 @@ export function updateGame(
     next = runAutoHammerBreaker(next, weaponId, weaponLevel, supportId, supportLevel);
   } else if (mainCharacterId === 'rockel') {
     next = runAutoAxeBerserker(next, weaponId, weaponLevel, supportId, supportLevel);
+  } else if (mainCharacterId === 'nanaichi') {
+    next = runAutoIceSword(next, weaponId, weaponLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -561,6 +570,50 @@ function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel:
     player: {
       ...state.player,
       attackCooldown: weaponTuning.arrowCooldown,
+      slashTimer: 0,
+    },
+  };
+}
+
+function runAutoIceSword(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getNanaichiWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const shards: PlayerArrow[] = Array.from({ length: weaponTuning.iceShardCount }, (_, index) => {
+    const direction = createIceShardDirection(index, weaponTuning.iceShardCount);
+    const xOffset = (index - (weaponTuning.iceShardCount - 1) / 2) * 5;
+    return {
+      id: nextId++,
+      x: state.player.x + xOffset,
+      y: state.player.y - 28,
+      vx: direction.x * NANAICHI_ICE_SHARD_SPEED,
+      vy: direction.y * NANAICHI_ICE_SHARD_SPEED,
+      radius: NANAICHI_ICE_SHARD_RADIUS,
+      damage: NANAICHI_ICE_SHARD_DAMAGE,
+      bossDamage: NANAICHI_ICE_SHARD_BOSS_DAMAGE,
+      life: NANAICHI_ICE_SHARD_LIFE,
+      kind: 'ice',
+    };
+  });
+
+  return {
+    ...state,
+    playerArrows: [...state.playerArrows, ...shards],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 42,
+        text: 'ICE',
+        timer: 0.24,
+      },
+    ],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.iceSwordCooldown,
       slashTimer: 0,
     },
   };
@@ -1038,7 +1091,12 @@ function resolvePlayerArrowHits(
         nextId = heartDrop.nextId;
         enemies.splice(enemyIndex, 1);
       } else {
-        enemies[enemyIndex] = { ...enemy, hp, hitTimer: 0.12 };
+        enemies[enemyIndex] = {
+          ...enemy,
+          hp,
+          hitTimer: 0.12,
+          slowTimer: arrow.kind === 'ice' ? Math.max(enemy.slowTimer ?? 0, NANAICHI_ICE_SHARD_SLOW_TIME) : enemy.slowTimer,
+        };
       }
       if (arrow.piercing) {
         remainingArrows.push(nextArrow);
@@ -1051,6 +1109,8 @@ function resolvePlayerArrowHits(
         ...boss,
         hp: boss.hp - arrow.bossDamage,
         hitTimer: 0.16,
+        phaseTimer: arrow.kind === 'ice' ? boss.phaseTimer * 0.98 : boss.phaseTimer,
+        shotTimer: arrow.kind === 'ice' ? boss.shotTimer + 0.05 : boss.shotTimer,
       };
       effects.push(createHitEffect(nextId++, arrow.x, arrow.y, `-${arrow.bossDamage}`));
       if (arrow.piercing) {
@@ -1742,6 +1802,15 @@ function createShadowHitEffect(id: number, x: number, y: number, text: string): 
     text,
     timer: 0.3,
   };
+}
+
+function createIceShardDirection(index: number, count: number): Vector {
+  const spreadBase = count === 1 ? 0 : (index - (count - 1) / 2) * 0.16;
+  const randomSpread = (Math.random() - 0.5) * 0.24;
+  return normalize({
+    x: spreadBase + randomSpread,
+    y: -1,
+  });
 }
 
 export function clamp(value: number, min: number, max: number) {

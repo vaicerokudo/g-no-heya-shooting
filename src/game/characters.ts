@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker' | 'iceSword';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -112,6 +112,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '斧ぶん回し',
     image: '/assets/tcg/rockel-player.png',
   },
+  nanaichi: {
+    id: 'nanaichi',
+    name: '7171',
+    role: '氷剣・散弾スロウ型',
+    description: '氷の片手剣から散弾状の氷弾を放ち、敵の動きを鈍らせる。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '片手剣',
+    attackType: 'iceSword',
+    attackLabel: '氷剣散弾',
+    image: '/assets/tcg/nanaichi-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -130,7 +142,8 @@ export function isMainCharacterId(value: unknown): value is MainCharacterId {
     value === 'ushimaru' ||
     value === 'deli' ||
     value === 'yabuko-fm' ||
-    value === 'rockel'
+    value === 'rockel' ||
+    value === 'nanaichi'
   );
 }
 

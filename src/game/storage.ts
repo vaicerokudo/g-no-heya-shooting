@@ -75,6 +75,7 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
       ...(typeof equipped.deli === 'string' ? { deli: equipped.deli } : {}),
       ...(typeof equipped['yabuko-fm'] === 'string' ? { 'yabuko-fm': equipped['yabuko-fm'] } : {}),
       ...(typeof equipped.rockel === 'string' ? { rockel: equipped.rockel } : {}),
+      ...(typeof equipped.nanaichi === 'string' ? { nanaichi: equipped.nanaichi } : {}),
     };
   } catch {
     return {};

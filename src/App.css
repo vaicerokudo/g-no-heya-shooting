@@ -2847,6 +2847,23 @@ h1 {
   background: linear-gradient(180deg, rgba(184, 247, 255, 0.62), transparent);
 }
 
+.player-ice-shard {
+  background:
+    radial-gradient(circle at 42% 28%, #ffffff, rgba(205, 250, 255, 0.96) 42%, rgba(86, 191, 255, 0.72) 72%, transparent),
+    #b8f7ff;
+  box-shadow:
+    0 0 0 1px rgba(230, 255, 255, 0.76),
+    0 0 12px rgba(144, 224, 255, 0.9),
+    0 0 20px rgba(76, 201, 240, 0.44);
+}
+
+.player-ice-shard::after {
+  bottom: -12px;
+  width: 3px;
+  height: 15px;
+  background: linear-gradient(180deg, rgba(205, 250, 255, 0.72), rgba(76, 201, 240, 0.18), transparent);
+}
+
 .player-spear {
   border-radius: 999px 999px 8px 8px;
   background:

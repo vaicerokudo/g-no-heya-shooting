@@ -5,6 +5,7 @@ import {
   DELI_TURRET_FIRE_INTERVAL,
   DELI_TURRET_MAX_COUNT,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
+  NANAICHI_ICE_SWORD_COOLDOWN,
   PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
   ROCKEL_AXE_COOLDOWN,
@@ -46,7 +47,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -111,6 +112,11 @@ export type RockelWeaponTuning = {
   strongVisibleTime: number;
 };
 
+export type NanaichiWeaponTuning = {
+  iceSwordCooldown: number;
+  iceShardCount: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
@@ -119,6 +125,7 @@ export const DEFAULT_USHIMARU_WEAPON_ID = 'starter-spear';
 export const DEFAULT_DELI_WEAPON_ID = 'starter-tool-gun';
 export const DEFAULT_YABUKO_FM_WEAPON_ID = 'starter-war-hammer';
 export const DEFAULT_ROCKEL_WEAPON_ID = 'starter-double-axe';
+export const DEFAULT_NANAICHI_WEAPON_ID = 'starter-ice-sword';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -183,6 +190,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'ROCKEL用。最初から使える基本の両刃斧。',
     effectDescription: '前方を大きく横薙ぎし、広めの円弧で敵を巻き込む。',
+  },
+  {
+    id: DEFAULT_NANAICHI_WEAPON_ID,
+    name: '支給氷剣',
+    owner: '7171',
+    type: '片手剣',
+    rarity: 'common',
+    description: '7171用。最初から使える氷の片手剣。',
+    effectDescription: '約1.1秒ごとに前方寄りへ氷弾を放ち、敵に短時間スロウを付与する。',
   },
 ];
 
@@ -293,6 +309,15 @@ export const weaponCandidates: WeaponDefinition[] = [
     effectDescription: '一定間隔で前方へ地割れのような星砕き衝撃波を放つ。Lvで発動間隔、射程、幅が少し強化される。',
     imagePath: '/assets/tcg/weapon-starbreaker-hammer.png',
   },
+  {
+    id: 'ice-crystal-sword',
+    name: '氷晶の片手剣',
+    owner: '7171',
+    type: '片手剣',
+    rarity: 'rare',
+    description: '7171用。氷晶を宿した片手剣。',
+    effectDescription: 'Lvが上がるごとに氷弾数が増え、前方寄りのランダム散弾で敵を鈍らせる。',
+  },
 ];
 
 export const FORGE_RESULT_LINES: Record<WeaponRarity, string> = {
@@ -364,6 +389,10 @@ export function getRockelWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon
   return [getDefaultOwnedWeapon(DEFAULT_ROCKEL_WEAPON_ID), ...ownedWeapons.filter((weapon) => isRockelWeapon(weapon.id))];
 }
 
+export function getNanaichiWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_NANAICHI_WEAPON_ID), ...ownedWeapons.filter((weapon) => isNanaichiWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -396,6 +425,10 @@ export function getEquippedRockelWeapon(equippedWeapons: EquippedWeaponsByCharac
   return getWeaponById(equippedWeapons.rockel ?? DEFAULT_ROCKEL_WEAPON_ID) ?? defaultWeaponDefinitions[6];
 }
 
+export function getEquippedNanaichiWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.nanaichi ?? DEFAULT_NANAICHI_WEAPON_ID) ?? defaultWeaponDefinitions[7];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -407,6 +440,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'deli') return getEquippedDeliWeapon(equippedWeapons);
   if (characterId === 'yabuko-fm') return getEquippedYabukoFmWeapon(equippedWeapons);
   if (characterId === 'rockel') return getEquippedRockelWeapon(equippedWeapons);
+  if (characterId === 'nanaichi') return getEquippedNanaichiWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -420,7 +454,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_USHIMARU_WEAPON_ID ||
     weaponId === DEFAULT_DELI_WEAPON_ID ||
     weaponId === DEFAULT_YABUKO_FM_WEAPON_ID ||
-    weaponId === DEFAULT_ROCKEL_WEAPON_ID
+    weaponId === DEFAULT_ROCKEL_WEAPON_ID ||
+    weaponId === DEFAULT_NANAICHI_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -440,6 +475,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'deli') return getDeliWeaponOptions(ownedWeapons);
   if (characterId === 'yabuko-fm') return getYabukoFmWeaponOptions(ownedWeapons);
   if (characterId === 'rockel') return getRockelWeaponOptions(ownedWeapons);
+  if (characterId === 'nanaichi') return getNanaichiWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -558,6 +594,16 @@ export function getRockelWeaponTuning(weaponId: string | undefined, level = 1): 
   };
 }
 
+export function getNanaichiWeaponTuning(weaponId: string | undefined, level = 1): NanaichiWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const hasIceCrystalSword = weaponId === 'ice-crystal-sword';
+
+  return {
+    iceSwordCooldown: NANAICHI_ICE_SWORD_COOLDOWN,
+    iceShardCount: hasIceCrystalSword ? normalizedLevel : 1,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -597,6 +643,10 @@ export function isYabukoFmWeapon(weaponId: string): boolean {
 
 export function isRockelWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_ROCKEL_WEAPON_ID || weaponId === 'mountain-breaker-axe';
+}
+
+export function isNanaichiWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_NANAICHI_WEAPON_ID || weaponId === 'ice-crystal-sword';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {
