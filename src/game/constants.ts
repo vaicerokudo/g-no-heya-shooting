@@ -41,6 +41,14 @@ export const TSUTSU_ARROW_SPEED = 460;
 export const TSUTSU_ARROW_RADIUS = 5;
 export const TSUTSU_ARROW_LIFE = 1.7;
 
+export const ROKUDO_SHADOW_SLASH_COOLDOWN = 0.48;
+export const ROKUDO_SHADOW_SLASH_VISIBLE_TIME = 0.16;
+export const ROKUDO_SHADOW_SLASH_RADIUS = 92;
+export const ROKUDO_SHADOW_SLASH_BOSS_RADIUS = 118;
+export const ROKUDO_SHADOW_SLASH_HALF_WIDTH = 46;
+export const ROKUDO_SHADOW_SLASH_DAMAGE = 1;
+export const ROKUDO_SHADOW_SLASH_BOSS_DAMAGE = 1;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

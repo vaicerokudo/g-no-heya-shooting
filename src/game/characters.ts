@@ -1,6 +1,6 @@
 export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -45,11 +45,12 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     name: 'ROKUDO',
     role: '影の忍び',
     description: '素早い移動と刀で敵を翻弄する。',
-    status: 'locked',
-    statusLabel: '未解放',
+    status: 'available',
+    statusLabel: '使用可能',
     weaponType: '刀',
-    attackType: 'slash',
-    attackLabel: '未実装',
+    attackType: 'shadowSlash',
+    attackLabel: '影斬り',
+    image: '/assets/tcg/rokudo-player.png',
   },
   player: {
     id: 'player',

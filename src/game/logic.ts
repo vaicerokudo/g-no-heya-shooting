@@ -12,6 +12,12 @@ import {
   PLAYER_MAX_HP,
   PLAYER_START,
   PLAYER_SPEED,
+  ROKUDO_SHADOW_SLASH_BOSS_DAMAGE,
+  ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
+  ROKUDO_SHADOW_SLASH_DAMAGE,
+  ROKUDO_SHADOW_SLASH_HALF_WIDTH,
+  ROKUDO_SHADOW_SLASH_RADIUS,
+  ROKUDO_SHADOW_SLASH_VISIBLE_TIME,
   SLASH_BOSS_RADIUS,
   SLASH_DAMAGE,
   SLASH_HALF_WIDTH,
@@ -36,7 +42,7 @@ import {
   updateSupportEffects,
 } from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
-import { getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
+import { getRokudoWeaponTuning, getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -118,10 +124,13 @@ export function updateGame(
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
   next = updateSupportEffects(next, dt, supportId, supportLevel);
-  next =
-    mainCharacterId === 'tsutsu'
-      ? runAutoBow(next, weaponId, weaponLevel)
-      : runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  if (mainCharacterId === 'tsutsu') {
+    next = runAutoBow(next, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'rokudo') {
+    next = runAutoShadowSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  } else {
+    next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  }
   next = updatePlayerArrows(next, dt, supportId, supportLevel);
   next = updateCoins(next, dt, supportId, supportLevel);
   next = collectCoins(next, supportId, supportLevel);
@@ -350,6 +359,46 @@ function runAutoSlash(
   };
 }
 
+function runAutoShadowSlash(
+  state: GameState,
+  dt: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponId: string | undefined,
+  weaponLevel: number,
+): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getRokudoWeaponTuning(weaponId, weaponLevel);
+
+  const { enemies, defeated, coins, hearts, nextId, effects } = damageEnemiesWithShadowSlash(
+    state.enemies,
+    state.coins,
+    state.hearts,
+    state.effects,
+    state.nextId,
+    state.player,
+    supportId,
+    supportLevel,
+  );
+  const bossHit = damageBossWithShadowSlash(state.boss, state.player, nextId);
+
+  return {
+    ...state,
+    enemies,
+    boss: bossHit.boss,
+    coins,
+    hearts,
+    effects: bossHit.effect ? [...effects, bossHit.effect] : effects,
+    nextId: bossHit.nextId,
+    defeatedEnemies: state.defeatedEnemies + defeated,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.shadowSlashCooldown + dt,
+      slashTimer: ROKUDO_SHADOW_SLASH_VISIBLE_TIME,
+    },
+  };
+}
+
 function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
   if (state.player.attackCooldown > 0) return state;
   const weaponTuning = getTsutsuWeaponTuning(weaponId, weaponLevel);
@@ -538,6 +587,57 @@ function damageBossWithSlash(
   };
 }
 
+function damageEnemiesWithShadowSlash(
+  enemies: Enemy[],
+  coins: Coin[],
+  hearts: GameState['hearts'],
+  effects: FloatingEffect[],
+  nextId: number,
+  player: Player,
+  supportId: SupportId | null,
+  supportLevel: number,
+) {
+  let defeated = 0;
+  const nextCoins = [...coins];
+  const nextHearts = [...hearts];
+  const nextEffects = [...effects];
+  const nextEnemies: Enemy[] = [];
+
+  for (const enemy of enemies) {
+    if (!isInShadowSlash(player, enemy.x, enemy.y, enemy.radius)) {
+      nextEnemies.push(enemy);
+      continue;
+    }
+
+    const hp = enemy.hp - ROKUDO_SHADOW_SLASH_DAMAGE;
+    nextEffects.push(createShadowHitEffect(nextId++, enemy.x, enemy.y, `-${ROKUDO_SHADOW_SLASH_DAMAGE}`));
+    if (hp <= 0) {
+      defeated += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
+    } else {
+      nextEnemies.push({ ...enemy, hp, hitTimer: 0.14 });
+    }
+  }
+
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
+}
+
+function damageBossWithShadowSlash(boss: Boss | null, player: Player, nextId: number) {
+  if (!boss || !isInBossShadowSlash(player, boss)) return { boss, nextId };
+  return {
+    boss: { ...boss, hp: boss.hp - ROKUDO_SHADOW_SLASH_BOSS_DAMAGE, hitTimer: 0.16 },
+    effect: createShadowHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${ROKUDO_SHADOW_SLASH_BOSS_DAMAGE}`),
+    nextId,
+  };
+}
+
 function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
@@ -693,6 +793,30 @@ function isInBossStarSlashWave(
   return isInStarSlashWave(player, boss.x, bossLowerBodyY, boss.radius * 0.5, weaponTuning);
 }
 
+function isInShadowSlash(player: Player, x: number, y: number, radius: number): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.24) return false;
+  if (dy > ROKUDO_SHADOW_SLASH_RADIUS + radius) return false;
+
+  const widthAtPoint = ROKUDO_SHADOW_SLASH_HALF_WIDTH * (0.34 + Math.max(0, dy) / ROKUDO_SHADOW_SLASH_RADIUS);
+  return Math.abs(dx) < widthAtPoint + radius * 0.68 && Math.hypot(dx, dy) < ROKUDO_SHADOW_SLASH_RADIUS + radius;
+}
+
+function isInBossShadowSlash(player: Player, boss: Boss): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.55;
+  const dx = boss.x - player.x;
+  const dy = player.y - bossLowerBodyY;
+  if (dy < -boss.radius * 0.22) return false;
+  if (dy > ROKUDO_SHADOW_SLASH_BOSS_RADIUS + boss.radius * 0.4) return false;
+
+  const widthAtPoint = ROKUDO_SHADOW_SLASH_HALF_WIDTH * (0.42 + Math.max(0, dy) / ROKUDO_SHADOW_SLASH_BOSS_RADIUS);
+  return (
+    Math.abs(dx) < widthAtPoint + boss.radius * 0.48 &&
+    Math.hypot(dx, dy) < ROKUDO_SHADOW_SLASH_BOSS_RADIUS + boss.radius * 0.42
+  );
+}
+
 function updateEffects(state: GameState, dt: number): GameState {
   return {
     ...state,
@@ -710,6 +834,17 @@ function createHitEffect(id: number, x: number, y: number, text: string): Floati
     y,
     text,
     timer: 0.34,
+  };
+}
+
+function createShadowHitEffect(id: number, x: number, y: number, text: string): FloatingEffect {
+  return {
+    id,
+    kind: 'support',
+    x,
+    y,
+    text,
+    timer: 0.3,
   };
 }
 

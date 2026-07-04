@@ -1873,6 +1873,7 @@ h1 {
 .field.is-paused .scroll-band,
 .field.is-paused .slash,
 .field.is-paused .slash-wave,
+.field.is-paused .shadow-slash,
 .field.is-paused .coin,
 .field.is-paused .heart-pickup,
 .field.is-paused .hibiki-shield,
@@ -1921,6 +1922,7 @@ h1 {
 .boss,
 .slash,
 .slash-wave,
+.shadow-slash,
 .floating-effect {
   position: absolute;
   left: 0;
@@ -2094,6 +2096,72 @@ h1 {
     radial-gradient(circle at 72% 74%, rgba(255, 247, 206, 0.78) 0 1px, transparent 3px);
   mix-blend-mode: screen;
   animation: starWaveSparkle 190ms ease-out both;
+}
+
+.shadow-slash {
+  z-index: 5;
+  overflow: visible;
+  border-radius: 90px 90px 12px 12px;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(142, 68, 173, 0.58), rgba(36, 12, 52, 0.36) 46%, transparent 74%),
+    linear-gradient(105deg, transparent 0 28%, rgba(221, 184, 255, 0.88) 31% 34%, transparent 38% 100%);
+  border-top: 2px solid rgba(221, 184, 255, 0.82);
+  filter:
+    drop-shadow(0 0 12px rgba(171, 86, 255, 0.76))
+    drop-shadow(0 0 18px rgba(28, 8, 42, 0.86));
+  animation: shadowSlashBurst 160ms ease-out both;
+  pointer-events: none;
+}
+
+.shadow-slash-core,
+.shadow-slash-line,
+.shadow-slash-smoke {
+  position: absolute;
+  pointer-events: none;
+}
+
+.shadow-slash-core {
+  left: 20%;
+  right: 20%;
+  bottom: 0;
+  height: 60%;
+  border-radius: 50% 50% 0 0;
+  background: radial-gradient(ellipse at 50% 100%, rgba(221, 184, 255, 0.78), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+.shadow-slash-line {
+  left: 4%;
+  right: 4%;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #11051f 10%, #ddb8ff 56%, transparent);
+  box-shadow:
+    0 0 12px rgba(221, 184, 255, 0.88),
+    0 0 18px rgba(85, 34, 139, 0.7);
+  transform-origin: center;
+}
+
+.shadow-slash-line.line-one {
+  top: 30%;
+  transform: rotate(-24deg);
+  animation: shadowLineOne 150ms ease-out both;
+}
+
+.shadow-slash-line.line-two {
+  top: 52%;
+  transform: rotate(19deg);
+  animation: shadowLineTwo 150ms ease-out both;
+}
+
+.shadow-slash-smoke {
+  inset: 18% 8% 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 62%, rgba(33, 8, 48, 0.64), transparent 28%),
+    radial-gradient(circle at 66% 54%, rgba(101, 46, 160, 0.48), transparent 32%);
+  opacity: 0;
+  animation: shadowSmoke 170ms ease-out both;
 }
 
 .enemy {
@@ -2823,6 +2891,63 @@ h1 {
   100% {
     opacity: 0;
     transform: scale(1.18);
+  }
+}
+
+@keyframes shadowSlashBurst {
+  0% {
+    opacity: 0;
+    transform: scale(0.68) translateY(12px);
+  }
+  36% {
+    opacity: 0.96;
+    transform: scale(1.02) translateY(-1px);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.1) translateY(-8px);
+  }
+}
+
+@keyframes shadowLineOne {
+  from {
+    opacity: 0;
+    transform: translateX(-24px) rotate(-28deg) scaleX(0.28);
+  }
+  42% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(18px) rotate(-20deg) scaleX(1.05);
+  }
+}
+
+@keyframes shadowLineTwo {
+  from {
+    opacity: 0;
+    transform: translateX(22px) rotate(22deg) scaleX(0.3);
+  }
+  42% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-18px) rotate(15deg) scaleX(1);
+  }
+}
+
+@keyframes shadowSmoke {
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(8px);
+  }
+  42% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.18) translateY(-12px);
   }
 }
 

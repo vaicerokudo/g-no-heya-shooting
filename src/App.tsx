@@ -4,6 +4,9 @@ import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
   PLAYER_LIMITS,
+  ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
+  ROKUDO_SHADOW_SLASH_HALF_WIDTH,
+  ROKUDO_SHADOW_SLASH_RADIUS,
   SLASH_BOSS_RADIUS,
   SLASH_HALF_WIDTH,
   SLASH_RADIUS,
@@ -237,11 +240,13 @@ function App() {
   const hpPercent = Math.max(0, (game.player.hp / game.player.maxHp) * 100);
   const bossHpPercent = game.boss ? Math.max(0, (game.boss.hp / game.boss.maxHp) * 100) : 0;
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
+  const activeShadowSlashRadius = game.boss ? ROKUDO_SHADOW_SLASH_BOSS_RADIUS : ROKUDO_SHADOW_SLASH_RADIUS;
   const hibikiShield = getHibikiShieldView(game);
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
-  const activeWeaponCharacterId: CharacterId = mainCharacter.id === 'tsutsu' ? 'tsutsu' : 'socho';
+  const activeWeaponCharacterId: CharacterId =
+    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' ? mainCharacter.id : 'socho';
   const equippedMainWeapon = useMemo(
     () => getEquippedWeaponForCharacter(equippedWeapons, activeWeaponCharacterId),
     [equippedWeapons, activeWeaponCharacterId],
@@ -1259,6 +1264,22 @@ function App() {
               >
                 <span className="slash-wave-core" />
                 <span className="slash-wave-stars" />
+              </div>
+            )}
+            {mainCharacter.id === 'rokudo' && game.player.slashTimer > 0 && (
+              <div
+                className="shadow-slash"
+                style={{
+                  left: game.player.x - ROKUDO_SHADOW_SLASH_HALF_WIDTH,
+                  top: game.player.y - activeShadowSlashRadius,
+                  width: ROKUDO_SHADOW_SLASH_HALF_WIDTH * 2,
+                  height: activeShadowSlashRadius,
+                }}
+              >
+                <span className="shadow-slash-core" />
+                <span className="shadow-slash-line line-one" />
+                <span className="shadow-slash-line line-two" />
+                <span className="shadow-slash-smoke" />
               </div>
             )}
 

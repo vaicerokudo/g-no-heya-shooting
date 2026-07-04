@@ -69,6 +69,7 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
     return {
       ...(typeof equipped.socho === 'string' ? { socho: equipped.socho } : {}),
       ...(typeof equipped.tsutsu === 'string' ? { tsutsu: equipped.tsutsu } : {}),
+      ...(typeof equipped.rokudo === 'string' ? { rokudo: equipped.rokudo } : {}),
     };
   } catch {
     return {};
