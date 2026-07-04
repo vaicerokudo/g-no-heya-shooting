@@ -192,6 +192,7 @@ function App() {
   const [isForging, setIsForging] = useState(false);
   const [summonContext, setSummonContext] = useState<SummonContext>('shopPaid');
   const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
+  const [guildReceptionOpen, setGuildReceptionOpen] = useState(false);
   const supportId = useRef<SupportId | null>(null);
   const supportLevel = useRef(1);
   const mainCharacterId = useRef<MainCharacterId>('socho');
@@ -327,9 +328,9 @@ function App() {
   );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
   const screenTitle = useMemo(() => {
-    if (game.status === 'clear') return '星門、沈黙。';
-    if (game.status === 'gameOver') return '撤退。';
-    return 'Gの部屋：星門シューティング';
+    if (game.status === 'clear') return '\u30b9\u30c6\u30fc\u30b8\u30af\u30ea\u30a2';
+    if (game.status === 'gameOver') return '\u30b2\u30fc\u30e0\u30aa\u30fc\u30d0\u30fc';
+    return 'G\u306e\u90e8\u5c4b STG';
   }, [game.status]);
   const rewardSummary = useMemo(
     () => calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage),
@@ -338,6 +339,10 @@ function App() {
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
     (summonPhase === 'idle' || summonPhase === 'done') && (shopSummonCost === 0 || ownedCoins >= shopSummonCost);
+
+  useEffect(() => {
+    document.title = 'G\u306e\u90e8\u5c4b STG';
+  }, []);
 
   useEffect(() => {
     if (!rewardSummary) return;
@@ -380,6 +385,7 @@ function App() {
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
+    setGuildReceptionOpen(false);
     lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'astoriaMap' }));
   };
@@ -397,18 +403,22 @@ function App() {
   };
 
   const goToGuildParty = () => {
+    setGuildReceptionOpen(false);
     setGame((current) => ({ ...current, status: 'guildParty' }));
   };
 
   const goToGuildSummon = () => {
+    setGuildReceptionOpen(false);
     setGame((current) => ({ ...current, status: 'guildSummon' }));
   };
 
   const goToGuildEquipment = () => {
+    setGuildReceptionOpen(false);
     setGame((current) => ({ ...current, status: 'guildEquipment' }));
   };
 
   const goToGuildWeapons = () => {
+    setGuildReceptionOpen(false);
     setGame((current) => ({ ...current, status: 'guildWeapons' }));
   };
 
@@ -646,7 +656,7 @@ function App() {
         <section className="menu-screen title-screen">
           <div>
             <p className="eyebrow">MVP / アストリア草原</p>
-            <h1>Gの部屋：星門シューティング</h1>
+            <h1>{'G\u306e\u90e8\u5c4b STG'}</h1>
             <p className="lead">
               総長を操作し、前方半円斬撃で敵を倒し、コインを拾い、大型魔獣を撃破する最小体験です。
             </p>
@@ -796,8 +806,25 @@ function App() {
           </div>
           <div className="guild-lobby-board" aria-label="Guild lobby destinations">
             <img src="/assets/tcg/guild-lobby.png" alt="G guild lobby" />
-            <img className="guild-lobby-7171" src="/assets/tcg/support-7171.png" alt="7171" />
-            {guildLobbyHotspots.map((hotspot) => (
+            <button
+              className={`guild-receptionist-button ${guildReceptionOpen ? 'is-open' : ''}`}
+              type="button"
+              onClick={() => setGuildReceptionOpen((isOpen) => !isOpen)}
+              aria-expanded={guildReceptionOpen}
+              aria-label="7171\u53d7\u4ed8"
+            >
+              <img className="guild-lobby-7171" src="/assets/tcg/support-7171.png" alt="7171" />
+              <span>{'7171\u53d7\u4ed8'}</span>
+            </button>
+            {guildReceptionOpen && (
+              <div className="guild-reception-menu" role="menu" aria-label="7171\u53d7\u4ed8\u30e1\u30cb\u30e5\u30fc">
+                <button type="button" onClick={goToGuildParty} role="menuitem">{'\u7de8\u6210'}</button>
+                <button type="button" onClick={goToGuildSummon} role="menuitem">{'\u30b5\u30dd\u30fc\u30c8'}</button>
+                <button type="button" onClick={goToGuildEquipment} role="menuitem">{'\u88c5\u5099'}</button>
+                <button type="button" onClick={goToGuildWeapons} role="menuitem">{'\u6b66\u5668\u4e00\u89a7'}</button>
+              </div>
+            )}
+            {guildLobbyHotspots.filter((hotspot) => hotspot.id === 'map').map((hotspot) => (
               <button
                 key={hotspot.id}
                 className={`guild-hotspot ${hotspot.id}`}
