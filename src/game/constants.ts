@@ -49,6 +49,13 @@ export const ROKUDO_SHADOW_SLASH_HALF_WIDTH = 46;
 export const ROKUDO_SHADOW_SLASH_DAMAGE = 1;
 export const ROKUDO_SHADOW_SLASH_BOSS_DAMAGE = 1;
 
+export const PLAYER_MAIN_GUN_COOLDOWN = 0.42;
+export const PLAYER_MAIN_GUN_DAMAGE = 1;
+export const PLAYER_MAIN_GUN_BOSS_DAMAGE = 1;
+export const PLAYER_MAIN_GUN_SPEED = 520;
+export const PLAYER_MAIN_GUN_RADIUS = 4;
+export const PLAYER_MAIN_GUN_LIFE = 1.35;
+
 // Support tuning is intentionally centralized so future Lv growth can adjust it.
 export const PLAYER_SUPPORT_FIRE_INTERVAL = 1.35;
 export const PLAYER_SUPPORT_BULLET_SPEED = 286;

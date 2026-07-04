@@ -1,6 +1,6 @@
 export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -57,12 +57,12 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     name: 'Player',
     role: '二丁拳銃',
     description: '連射と手数で敵を制圧する。',
-    status: 'locked',
-    statusLabel: '未解放',
+    status: 'available',
+    statusLabel: '使用可能',
     weaponType: '拳銃',
-    attackType: 'bow',
-    attackLabel: '未実装',
-    image: '/assets/tcg/support-card-player.png',
+    attackType: 'gun',
+    attackLabel: '二丁拳銃',
+    image: '/assets/tcg/player-player.png',
   },
 };
 

@@ -246,7 +246,7 @@ function App() {
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
   const activeWeaponCharacterId: CharacterId =
-    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' ? mainCharacter.id : 'socho';
+    mainCharacter.id === 'tsutsu' || mainCharacter.id === 'rokudo' || mainCharacter.id === 'player' ? mainCharacter.id : 'socho';
   const equippedMainWeapon = useMemo(
     () => getEquippedWeaponForCharacter(equippedWeapons, activeWeaponCharacterId),
     [equippedWeapons, activeWeaponCharacterId],
@@ -1330,7 +1330,11 @@ function App() {
             ))}
 
             {game.playerArrows.map((arrow) => (
-              <div key={arrow.id} className="player-arrow" style={place(arrow.x, arrow.y, arrow.radius * 2.2, 34)} />
+              <div
+                key={arrow.id}
+                className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''}`}
+                style={place(arrow.x, arrow.y, arrow.radius * 2.2, arrow.kind === 'gun' ? 18 : 34)}
+              />
             ))}
 
             {myououGaruda && (

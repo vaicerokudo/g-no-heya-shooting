@@ -1,4 +1,5 @@
 import {
+  PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
   SLASH_COOLDOWN,
   STAR_SLASH_WAVE_BOSS_DAMAGE,
@@ -26,7 +27,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -48,9 +49,14 @@ export type RokudoWeaponTuning = {
   shadowSlashCooldown: number;
 };
 
+export type PlayerWeaponTuning = {
+  gunCooldown: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
+export const DEFAULT_PLAYER_WEAPON_ID = 'starter-pistols';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -70,6 +76,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'ROKUDO用。最初から使える影の小刀。',
     effectDescription: '素早い影斬りで前方の敵を斬る。',
+  },
+  {
+    id: DEFAULT_PLAYER_WEAPON_ID,
+    name: '支給拳銃',
+    owner: 'Player',
+    type: '拳銃',
+    rarity: 'common',
+    description: 'Player用。最初から使える支給品の二丁拳銃。',
+    effectDescription: '二丁拳銃で前方へ弾を放つ。',
   },
 ];
 
@@ -167,7 +182,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '拳銃',
     rarity: 'common',
     description: 'Player用。2丁拳銃の基礎武器。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    effectDescription: 'Playerの射撃間隔を少し短くする。Lvでさらに少し短縮。',
     imagePath: '/assets/tcg/weapon-twin-fang-pistols.png',
   },
 ];
@@ -221,6 +236,10 @@ export function getRokudoWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon
   return [getDefaultOwnedWeapon(DEFAULT_ROKUDO_WEAPON_ID), ...ownedWeapons.filter((weapon) => isRokudoWeapon(weapon.id))];
 }
 
+export function getPlayerWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_PLAYER_WEAPON_ID), ...ownedWeapons.filter((weapon) => isPlayerWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -233,12 +252,17 @@ export function getEquippedRokudoWeapon(equippedWeapons: EquippedWeaponsByCharac
   return getWeaponById(equippedWeapons.rokudo ?? DEFAULT_ROKUDO_WEAPON_ID) ?? defaultWeaponDefinitions[1];
 }
 
+export function getEquippedPlayerWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.player ?? DEFAULT_PLAYER_WEAPON_ID) ?? defaultWeaponDefinitions[2];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
 ): WeaponDefinition {
   if (characterId === 'tsutsu') return getEquippedTsutsuWeapon(equippedWeapons);
   if (characterId === 'rokudo') return getEquippedRokudoWeapon(equippedWeapons);
+  if (characterId === 'player') return getEquippedPlayerWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -247,7 +271,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     !weaponId ||
     weaponId === DEFAULT_SOCHO_WEAPON_ID ||
     weaponId === DEFAULT_TSUTSU_WEAPON_ID ||
-    weaponId === DEFAULT_ROKUDO_WEAPON_ID
+    weaponId === DEFAULT_ROKUDO_WEAPON_ID ||
+    weaponId === DEFAULT_PLAYER_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -262,6 +287,7 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
 export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
   if (characterId === 'tsutsu') return getTsutsuWeaponOptions(ownedWeapons);
   if (characterId === 'rokudo') return getRokudoWeaponOptions(ownedWeapons);
+  if (characterId === 'player') return getPlayerWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -283,9 +309,9 @@ export function getSochoWeaponTuning(weaponId: string | undefined, level = 1): S
 export function getTsutsuWeaponTuning(weaponId: string | undefined, level = 1): TsutsuWeaponTuning {
   const normalizedLevel = normalizeWeaponLevel(level);
   const levelBonus = normalizedLevel - 1;
-  const isRepeatingBow = weaponId === 'repeating-crossbow-bow';
-  const weaponReduction = isRepeatingBow ? 0.08 : 0;
-  const levelReduction = isRepeatingBow ? Math.min(0.1, levelBonus * 0.016) : 0;
+  const isShippuBow = weaponId === 'repeating-crossbow-bow';
+  const weaponReduction = isShippuBow ? 0.08 : 0;
+  const levelReduction = isShippuBow ? Math.min(0.1, levelBonus * 0.016) : 0;
 
   return {
     arrowCooldown: Math.max(0.48, TSUTSU_ARROW_COOLDOWN - weaponReduction - levelReduction),
@@ -300,6 +326,17 @@ export function getRokudoWeaponTuning(weaponId: string | undefined, level = 1): 
 
   return {
     shadowSlashCooldown: Math.max(0.42, baseCooldown - levelReduction),
+  };
+}
+
+export function getPlayerWeaponTuning(weaponId: string | undefined, level = 1): PlayerWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const isTwinFangPistols = weaponId === 'twin-fang-pistols';
+  const baseCooldown = isTwinFangPistols ? 0.38 : PLAYER_MAIN_GUN_COOLDOWN;
+  const levelReduction = isTwinFangPistols ? Math.min(0.04, (normalizedLevel - 1) * 0.01) : 0;
+
+  return {
+    gunCooldown: Math.max(0.34, baseCooldown - levelReduction),
   };
 }
 
@@ -322,6 +359,10 @@ export function isTsutsuWeapon(weaponId: string): boolean {
 
 export function isRokudoWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_ROKUDO_WEAPON_ID || weaponId === 'shadow-stitch-blade';
+}
+
+export function isPlayerWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_PLAYER_WEAPON_ID || weaponId === 'twin-fang-pistols';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

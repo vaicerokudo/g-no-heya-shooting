@@ -2386,6 +2386,23 @@ h1 {
   background: linear-gradient(180deg, rgba(255, 247, 210, 0.68), transparent);
 }
 
+.player-gunshot {
+  background:
+    radial-gradient(circle at 50% 28%, #ffffff, rgba(184, 247, 255, 0.94) 42%, rgba(255, 209, 102, 0.46) 72%, transparent),
+    #b8f7ff;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.72),
+    0 0 10px rgba(184, 247, 255, 0.86),
+    0 0 16px rgba(255, 209, 102, 0.34);
+}
+
+.player-gunshot::after {
+  bottom: -10px;
+  width: 2px;
+  height: 12px;
+  background: linear-gradient(180deg, rgba(184, 247, 255, 0.62), transparent);
+}
+
 .garuda-sweep {
   z-index: 7;
   pointer-events: none;

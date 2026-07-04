@@ -10,6 +10,11 @@ import {
   MYOUOU_GARUDA_INITIAL_DELAY,
   PLAYER_LIMITS,
   PLAYER_MAX_HP,
+  PLAYER_MAIN_GUN_BOSS_DAMAGE,
+  PLAYER_MAIN_GUN_DAMAGE,
+  PLAYER_MAIN_GUN_LIFE,
+  PLAYER_MAIN_GUN_RADIUS,
+  PLAYER_MAIN_GUN_SPEED,
   PLAYER_START,
   PLAYER_SPEED,
   ROKUDO_SHADOW_SLASH_BOSS_DAMAGE,
@@ -42,7 +47,7 @@ import {
   updateSupportEffects,
 } from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
-import { getRokudoWeaponTuning, getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
+import { getPlayerWeaponTuning, getRokudoWeaponTuning, getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -128,6 +133,8 @@ export function updateGame(
     next = runAutoBow(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'rokudo') {
     next = runAutoShadowSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'player') {
+    next = runAutoGunfire(next, weaponId, weaponLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -437,6 +444,52 @@ function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel:
   };
 }
 
+function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getPlayerWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const leftShot: PlayerArrow = {
+    id: nextId++,
+    x: state.player.x - 9,
+    y: state.player.y - 22,
+    vx: -10,
+    vy: -PLAYER_MAIN_GUN_SPEED,
+    radius: PLAYER_MAIN_GUN_RADIUS,
+    damage: PLAYER_MAIN_GUN_DAMAGE,
+    bossDamage: PLAYER_MAIN_GUN_BOSS_DAMAGE,
+    life: PLAYER_MAIN_GUN_LIFE,
+    kind: 'gun',
+  };
+  const rightShot: PlayerArrow = {
+    ...leftShot,
+    id: nextId++,
+    x: state.player.x + 9,
+    vx: 10,
+  };
+
+  return {
+    ...state,
+    playerArrows: [...state.playerArrows, leftShot, rightShot],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 34,
+        text: 'BANG',
+        timer: 0.16,
+      },
+    ],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.gunCooldown,
+      slashTimer: 0,
+    },
+  };
+}
+
 function updatePlayerArrows(
   state: GameState,
   dt: number,
@@ -446,6 +499,7 @@ function updatePlayerArrows(
   const movedArrows = state.playerArrows
     .map((arrow) => ({
       ...arrow,
+      x: arrow.x + (arrow.vx ?? 0) * dt,
       y: arrow.y + arrow.vy * dt,
       life: arrow.life - dt,
     }))

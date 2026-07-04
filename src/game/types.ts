@@ -91,11 +91,13 @@ export type PlayerArrow = {
   id: number;
   x: number;
   y: number;
+  vx?: number;
   vy: number;
   radius: number;
   damage: number;
   bossDamage: number;
   life: number;
+  kind?: 'arrow' | 'gun';
 };
 
 export type HibikiShieldState = {
