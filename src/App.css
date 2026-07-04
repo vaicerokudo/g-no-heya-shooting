@@ -2593,9 +2593,13 @@ h1 {
 .hammer-breaker {
   z-index: 7;
   pointer-events: none;
-  transform-origin: 50% 100%;
-  animation: hammerBreakerDrop 240ms ease-out both;
-  filter: drop-shadow(0 0 14px rgba(255, 209, 102, 0.52));
+  display: grid;
+  place-items: center;
+  transform-origin: 50% 88%;
+  animation: hammerStarPop 220ms ease-out both;
+  filter:
+    drop-shadow(0 0 10px rgba(255, 244, 194, 0.72))
+    drop-shadow(0 0 16px rgba(148, 216, 255, 0.38));
 }
 
 .hammer-breaker-head,
@@ -2606,39 +2610,38 @@ h1 {
 
 .hammer-breaker-head {
   left: 50%;
-  top: 8%;
-  width: min(86px, 72%);
-  height: 36%;
-  border-radius: 16px 16px 22px 22px;
+  top: 28%;
+  width: min(58px, 54%);
+  aspect-ratio: 1;
   background:
-    linear-gradient(90deg, rgba(255, 240, 178, 0.9), rgba(126, 88, 62, 0.92) 48%, rgba(54, 42, 42, 0.96)),
-    radial-gradient(circle at 50% 70%, rgba(255, 118, 77, 0.36), transparent 62%);
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.98), rgba(255, 241, 179, 0.94) 32%, rgba(166, 221, 255, 0.64) 58%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 218, 116, 0.86) 48%, rgba(148, 216, 255, 0.72));
+  clip-path: polygon(50% 0%, 61% 34%, 96% 18%, 72% 50%, 100% 76%, 64% 68%, 50% 100%, 36% 68%, 0% 76%, 28% 50%, 4% 18%, 39% 34%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.42),
-    inset 0 -9px 12px rgba(54, 25, 20, 0.58),
-    0 0 0 2px rgba(255, 209, 102, 0.32),
-    0 12px 18px rgba(0, 0, 0, 0.34);
-  transform: translateX(-50%) rotate(-8deg);
+    0 0 14px rgba(255, 242, 184, 0.86),
+    0 0 24px rgba(118, 202, 255, 0.48);
+  transform: translateX(-50%) rotate(12deg);
 }
 
 .hammer-breaker-shock {
-  left: 4%;
-  right: 4%;
-  bottom: -3%;
-  height: 42%;
+  left: 50%;
+  top: 51%;
+  width: min(92px, 78%);
+  aspect-ratio: 1;
   border-radius: 50% 50% 8px 8px;
   background:
-    radial-gradient(ellipse at 50% 100%, rgba(255, 209, 102, 0.46), transparent 62%),
-    linear-gradient(0deg, rgba(255, 118, 77, 0.32), rgba(255, 255, 255, 0));
-  border-bottom: 3px solid rgba(255, 209, 102, 0.66);
-  transform: scaleX(1.08);
+    radial-gradient(circle, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.78) 8%, rgba(255, 229, 150, 0.38) 22%, rgba(151, 215, 255, 0.22) 39%, transparent 60%);
+  border: 2px solid rgba(255, 237, 177, 0.42);
+  transform: translate(-50%, -50%) scale(0.84);
 }
 
 .starbreaker-wave {
   z-index: 6;
   pointer-events: none;
-  filter: drop-shadow(0 0 16px rgba(255, 234, 166, 0.76));
-  animation: starbreakerRise 340ms ease-out both;
+  filter:
+    drop-shadow(0 0 18px rgba(255, 244, 194, 0.86))
+    drop-shadow(0 0 26px rgba(104, 190, 255, 0.48));
+  animation: starbreakerStarBurst 340ms ease-out both;
 }
 
 .starbreaker-core,
@@ -2649,27 +2652,34 @@ h1 {
 
 .starbreaker-core {
   left: 50%;
-  bottom: 0;
-  width: 20%;
-  height: 100%;
-  border-radius: 999px 999px 12px 12px;
+  top: 30%;
+  width: min(132px, 92%);
+  aspect-ratio: 1;
   background:
-    linear-gradient(0deg, rgba(255, 131, 83, 0.18), rgba(255, 209, 102, 0.72) 38%, rgba(255, 255, 255, 0.92) 66%, transparent),
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.86), transparent 44%);
-  transform: translateX(-50%);
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 1), rgba(255, 235, 157, 0.96) 30%, rgba(151, 216, 255, 0.78) 56%, transparent 73%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 209, 102, 0.9) 42%, rgba(118, 202, 255, 0.7));
+  clip-path: polygon(50% 0%, 59% 32%, 92% 12%, 74% 48%, 100% 68%, 64% 66%, 50% 100%, 36% 66%, 0% 68%, 26% 48%, 8% 12%, 41% 32%);
+  transform: translateX(-50%) rotate(-8deg);
+  box-shadow:
+    0 0 20px rgba(255, 242, 184, 0.9),
+    0 0 34px rgba(118, 202, 255, 0.52);
 }
 
 .starbreaker-cracks {
-  left: -24%;
-  right: -24%;
-  bottom: 0;
-  height: 82%;
+  left: 50%;
+  top: 44%;
+  width: min(178px, 128%);
+  aspect-ratio: 1;
   background:
-    linear-gradient(20deg, transparent 0 45%, rgba(255, 209, 102, 0.8) 46% 48%, transparent 49%),
-    linear-gradient(-18deg, transparent 0 38%, rgba(255, 131, 83, 0.62) 39% 41%, transparent 42%),
-    linear-gradient(0deg, rgba(255, 209, 102, 0.34), transparent 78%);
-  clip-path: polygon(45% 100%, 39% 64%, 47% 68%, 42% 28%, 51% 52%, 58% 18%, 55% 62%, 65% 54%, 56% 100%);
-  opacity: 0.9;
+    radial-gradient(circle, rgba(255, 255, 255, 0.48), transparent 11%),
+    linear-gradient(0deg, transparent 44%, rgba(255, 236, 168, 0.54) 49%, transparent 54%),
+    linear-gradient(45deg, transparent 44%, rgba(151, 216, 255, 0.36) 49%, transparent 54%),
+    linear-gradient(-45deg, transparent 44%, rgba(255, 236, 168, 0.42) 49%, transparent 54%),
+    radial-gradient(circle, transparent 42%, rgba(151, 216, 255, 0.34) 45%, transparent 48%);
+  border: 2px solid rgba(255, 239, 184, 0.32);
+  border-radius: 999px;
+  opacity: 0.82;
+  transform: translate(-50%, -50%);
 }
 
 .garuda-sweep {
@@ -3295,32 +3305,33 @@ h1 {
   }
 }
 
-@keyframes hammerBreakerDrop {
+@keyframes hammerStarPop {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.84);
+    transform: translateY(18px) scale(0.45) rotate(-18deg);
   }
-  42% {
+  45% {
     opacity: 1;
-    transform: translateY(0) scale(1.04);
+    transform: translateY(0) scale(1.08) rotate(6deg);
   }
   100% {
     opacity: 0;
-    transform: translateY(-8px) scale(1.08);
+    transform: translateY(-10px) scale(1.22) rotate(20deg);
   }
 }
 
-@keyframes starbreakerRise {
+@keyframes starbreakerStarBurst {
   0% {
     opacity: 0;
-    transform: translateY(24px) scaleY(0.62);
+    transform: translateY(20px) scale(0.5) rotate(-10deg);
   }
-  42% {
+  35% {
     opacity: 1;
+    transform: translateY(0) scale(1.04) rotate(3deg);
   }
   100% {
     opacity: 0;
-    transform: translateY(-18px) scaleY(1.08);
+    transform: translateY(-16px) scale(1.24) rotate(18deg);
   }
 }
 
