@@ -66,7 +66,10 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
     const parsed = JSON.parse(rawValue);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
     const equipped = parsed as Record<string, unknown>;
-    return typeof equipped.socho === 'string' ? { socho: equipped.socho } : {};
+    return {
+      ...(typeof equipped.socho === 'string' ? { socho: equipped.socho } : {}),
+      ...(typeof equipped.tsutsu === 'string' ? { tsutsu: equipped.tsutsu } : {}),
+    };
   } catch {
     return {};
   }

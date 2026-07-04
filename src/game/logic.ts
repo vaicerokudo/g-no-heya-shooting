@@ -18,7 +18,6 @@ import {
   SLASH_RADIUS,
   SLASH_VISIBLE_TIME,
   TSUTSU_ARROW_BOSS_DAMAGE,
-  TSUTSU_ARROW_COOLDOWN,
   TSUTSU_ARROW_DAMAGE,
   TSUTSU_ARROW_LIFE,
   TSUTSU_ARROW_RADIUS,
@@ -37,7 +36,7 @@ import {
   updateSupportEffects,
 } from './support';
 import type { Boss, Coin, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
-import { getSochoWeaponTuning, hasSochoSlashWave } from './weapons';
+import { getSochoWeaponTuning, getTsutsuWeaponTuning, hasSochoSlashWave } from './weapons';
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -121,7 +120,7 @@ export function updateGame(
   next = updateSupportEffects(next, dt, supportId, supportLevel);
   next =
     mainCharacterId === 'tsutsu'
-      ? runAutoBow(next)
+      ? runAutoBow(next, weaponId, weaponLevel)
       : runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   next = updatePlayerArrows(next, dt, supportId, supportLevel);
   next = updateCoins(next, dt, supportId, supportLevel);
@@ -351,8 +350,9 @@ function runAutoSlash(
   };
 }
 
-function runAutoBow(state: GameState): GameState {
+function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
   if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getTsutsuWeaponTuning(weaponId, weaponLevel);
   let nextId = state.nextId;
   const arrow: PlayerArrow = {
     id: nextId++,
@@ -382,7 +382,7 @@ function runAutoBow(state: GameState): GameState {
     nextId,
     player: {
       ...state.player,
-      attackCooldown: TSUTSU_ARROW_COOLDOWN,
+      attackCooldown: weaponTuning.arrowCooldown,
       slashTimer: 0,
     },
   };

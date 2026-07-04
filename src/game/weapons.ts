@@ -4,6 +4,7 @@ import {
   STAR_SLASH_WAVE_DAMAGE,
   STAR_SLASH_WAVE_HALF_WIDTH,
   STAR_SLASH_WAVE_RANGE,
+  TSUTSU_ARROW_COOLDOWN,
 } from './constants';
 
 export type WeaponRarity = 'common' | 'rare' | 'epic';
@@ -23,7 +24,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho';
+export type CharacterId = 'socho' | 'tsutsu';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -37,7 +38,24 @@ export type SochoWeaponTuning = {
   starWaveBossDamage: number;
 };
 
+export type TsutsuWeaponTuning = {
+  arrowCooldown: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
+export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
+
+export const defaultWeaponDefinitions: WeaponDefinition[] = [
+  {
+    id: DEFAULT_TSUTSU_WEAPON_ID,
+    name: '初期弓',
+    owner: 'つつ',
+    type: '弓',
+    rarity: 'common',
+    description: 'つつ用。最初から使える基本の弓。',
+    effectDescription: '一定間隔で前方へ矢を放つ。',
+  },
+];
 
 export const WEAPON_RARITY_WEIGHTS: Record<WeaponRarity, number> = {
   common: 65,
@@ -71,7 +89,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '弓',
     rarity: 'rare',
     description: 'つつ用。連射しやすい弓。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    effectDescription: 'つつの矢の発射間隔を少し短くする。Lvでさらに少し短縮。',
   },
   {
     id: 'shadow-stitch-blade',
@@ -156,7 +174,7 @@ export function addOwnedWeapon(ownedWeapons: OwnedWeapon[], weapon: WeaponDefini
 }
 
 export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
-  return weaponCandidates.find((weapon) => weapon.id === weaponId);
+  return [...defaultWeaponDefinitions, ...weaponCandidates].find((weapon) => weapon.id === weaponId);
 }
 
 export function hydrateOwnedWeapon(weapon: OwnedWeapon): OwnedWeapon {
@@ -174,9 +192,20 @@ export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharact
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
 
+export function getEquippedTsutsuWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.tsutsu ?? DEFAULT_TSUTSU_WEAPON_ID) ?? defaultWeaponDefinitions[0];
+}
+
+export function getEquippedWeaponForCharacter(
+  equippedWeapons: EquippedWeaponsByCharacter,
+  characterId: CharacterId,
+): WeaponDefinition {
+  return characterId === 'tsutsu' ? getEquippedTsutsuWeapon(equippedWeapons) : getEquippedSochoWeapon(equippedWeapons);
+}
+
 export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: string | undefined): number {
-  if (!weaponId || weaponId === DEFAULT_SOCHO_WEAPON_ID) {
-    return ownedWeapons.find((weapon) => weapon.id === DEFAULT_SOCHO_WEAPON_ID)?.level ?? 1;
+  if (!weaponId || weaponId === DEFAULT_SOCHO_WEAPON_ID || weaponId === DEFAULT_TSUTSU_WEAPON_ID) {
+    return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
 
   return normalizeWeaponLevel(
@@ -184,6 +213,15 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
       ownedWeapons.find((weapon) => weapon.id === weaponId)?.count ??
       1,
   );
+}
+
+export function getTsutsuWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  const defaultBow = getDefaultOwnedWeapon(DEFAULT_TSUTSU_WEAPON_ID);
+  return [defaultBow, ...ownedWeapons.filter((weapon) => isTsutsuWeapon(weapon.id))];
+}
+
+export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return characterId === 'tsutsu' ? getTsutsuWeaponOptions(ownedWeapons) : getSochoWeaponOptions(ownedWeapons);
 }
 
 export function getSochoWeaponTuning(weaponId: string | undefined, level = 1): SochoWeaponTuning {
@@ -201,6 +239,18 @@ export function getSochoWeaponTuning(weaponId: string | undefined, level = 1): S
   };
 }
 
+export function getTsutsuWeaponTuning(weaponId: string | undefined, level = 1): TsutsuWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const levelBonus = normalizedLevel - 1;
+  const isRepeatingBow = weaponId === 'repeating-crossbow-bow';
+  const weaponReduction = isRepeatingBow ? 0.08 : 0;
+  const levelReduction = isRepeatingBow ? Math.min(0.1, levelBonus * 0.016) : 0;
+
+  return {
+    arrowCooldown: Math.max(0.48, TSUTSU_ARROW_COOLDOWN - weaponReduction - levelReduction),
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -212,6 +262,15 @@ export function hasSochoSlashWave(weaponId: string | undefined): boolean {
 
 export function isSochoWeapon(weaponId: string): boolean {
   return weaponId === 'iron-tachi' || weaponId === 'star-vein-tachi';
+}
+
+export function isTsutsuWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_TSUTSU_WEAPON_ID || weaponId === 'repeating-crossbow-bow';
+}
+
+function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {
+  const definition = getWeaponById(weaponId) ?? defaultWeaponDefinitions[0];
+  return { ...definition, count: 1, level: 1 };
 }
 
 function normalizeWeaponLevel(level: number | undefined): number {

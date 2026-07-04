@@ -48,14 +48,15 @@ import {
   addOwnedWeapon,
   forgeRandomWeapon,
   FORGE_RESULT_LINES,
+  getEquippedWeaponForCharacter,
   getEquippedSochoWeapon,
   getOwnedWeaponLevel,
-  getSochoWeaponOptions,
   getSochoWeaponTuning,
+  getWeaponOptionsForCharacter,
   hasSochoSlashWave,
   WEAPON_RARITY_WEIGHTS,
 } from './game/weapons';
-import type { EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
+import type { CharacterId, EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
 
 type SummonPhase = 'idle' | 'gate' | 'cards' | 'revealing' | 'done';
 type SummonContext = 'shopFree' | 'shopPaid';
@@ -240,7 +241,15 @@ function App() {
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
-  const sochoWeaponOptions = useMemo(() => getSochoWeaponOptions(ownedWeapons), [ownedWeapons]);
+  const activeWeaponCharacterId: CharacterId = mainCharacter.id === 'tsutsu' ? 'tsutsu' : 'socho';
+  const equippedMainWeapon = useMemo(
+    () => getEquippedWeaponForCharacter(equippedWeapons, activeWeaponCharacterId),
+    [equippedWeapons, activeWeaponCharacterId],
+  );
+  const weaponOptions = useMemo(
+    () => getWeaponOptionsForCharacter(activeWeaponCharacterId, ownedWeapons),
+    [activeWeaponCharacterId, ownedWeapons],
+  );
   const selectedSupportLevel = useMemo(
     () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
     [ownedSupports, selectedSupport?.id],
@@ -249,11 +258,12 @@ function App() {
     () => getOwnedWeaponLevel(ownedWeapons, equippedSochoWeapon.id),
     [ownedWeapons, equippedSochoWeapon.id],
   );
-  const mainWeaponLabel = mainCharacter.id === 'tsutsu' ? '\u521d\u671f\u5f13' : `${equippedSochoWeapon.name} / Lv ${equippedSochoWeaponLevel}`;
-  const mainWeaponEffect =
-    mainCharacter.id === 'tsutsu'
-      ? '\u4e00\u5b9a\u9593\u9694\u3067\u524d\u65b9\u3078\u77e2\u3092\u653e\u3064\u3002\u3064\u3064\u7528\u6b66\u5668\u88c5\u5099\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3002'
-      : equippedSochoWeapon.effectDescription;
+  const equippedMainWeaponLevel = useMemo(
+    () => getOwnedWeaponLevel(ownedWeapons, equippedMainWeapon.id),
+    [ownedWeapons, equippedMainWeapon.id],
+  );
+  const mainWeaponLabel = `${equippedMainWeapon.name} / Lv ${equippedMainWeaponLevel}`;
+  const mainWeaponEffect = equippedMainWeapon.effectDescription;
   const sochoWeaponTuning = useMemo(
     () => getSochoWeaponTuning(equippedSochoWeapon.id, equippedSochoWeaponLevel),
     [equippedSochoWeapon.id, equippedSochoWeaponLevel],
@@ -287,9 +297,9 @@ function App() {
   }, [game.defeatedEnemies, game.elapsed, rewardSummary]);
 
   useEffect(() => {
-    equippedWeaponId.current = equippedSochoWeapon.id;
-    equippedWeaponLevel.current = equippedSochoWeaponLevel;
-  }, [equippedSochoWeapon.id, equippedSochoWeaponLevel]);
+    equippedWeaponId.current = equippedMainWeapon.id;
+    equippedWeaponLevel.current = equippedMainWeaponLevel;
+  }, [equippedMainWeapon.id, equippedMainWeaponLevel]);
 
   useEffect(() => {
     supportLevel.current = selectedSupportLevel;
@@ -558,8 +568,8 @@ function App() {
     setForgeResult(null);
   };
 
-  const equipSochoWeapon = (weaponId: string) => {
-    const nextEquippedWeapons = { ...equippedWeapons, socho: weaponId };
+  const equipMainWeapon = (weaponId: string) => {
+    const nextEquippedWeapons = { ...equippedWeapons, [activeWeaponCharacterId]: weaponId };
     setEquippedWeapons(nextEquippedWeapons);
     saveEquippedWeapons(nextEquippedWeapons);
   };
@@ -713,7 +723,7 @@ function App() {
               <div>
                 <h2>{mainWeaponLabel}</h2>
                 <strong>{mainCharacter.weaponType} / {mainCharacter.attackLabel}</strong>
-                <p>{mainCharacter.id === 'tsutsu' ? '\u3064\u3064\u7528\u6b66\u5668\u88c5\u5099\u306f\u4eca\u5f8c\u5b9f\u88c5\u4e88\u5b9a\u3067\u3059\u3002' : equippedSochoWeapon.description}</p>
+                <p>{equippedMainWeapon.description}</p>
                 <p className="weapon-effect-line">効果：{mainWeaponEffect}</p>
               </div>
             </article>
@@ -813,30 +823,30 @@ function App() {
             <strong>{ownedCoins}</strong>
           </div>
           <article className="equipped-weapon-panel">
-            <span>{'\u30e1\u30a4\u30f3\u30ad\u30e3\u30e9\uff1a\u7dcf\u9577'}</span>
-            <h2>{'\u73fe\u5728\u88c5\u5099\u4e2d\u306e\u6b66\u5668'}：{equippedSochoWeapon.name} / Lv {equippedSochoWeaponLevel}</h2>
-            <p>{equippedSochoWeapon.owner} / {equippedSochoWeapon.type} / {equippedSochoWeapon.rarity}</p>
-            <p>{equippedSochoWeapon.description}</p>
-            <p className="weapon-effect-line">{'\u52b9\u679c'}：{equippedSochoWeapon.effectDescription}</p>
+            <span>メインキャラ：{mainCharacter.name}</span>
+            <h2>現在装備中の武器：{equippedMainWeapon.name} / Lv {equippedMainWeaponLevel}</h2>
+            <p>{equippedMainWeapon.owner} / {equippedMainWeapon.type} / {equippedMainWeapon.rarity}</p>
+            <p>{equippedMainWeapon.description}</p>
+            <p className="weapon-effect-line">効果：{equippedMainWeapon.effectDescription}</p>
           </article>
           <div className="equipment-list">
-            <h2>{'\u7dcf\u9577\u304c\u88c5\u5099\u3067\u304d\u308b\u6240\u6301\u6b66\u5668'}</h2>
-            {sochoWeaponOptions.length === 0 ? (
-              <p className="empty-inventory">{'\u7dcf\u9577\u7528\u306e\u6b66\u5668\u3092\u6301\u3063\u3066\u3044\u307e\u305b\u3093\u3002\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b\u3067\u935b\u9020\u3057\u3066\u307f\u3088\u3046\u3002'}</p>
+            <h2>{mainCharacter.name}が装備できる武器</h2>
+            {weaponOptions.length === 0 ? (
+              <p className="empty-inventory">{mainCharacter.name}用の武器を持っていません。サッグの鍛冶屋で鍛造してみよう。</p>
             ) : (
-              sochoWeaponOptions.map((weapon) => {
-                const isEquipped = equippedSochoWeapon.id === weapon.id;
+              weaponOptions.map((weapon) => {
+                const isEquipped = equippedMainWeapon.id === weapon.id;
                 return (
-                  <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''}`}> 
+                  <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''}`}>
                     <div>
                       <h3>{weapon.name}</h3>
                       <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
                     </div>
                     <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                     <p>{weapon.description}</p>
-                    <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
-                    <button className="secondary-button" onClick={() => equipSochoWeapon(weapon.id)} disabled={isEquipped}>
-                      {isEquipped ? '\u88c5\u5099\u4e2d' : '\u88c5\u5099\u3059\u308b'}
+                    <p className="weapon-effect-line">効果：{weapon.effectDescription}</p>
+                    <button className="secondary-button" onClick={() => equipMainWeapon(weapon.id)} disabled={isEquipped}>
+                      {isEquipped ? '装備中' : '装備する'}
                     </button>
                   </article>
                 );
@@ -864,7 +874,7 @@ function App() {
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
-                    {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
+                    {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
                   <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                   <p>{weapon.description}</p>
@@ -990,7 +1000,7 @@ function App() {
                   <div>
                     <h3>{weapon.name}</h3>
                     <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
-                    {equippedSochoWeapon.id === weapon.id && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
+                    {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                   </div>
                   <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                   <p>{weapon.description}</p>
