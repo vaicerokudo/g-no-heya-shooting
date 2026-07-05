@@ -67,6 +67,7 @@ import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 import {
   getCharacterSkinImage,
   getCharacterSkinLabel,
+  getCharacterWithSkin,
   getEffectiveCharacterSkinId,
   getSoundComicSkinSupportId,
   isSoundComicSkinUnlocked,
@@ -304,7 +305,14 @@ function App() {
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const runtimeMainCharacterId = game.isTraining && trainingRunCharacterId ? trainingRunCharacterId : activeMainCharacterId;
-  const mainCharacter = useMemo(() => getMainCharacter(runtimeMainCharacterId), [runtimeMainCharacterId]);
+  const mainCharacterSkinId = useMemo(
+    () => getEffectiveCharacterSkinId(runtimeMainCharacterId, selectedSkins, ownedSupports),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins],
+  );
+  const mainCharacter = useMemo(
+    () => getCharacterWithSkin(runtimeMainCharacterId, selectedSkins, ownedSupports),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins],
+  );
   const selectedStage = useMemo(() => getStageById(selectedStageId), [selectedStageId]);
   const activeWeaponCharacterId: CharacterId =
     mainCharacter.id === 'tsutsu' ||
@@ -850,7 +858,7 @@ function App() {
 
           <div className="training-character-grid">
             {trainingCharacters.map((character) => {
-              const definition = getMainCharacter(character.id);
+              const definition = getCharacterWithSkin(character.id, selectedSkins, ownedSupports);
               const isSelected = trainingSelectedCharacterId === character.id;
               return (
                 <button
@@ -1007,6 +1015,7 @@ function App() {
             </div>
             <div className="main-character-list">
               {mainCharacterList.map((character) => {
+                const characterView = getCharacterWithSkin(character.id, selectedSkins, ownedSupports);
                 const isActive = activeMainCharacterId === character.id;
                 const isAvailable = character.status === 'available';
                 return (
@@ -1016,8 +1025,8 @@ function App() {
                     className={`main-character-card ${isActive ? 'is-active' : ''} ${isAvailable ? 'is-available' : 'is-locked'}`}
                     onClick={() => chooseMainCharacter(character)}
                   >
-                    {character.image ? (
-                      <img src={character.image} alt={character.name} />
+                    {characterView.image ? (
+                      <img src={characterView.image} alt={character.name} />
                     ) : (
                       <span className="character-silhouette">{character.name.slice(0, 1)}</span>
                     )}
@@ -1505,8 +1514,10 @@ function App() {
           <article className="stage-card selected-stage-card">
             <span>{selectedStage.difficultyLabel}</span>
             <h2>{selectedStage.name}</h2>
+            {mainCharacter.image && <img className="stage-main-image" src={mainCharacter.image} alt={mainCharacter.name} />}
             <p>{`BOSS\uff1a${selectedStage.bossName}`}</p>
             <p>{`\u30e1\u30a4\u30f3\uff1a${mainCharacter.name}`}</p>
+            <p>{`\u30b9\u30ad\u30f3\uff1a${getCharacterSkinLabel(mainCharacterSkinId)}`}</p>
             {selectedSupport ? (
               <>
                 <p>{`\u540c\u884c\uff1a${selectedSupport.name} Lv ${selectedSupportLevel}`}</p>
@@ -1546,6 +1557,11 @@ function App() {
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{game.stageName}</div>
+            {mainCharacter.image && (
+              <div className="hud-main-portrait">
+                <img src={mainCharacter.image} alt={mainCharacter.name} />
+              </div>
+            )}
             <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
             <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>

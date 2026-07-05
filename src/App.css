@@ -497,6 +497,17 @@ button {
   width: min(560px, 100%);
 }
 
+.stage-main-image {
+  justify-self: center;
+  width: min(150px, 42vw);
+  height: 128px;
+  object-fit: contain;
+  object-position: bottom center;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.42));
+}
+
 .guild-lobby-hotspot-screen {
   width: min(980px, 100%);
   min-height: min(760px, calc(100vh - 40px));
@@ -2311,6 +2322,24 @@ h1 {
 .hud-weapon {
   justify-content: start;
   color: #c8ffdf;
+}
+
+.hud-main-portrait {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(143, 220, 255, 0.26);
+  border-radius: 8px;
+  background: rgba(143, 220, 255, 0.08);
+}
+
+.hud-main-portrait img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.36));
 }
 
 .hud-main,
