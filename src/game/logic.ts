@@ -24,6 +24,7 @@ import {
   NANAICHI_ICE_SHARD_RADIUS,
   NANAICHI_ICE_SHARD_SLOW_TIME,
   NANAICHI_ICE_SHARD_SPEED,
+  NANAICHI_ICE_SWORD_VISIBLE_TIME,
   PLAYER_LIMITS,
   PLAYER_MAX_HP,
   PLAYER_MAIN_GUN_BOSS_DAMAGE,
@@ -614,7 +615,7 @@ function runAutoIceSword(state: GameState, weaponId: string | undefined, weaponL
     player: {
       ...state.player,
       attackCooldown: weaponTuning.iceSwordCooldown,
-      slashTimer: 0,
+      slashTimer: NANAICHI_ICE_SWORD_VISIBLE_TIME,
     },
   };
 }

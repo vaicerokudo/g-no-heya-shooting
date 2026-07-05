@@ -2596,6 +2596,71 @@ h1 {
   animation: shadowSmoke 170ms ease-out both;
 }
 
+.nanaichi-ice-slash {
+  z-index: 6;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 12px rgba(184, 247, 255, 0.86))
+    drop-shadow(0 0 20px rgba(76, 201, 240, 0.52));
+  animation: nanaichiIceSlashBurst 180ms ease-out both;
+}
+
+.nanaichi-ice-slash-arc,
+.nanaichi-ice-slash-edge,
+.nanaichi-ice-slash-spark {
+  position: absolute;
+  pointer-events: none;
+}
+
+.nanaichi-ice-slash-arc {
+  left: 8%;
+  right: 8%;
+  top: 15%;
+  height: 74%;
+  border-radius: 50% 50% 18% 18%;
+  background:
+    radial-gradient(ellipse at 50% 100%, rgba(184, 247, 255, 0.42), rgba(76, 201, 240, 0.2) 42%, transparent 70%),
+    linear-gradient(105deg, transparent 0 28%, rgba(255, 255, 255, 0.86) 34% 37%, rgba(184, 247, 255, 0.34) 45%, transparent 72%);
+  border-top: 2px solid rgba(230, 255, 255, 0.82);
+  transform: rotate(-8deg) scaleX(0.92);
+}
+
+.nanaichi-ice-slash-edge {
+  left: 19%;
+  right: 15%;
+  top: 44%;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffffff 16%, #b8f7ff 54%, rgba(76, 201, 240, 0.18), transparent);
+  box-shadow:
+    0 0 12px rgba(230, 255, 255, 0.9),
+    0 0 18px rgba(76, 201, 240, 0.48);
+  transform: rotate(-24deg);
+}
+
+.nanaichi-ice-slash-spark {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow:
+    0 0 8px rgba(255, 255, 255, 0.95),
+    0 0 14px rgba(128, 225, 255, 0.72);
+}
+
+.nanaichi-ice-slash-spark.spark-one {
+  left: 64%;
+  top: 20%;
+}
+
+.nanaichi-ice-slash-spark.spark-two {
+  left: 31%;
+  top: 62%;
+  width: 3px;
+  height: 3px;
+}
+
 .spear-thrust-set {
   z-index: 5;
   pointer-events: none;
@@ -3901,6 +3966,21 @@ h1 {
   100% {
     opacity: 0;
     transform: scale(1.18) translateY(-12px);
+  }
+}
+
+@keyframes nanaichiIceSlashBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) rotate(-5deg) scale(0.74);
+  }
+  38% {
+    opacity: 1;
+    transform: translateY(0) rotate(-8deg) scale(1.02);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) rotate(-13deg) scale(1.1);
   }
 }
 

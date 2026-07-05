@@ -317,6 +317,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     rarity: 'rare',
     description: '7171用。氷晶を宿した片手剣。',
     effectDescription: 'Lvが上がるごとに氷弾数が増え、前方寄りのランダム散弾で敵を鈍らせる。',
+    imagePath: '/assets/tcg/weapon-ice-crystal-sword.png',
   },
 ];
 

@@ -5,6 +5,7 @@ import {
   FIELD_WIDTH,
   PLAYER_LIMITS,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
+  NANAICHI_ICE_SWORD_VISIBLE_TIME,
   ROKUDO_SUPPORT_POISON_RADIUS,
   ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
   ROKUDO_SHADOW_SLASH_HALF_WIDTH,
@@ -1494,6 +1495,23 @@ function App() {
                 <span className="shadow-slash-line line-one" />
                 <span className="shadow-slash-line line-two" />
                 <span className="shadow-slash-smoke" />
+              </div>
+            )}
+            {mainCharacter.id === 'nanaichi' && game.player.slashTimer > 0 && (
+              <div
+                className="nanaichi-ice-slash"
+                style={{
+                  left: game.player.x - 58,
+                  top: game.player.y - 92,
+                  width: 116,
+                  height: 82,
+                  opacity: Math.min(1, game.player.slashTimer / NANAICHI_ICE_SWORD_VISIBLE_TIME),
+                }}
+              >
+                <span className="nanaichi-ice-slash-arc" />
+                <span className="nanaichi-ice-slash-edge" />
+                <span className="nanaichi-ice-slash-spark spark-one" />
+                <span className="nanaichi-ice-slash-spark spark-two" />
               </div>
             )}
             {mainCharacter.id === 'ushimaru' && game.player.slashTimer > 0 && (
