@@ -10,6 +10,7 @@ export type GameStatus =
   | 'guildSummon'
   | 'guildEquipment'
   | 'guildWeapons'
+  | 'guildSkins'
   | 'forge'
   | 'forgeDraw'
   | 'forgeWeapons'

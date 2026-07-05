@@ -42,6 +42,7 @@ import {
   loadEquippedWeapons,
   loadFreeSupportSummonUsed,
   loadOwnedSupports,
+  loadSelectedSkinsByCharacter,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
@@ -51,6 +52,7 @@ import {
   saveFreeSupportSummonUsed,
   saveOwnedSupports,
   saveOwnedWeapons,
+  saveSelectedSkinsByCharacter,
 } from './game/storage';
 import {
   addOwnedSupport,
@@ -62,6 +64,15 @@ import {
 import type { OwnedSupport, SupportCharacter } from './game/supports';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
+import {
+  getCharacterSkinImage,
+  getCharacterSkinLabel,
+  getEffectiveCharacterSkinId,
+  getSoundComicSkinSupportId,
+  isSoundComicSkinUnlocked,
+  SOUND_COMIC_SKIN_CHARACTER_IDS,
+} from './game/skins';
+import type { CharacterSkinId, SelectedSkinsByCharacter } from './game/skins';
 import {
   addOwnedWeapon,
   forgeRandomWeapon,
@@ -196,6 +207,7 @@ function App() {
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
+  const [selectedSkins, setSelectedSkins] = useState<SelectedSkinsByCharacter>(() => loadSelectedSkinsByCharacter());
   const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
   const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
@@ -476,6 +488,11 @@ function App() {
     setGame((current) => ({ ...current, status: 'guildWeapons' }));
   };
 
+  const goToGuildSkins = () => {
+    setGuildReceptionOpen(false);
+    setGame((current) => ({ ...current, status: 'guildSkins' }));
+  };
+
   const goToForge = () => {
     setGame((current) => ({ ...current, status: 'forge' }));
   };
@@ -622,6 +639,13 @@ function App() {
     setActiveMainCharacterId(nextCharacterId);
     saveActiveMainCharacterId(nextCharacterId);
     setLockedMainCharacterNotice('');
+  };
+
+  const chooseCharacterSkin = (characterId: MainCharacterId, skinId: CharacterSkinId) => {
+    if (skinId === 'sound-comic' && !isSoundComicSkinUnlocked(characterId, ownedSupports)) return;
+    const nextSkins = { ...selectedSkins, [characterId]: skinId };
+    setSelectedSkins(nextSkins);
+    saveSelectedSkinsByCharacter(nextSkins);
   };
 
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -887,6 +911,7 @@ function App() {
                 <button type="button" onClick={goToGuildSummon} role="menuitem">{'\u30b5\u30dd\u30fc\u30c8'}</button>
                 <button type="button" onClick={goToGuildEquipment} role="menuitem">{'\u88c5\u5099'}</button>
                 <button type="button" onClick={goToGuildWeapons} role="menuitem">{'\u6b66\u5668\u4e00\u89a7'}</button>
+                <button type="button" onClick={goToGuildSkins} role="menuitem">{'\u30b9\u30ad\u30f3\u5909\u66f4'}</button>
               </div>
             )}
             {guildLobbyHotspots.filter((hotspot) => hotspot.id === 'map').map((hotspot) => (
@@ -902,6 +927,67 @@ function App() {
                 <span>{hotspot.label}</span>
               </button>
             ))}
+          </div>
+        </section>
+      )}
+
+      {game.status === 'guildSkins' && (
+        <section className="menu-screen prepare-screen guild-subscreen skin-screen">
+          <p className="eyebrow">Guild House</p>
+          <h1>{'\u30b9\u30ad\u30f3\u5909\u66f4'}</h1>
+          <div className="owned-coins-panel compact">
+            <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
+            <strong>{ownedCoins}</strong>
+          </div>
+          <p className="control-note">{'\u5bfe\u5fdc\u30b5\u30dd\u30fc\u30c8\u304cLv5\u306b\u5230\u9054\u3059\u308b\u3068\u3001\u30b5\u30a6\u30f3\u30c9\u30b3\u30df\u30c3\u30af\u30b9\u30ad\u30f3\u3092\u9078\u3079\u307e\u3059\u3002'}</p>
+          <div className="skin-grid">
+            {SOUND_COMIC_SKIN_CHARACTER_IDS.map((characterId) => {
+              const character = getMainCharacter(characterId);
+              const supportId = getSoundComicSkinSupportId(characterId);
+              const support = supportId ? getSupportById(supportId) : null;
+              const supportLevel = getOwnedSupportLevel(ownedSupports, supportId);
+              const isUnlocked = isSoundComicSkinUnlocked(characterId, ownedSupports);
+              const currentSkinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports);
+              const defaultImage = getCharacterSkinImage(characterId, 'default');
+              const soundComicImage = getCharacterSkinImage(characterId, 'sound-comic');
+
+              return (
+                <article className={`skin-card ${isUnlocked ? 'is-unlocked' : 'is-locked'}`} key={characterId}>
+                  <div className="skin-card-header">
+                    {defaultImage && <img src={defaultImage} alt={character.name} />}
+                    <div>
+                      <h2>{character.name}</h2>
+                      <p>{`\u73fe\u5728\uff1a${getCharacterSkinLabel(currentSkinId)}`}</p>
+                      <strong>{support ? `${support.name} Lv ${supportLevel}` : '\u672a\u5bfe\u5fdc'}</strong>
+                    </div>
+                  </div>
+                  <div className="skin-options">
+                    <button
+                      className={`skin-option ${currentSkinId === 'default' ? 'is-selected' : ''}`}
+                      type="button"
+                      onClick={() => chooseCharacterSkin(characterId, 'default')}
+                    >
+                      <span>{'\u901a\u5e38\u30b9\u30ad\u30f3'}</span>
+                      <em>{currentSkinId === 'default' ? '\u9078\u629e\u4e2d' : '\u9078\u629e'}</em>
+                    </button>
+                    <button
+                      className={`skin-option sound-comic ${currentSkinId === 'sound-comic' ? 'is-selected' : ''}`}
+                      type="button"
+                      onClick={() => chooseCharacterSkin(characterId, 'sound-comic')}
+                      disabled={!isUnlocked}
+                    >
+                      {soundComicImage && <img src={soundComicImage} alt="" />}
+                      <span>{'\u30b5\u30a6\u30f3\u30c9\u30b3\u30df\u30c3\u30af'}</span>
+                      <em>{isUnlocked ? (currentSkinId === 'sound-comic' ? '\u9078\u629e\u4e2d' : '\u9078\u629e') : '\u30ed\u30c3\u30af\u4e2d'}</em>
+                    </button>
+                  </div>
+                  {!isUnlocked && <p className="skin-unlock-note">{'\u5bfe\u5fdc\u30b5\u30dd\u30fc\u30c8Lv5\u3067\u89e3\u653e'}</p>}
+                </article>
+              );
+            })}
+          </div>
+          <div className="prepare-actions">
+            <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
           </div>
         </section>
       )}
