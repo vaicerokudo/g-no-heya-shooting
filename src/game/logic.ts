@@ -111,6 +111,7 @@ export const createInitialGameState = (): GameState => ({
   status: 'title',
   stageId: DEFAULT_STAGE_ID,
   stageName: getStageById(DEFAULT_STAGE_ID).name,
+  isTraining: false,
   player: createPlayer(),
   enemies: [],
   coins: [],
@@ -161,14 +162,16 @@ export const createInitialGameState = (): GameState => ({
   message: '',
 });
 
-export const startGame = (stageId: StageId = DEFAULT_STAGE_ID): GameState => {
+export const startGame = (stageId: StageId = DEFAULT_STAGE_ID, options: { isTraining?: boolean } = {}): GameState => {
   const stage = getStageById(stageId);
+  const isTraining = Boolean(options.isTraining);
   return {
     ...createInitialGameState(),
     status: 'playing',
     stageId: stage.id,
-    stageName: stage.name,
-    message: '\u30b9\u30c6\u30fc\u30b8\u958b\u59cb',
+    stageName: isTraining ? '訓練場' : stage.name,
+    isTraining,
+    message: isTraining ? 'Training start' : '\u30b9\u30c6\u30fc\u30b8\u958b\u59cb',
   };
 };
 
@@ -212,7 +215,9 @@ export function updateGame(
   };
 
   next = maybeSpawnEnemy(next);
-  next = maybeSpawnBoss(next);
+  if (!next.isTraining) {
+    next = maybeSpawnBoss(next);
+  }
   next = updateBossIntro(next, dt);
   next = updateEnemies(next, dt);
   next = updateBoss(next, dt);

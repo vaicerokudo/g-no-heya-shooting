@@ -201,6 +201,7 @@ export type GameState = {
   status: GameStatus;
   stageId: StageId;
   stageName: string;
+  isTraining: boolean;
   player: Player;
   enemies: Enemy[];
   coins: Coin[];

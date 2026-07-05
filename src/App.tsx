@@ -195,6 +195,8 @@ function App() {
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
+  const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
+  const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
   const [lockedMainCharacterNotice, setLockedMainCharacterNotice] = useState('');
   const [freeSupportSummonUsed, setFreeSupportSummonUsed] = useState(() => loadFreeSupportSummonUsed());
@@ -288,7 +290,8 @@ function App() {
   const hibikiShield = getHibikiShieldView(game);
   const myououGaruda = getMyououGarudaView(game);
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
-  const mainCharacter = useMemo(() => getMainCharacter(activeMainCharacterId), [activeMainCharacterId]);
+  const runtimeMainCharacterId = game.isTraining && trainingRunCharacterId ? trainingRunCharacterId : activeMainCharacterId;
+  const mainCharacter = useMemo(() => getMainCharacter(runtimeMainCharacterId), [runtimeMainCharacterId]);
   const selectedStage = useMemo(() => getStageById(selectedStageId), [selectedStageId]);
   const activeWeaponCharacterId: CharacterId =
     mainCharacter.id === 'tsutsu' ||
@@ -347,8 +350,8 @@ function App() {
     return 'G\u306e\u90e8\u5c4b STG';
   }, [game.status]);
   const rewardSummary = useMemo(
-    () => calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage, getStageById(game.stageId).clearBonus),
-    [game.status, game.coinsCollected, game.hasTakenDamage, game.stageId],
+    () => (game.isTraining ? null : calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage, getStageById(game.stageId).clearBonus)),
+    [game.isTraining, game.status, game.coinsCollected, game.hasTakenDamage, game.stageId],
   );
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
@@ -382,11 +385,12 @@ function App() {
   }, [selectedSupportLevel]);
 
   useEffect(() => {
-    mainCharacterId.current = activeMainCharacterId;
-  }, [activeMainCharacterId]);
+    mainCharacterId.current = runtimeMainCharacterId;
+  }, [runtimeMainCharacterId]);
 
   const begin = () => {
     if (!selectedSupport) return;
+    setTrainingRunCharacterId(null);
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
@@ -395,11 +399,45 @@ function App() {
     setGame(startGame(selectedStageId));
   };
 
+  const beginTraining = () => {
+    if (!trainingSelectedCharacterId) return;
+    const trainingWeapon = getEquippedWeaponForCharacter(equippedWeapons, trainingSelectedCharacterId);
+    const trainingWeaponLevel = getOwnedWeaponLevel(ownedWeapons, trainingWeapon.id);
+    setTrainingRunCharacterId(trainingSelectedCharacterId);
+    mainCharacterId.current = trainingSelectedCharacterId;
+    equippedWeaponId.current = trainingWeapon.id;
+    equippedWeaponLevel.current = trainingWeaponLevel;
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    resetJoystick();
+    rewardedResultKey.current = null;
+    lastFrame.current = null;
+    setGame(startGame(DEFAULT_STAGE_ID, { isTraining: true }));
+  };
+
+  const returnToTrainingGround = () => {
+    pressedKeys.current.clear();
+    dragTarget.current = null;
+    resetJoystick();
+    lastFrame.current = null;
+    setTrainingRunCharacterId(null);
+    setGame((current) => ({ ...current, status: 'trainingGround', isTraining: false }));
+  };
+
+  const retryCurrentRun = () => {
+    if (game.isTraining) {
+      beginTraining();
+      return;
+    }
+    begin();
+  };
+
   const goToAstoriaMap = () => {
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
     setGuildReceptionOpen(false);
+    setTrainingRunCharacterId(null);
     lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'astoriaMap' }));
   };
@@ -408,6 +446,7 @@ function App() {
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
+    setTrainingRunCharacterId(null);
     lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'guildLobby' }));
   };
@@ -470,6 +509,7 @@ function App() {
   };
 
   const goToTrainingGround = () => {
+    setTrainingRunCharacterId(null);
     setGame((current) => ({ ...current, status: 'trainingGround' }));
   };
 
@@ -477,6 +517,7 @@ function App() {
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
+    setTrainingRunCharacterId(null);
     lastFrame.current = null;
     setGame((current) => ({ ...current, status: 'gate' }));
   };
@@ -785,20 +826,30 @@ function App() {
           <div className="training-character-grid">
             {trainingCharacters.map((character) => {
               const definition = getMainCharacter(character.id);
+              const isSelected = trainingSelectedCharacterId === character.id;
               return (
-                <article className="training-character-card" key={character.id}>
+                <button
+                  className={`training-character-card ${isSelected ? 'is-selected' : ''}`}
+                  key={character.id}
+                  type="button"
+                  onClick={() => setTrainingSelectedCharacterId(character.id)}
+                >
                   {definition.image && <img src={definition.image} alt={character.name} />}
                   <div>
                     <h2>{character.name}</h2>
                     <strong>{character.summary}</strong>
                     <p>{definition.attackLabel}</p>
                   </div>
-                </article>
+                  {isSelected && <em>選択中</em>}
+                </button>
               );
             })}
           </div>
 
           <div className="facility-actions">
+            <button className="primary-button" onClick={beginTraining} disabled={!trainingSelectedCharacterId}>
+              {trainingSelectedCharacterId ? 'このキャラで訓練開始' : 'キャラを選択してください'}
+            </button>
             <button className="secondary-button" onClick={goToAstoriaPlaza}>{'\u30a2\u30b9\u30c8\u30ea\u30a2\u5e83\u5834\u3078\u623b\u308b'}</button>
             <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
           </div>
@@ -1415,6 +1466,11 @@ function App() {
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
+            {game.isTraining && (
+              <button className="pause-button training-exit-button" onClick={returnToTrainingGround}>
+                訓練終了
+              </button>
+            )}
           </div>
 
           {game.boss && (
@@ -1796,9 +1852,14 @@ function App() {
                     <button className="primary-button" onClick={resumeGame}>
                       再開
                     </button>
-                    <button className="secondary-button" onClick={begin}>
+                    <button className="secondary-button" onClick={retryCurrentRun}>
                       はじめからやり直す
                     </button>
+                    {game.isTraining && (
+                      <button className="secondary-button" onClick={returnToTrainingGround}>
+                        訓練場へ戻る
+                      </button>
+                    )}
                     <button className="secondary-button" onClick={goToPrepare}>
                       出撃準備へ戻る
                     </button>
@@ -1815,6 +1876,7 @@ function App() {
           </div>
 
           <div className="instructions">
+            {game.isTraining && <span>訓練中：報酬コインなし / 一時停止から訓練場へ戻れます</span>}
             <span>移動: WASD / 矢印キー / ドラッグ / スマホ左下ジョイスティック</span>
             <span>攻撃: クールタイムごとに自動斬撃</span>
           </div>
@@ -1869,6 +1931,18 @@ function App() {
               <strong>{mainCharacter.attackLabel}</strong>
             </div>
           </div>
+          {game.isTraining && (
+            <div className="reward-breakdown training-result-note">
+              <div>
+                <span>訓練報酬</span>
+                <strong>なし</strong>
+              </div>
+              <div>
+                <span>所持コイン</span>
+                <strong>{ownedCoins}</strong>
+              </div>
+            </div>
+          )}
           {rewardSummary && (
             <div className="reward-breakdown">
               <div>
@@ -1913,9 +1987,14 @@ function App() {
             </div>
           )}
           <div className="result-actions">
-            <button className="primary-button" onClick={begin}>
+            <button className="primary-button" onClick={retryCurrentRun}>
               Retry
             </button>
+            {game.isTraining && (
+              <button className="secondary-button" onClick={returnToTrainingGround}>
+                訓練場へ戻る
+              </button>
+            )}
             <button className="secondary-button" onClick={goToGate}>
               Back to Gate
             </button>
