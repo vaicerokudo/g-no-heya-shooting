@@ -1377,6 +1377,13 @@ button {
   text-shadow: 0 0 12px rgba(190, 160, 255, 0.38);
 }
 
+.g-support-result {
+  color: #ffe08a !important;
+  text-shadow:
+    0 0 10px rgba(255, 214, 112, 0.62),
+    0 0 18px rgba(255, 82, 82, 0.32);
+}
+
 .support-inventory {
   width: min(560px, 100%);
   display: grid;
@@ -2257,6 +2264,28 @@ h1 {
   opacity: 0.8;
 }
 
+.summon-card.is-g-support .card-back {
+  border-color: rgba(255, 214, 112, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 245, 204, 0.32),
+    inset 0 0 26px rgba(255, 190, 58, 0.34),
+    0 0 26px rgba(255, 173, 51, 0.66),
+    0 0 42px rgba(255, 73, 73, 0.28);
+}
+
+.summon-card.is-g-support .card-back::after {
+  content: "";
+  position: absolute;
+  inset: -18%;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, rgba(255, 245, 190, 0.38), transparent 54%),
+    conic-gradient(from 0deg, transparent, rgba(255, 214, 112, 0.26), transparent, rgba(255, 70, 70, 0.18), transparent);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  animation: gCardBackPulse 1.4s ease-in-out infinite alternate;
+}
+
 .card-max-badge {
   position: absolute;
   right: 6px;
@@ -2312,6 +2341,20 @@ h1 {
   font-style: normal;
   line-height: 1.15;
   text-align: center;
+}
+
+.g-card-badge {
+  min-width: 30px;
+  min-height: 30px;
+  display: grid;
+  place-items: center;
+  border-color: rgba(255, 245, 196, 0.88);
+  color: #2a1605;
+  background: linear-gradient(180deg, #fff2a8, #ffb52f 58%, #e4572d);
+  box-shadow:
+    0 0 14px rgba(255, 214, 112, 0.72),
+    0 0 22px rgba(255, 74, 74, 0.34);
+  font-size: 0.62rem;
 }
 
 .summon-success {
@@ -4705,6 +4748,17 @@ h1 {
   }
   100% {
     opacity: 1;
+  }
+}
+
+@keyframes gCardBackPulse {
+  from {
+    transform: scale(0.94) rotate(-2deg);
+    opacity: 0.58;
+  }
+  to {
+    transform: scale(1.02) rotate(2deg);
+    opacity: 0.92;
   }
 }
 

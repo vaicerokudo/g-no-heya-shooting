@@ -1,6 +1,6 @@
 import { getMainCharacter } from './characters';
 import type { MainCharacterId, MainCharacterDefinition } from './characters';
-import { getOwnedSupportLevel } from './supports';
+import { getOwnedSupportLevel, SUPPORT_SKIN_UNLOCK_LEVEL } from './supports';
 import type { OwnedSupport } from './supports';
 import type { SupportId } from './types';
 
@@ -54,7 +54,7 @@ export function getSoundComicSkinSupportId(characterId: MainCharacterId): Suppor
 
 export function isSoundComicSkinUnlocked(characterId: MainCharacterId, ownedSupports: OwnedSupport[]): boolean {
   const supportId = getSoundComicSkinSupportId(characterId);
-  return supportId ? getOwnedSupportLevel(ownedSupports, supportId) >= 5 : false;
+  return supportId ? getOwnedSupportLevel(ownedSupports, supportId) >= SUPPORT_SKIN_UNLOCK_LEVEL : false;
 }
 
 export function getEffectiveCharacterSkinId(

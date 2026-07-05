@@ -1,5 +1,9 @@
 import type { SupportId } from './types';
 
+export const SUPPORT_MAX_LEVEL = 10;
+export const SUPPORT_SKIN_UNLOCK_LEVEL = 5;
+export const SUPPORT_G_UNLOCK_LEVEL = 10;
+
 export type SupportCharacter = {
   id: SupportId;
   name: string;
@@ -156,5 +160,5 @@ export function getOwnedSupportLevel(ownedSupports: OwnedSupport[], supportId: S
 }
 
 export function normalizeSupportLevel(level: number | undefined): number {
-  return Math.min(5, Math.max(1, Math.floor(level ?? 1)));
+  return Math.min(SUPPORT_MAX_LEVEL, Math.max(1, Math.floor(level ?? 1)));
 }

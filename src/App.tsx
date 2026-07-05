@@ -64,6 +64,8 @@ import {
   getOwnedSupportLevel,
   getSupportById,
   SHOPKEEPER_SUPPORT_LINES,
+  SUPPORT_G_UNLOCK_LEVEL,
+  SUPPORT_SKIN_UNLOCK_LEVEL,
   supportCandidates,
 } from './game/supports';
 import type { OwnedSupport, SupportCharacter } from './game/supports';
@@ -194,6 +196,7 @@ const assetPaths = {
   boss: '/assets/tcg/boss-bear.png',
   cardBack: '/assets/tcg/card-back-default.png',
   maxSupportCardBack: '/assets/tcg/card-back-support-max.png',
+  gSupportCardBack: '/assets/tcg/card-back-support-g.png',
   sag: '/assets/tcg/sag-portrait.png',
   enemies: {
     small: '/assets/tcg/enemy-goblin.png',
@@ -633,7 +636,7 @@ function App() {
 
     setRevealingCardId(support.id);
     setSummonPhase('revealing');
-    const isMaxedDuplicate = getOwnedSupportLevel(ownedSupports, support.id) >= 5;
+    const isMaxedDuplicate = getOwnedSupportLevel(ownedSupports, support.id) >= SUPPORT_SKIN_UNLOCK_LEVEL;
     window.setTimeout(() => {
       setSelectedSupport(support);
       saveActiveSupportId(support.id);
@@ -1448,6 +1451,7 @@ function App() {
                   <strong>{shopSummonResult.role}</strong>
                   <p>{shopSummonResult.effectDescription}</p>
                   <p className="summon-success">Lv {getOwnedSupportLevel(ownedSupports, shopSummonResult.id)}</p>
+                  {getOwnedSupportLevel(ownedSupports, shopSummonResult.id) >= SUPPORT_G_UNLOCK_LEVEL && <p className="summon-success g-support-result">G化済み</p>}
                   {shopSummonStarDustGained && <p className="summon-success star-dust-reward">星屑のかけら +1</p>}
                   <p className="summon-success">{'\u5e97\u4e3b'}「{SHOPKEEPER_SUPPORT_LINES[shopSummonResult.id]}」</p>
                 </div>
@@ -1459,7 +1463,8 @@ function App() {
                 revealingCardId={revealingCardId}
                 cardBack={assetPaths.cardBack}
                 maxCardBack={assetPaths.maxSupportCardBack}
-                isSupportMaxed={(supportId) => getOwnedSupportLevel(ownedSupports, supportId) >= 5}
+                gCardBack={assetPaths.gSupportCardBack}
+                getSupportLevel={(supportId) => getOwnedSupportLevel(ownedSupports, supportId)}
                 onChoose={chooseSupportCard}
               />
             )}
@@ -2195,7 +2200,8 @@ function SummonCardStage({
   revealingCardId,
   cardBack,
   maxCardBack,
-  isSupportMaxed,
+  gCardBack,
+  getSupportLevel,
   onChoose,
 }: {
   phase: SummonPhase;
@@ -2203,7 +2209,8 @@ function SummonCardStage({
   revealingCardId: string | null;
   cardBack: string;
   maxCardBack: string;
-  isSupportMaxed: (supportId: SupportId) => boolean;
+  gCardBack: string;
+  getSupportLevel: (supportId: SupportId) => number;
   onChoose: (support: SupportCharacter) => void;
 }) {
   if (phase === 'idle') {
@@ -2231,20 +2238,24 @@ function SummonCardStage({
         {cards.map((card, index) => {
           const isRevealing = revealingCardId === card.id;
           const isDimmed = phase === 'revealing' && !isRevealing;
-          const isMaxed = isSupportMaxed(card.id);
+          const supportLevel = getSupportLevel(card.id);
+          const isGCard = supportLevel >= SUPPORT_G_UNLOCK_LEVEL;
+          const isRareCard = supportLevel >= SUPPORT_SKIN_UNLOCK_LEVEL && !isGCard;
+          const cardBackImage = isGCard ? gCardBack : isRareCard ? maxCardBack : cardBack;
 
           return (
             <button
               key={card.id}
-              className={`summon-card pick-${index} ${isRevealing ? 'is-revealing' : ''} ${isDimmed ? 'is-dimmed' : ''} ${isMaxed ? 'is-maxed-support' : ''}`}
+              className={`summon-card pick-${index} ${isRevealing ? 'is-revealing' : ''} ${isDimmed ? 'is-dimmed' : ''} ${isRareCard ? 'is-maxed-support' : ''} ${isGCard ? 'is-g-support' : ''}`}
               onClick={() => onChoose(card)}
               disabled={phase !== 'cards'}
               type="button"
             >
               <span className="card-inner">
                 <span className="card-face card-back">
-                  <img src={isMaxed ? maxCardBack : cardBack} alt="" />
-                  {isMaxed && <span className="card-max-badge">MAX</span>}
+                  <img src={cardBackImage} alt="" />
+                  {isRareCard && <span className="card-max-badge">Lv5+</span>}
+                  {isGCard && <span className="card-max-badge g-card-badge">G</span>}
                 </span>
                 <span className="card-face card-front">
                   <img src={card.image} alt="" />
