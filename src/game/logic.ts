@@ -432,21 +432,35 @@ function updateBoss(state: GameState, dt: number): GameState {
   let bullets = state.bullets;
   let nextId = state.nextId;
 
-  if (boss.shotTimer <= 0 && (boss.type === 'goblin' || boss.type === 'bear')) {
-    const spread = [-0.75, 0, 0.75];
-    const newBullets = spread.map((offset) => ({
-      id: nextId++,
-      x: boss.x,
-      y: boss.y + boss.radius * 0.65,
-      vx: offset * 70,
-      vy: 160,
-      radius: 7,
-    }));
+  if (boss.shotTimer <= 0 && boss.type === 'goblin') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.75, 0, 0.75], 70, 160, 7);
+    nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
     boss = { ...boss, shotTimer: 1.25 };
   }
 
-  if (boss.slamTimer <= 0 && (boss.type === 'boar' || boss.type === 'bear')) {
+  if (boss.shotTimer <= 0 && boss.type === 'wyvern') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1.0, -0.5, 0, 0.5, 1.0], 82, 188, 6);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.1 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'rock-golem') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, 0, 0.7], 68, 150, 8);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.45 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'bear') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.75, 0, 0.75], 70, 160, 7);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.25 };
+  }
+
+  if (boss.slamTimer <= 0 && boss.type === 'boar') {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
     bullets = [
       ...bullets,
@@ -462,15 +476,81 @@ function updateBoss(state: GameState, dt: number): GameState {
     boss = { ...boss, slamTimer: 3.6 };
   }
 
-  if (boss.shotTimer <= 0 && boss.type === 'boar') {
+  if (boss.slamTimer <= 0 && boss.type === 'giant-scorpion') {
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [
+      ...bullets,
+      {
+        id: nextId++,
+        x: boss.x,
+        y: boss.y + boss.radius,
+        vx: direction.x * 96,
+        vy: Math.max(145, direction.y * 190),
+        radius: 14,
+      },
+    ];
+    boss = { ...boss, slamTimer: 3.25 };
+  }
+
+  if (boss.slamTimer <= 0 && boss.type === 'rock-golem') {
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [
+      ...bullets,
+      {
+        id: nextId++,
+        x: boss.x,
+        y: boss.y + boss.radius,
+        vx: direction.x * 105,
+        vy: Math.max(155, direction.y * 205),
+        radius: 16,
+      },
+    ];
+    boss = { ...boss, slamTimer: 3.2 };
+  }
+
+  if (boss.slamTimer <= 0 && boss.type === 'bear') {
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [
+      ...bullets,
+      {
+        id: nextId++,
+        x: boss.x,
+        y: boss.y + boss.radius,
+        vx: direction.x * 120,
+        vy: Math.max(170, direction.y * 220),
+        radius: 13,
+      },
+    ];
+    boss = { ...boss, slamTimer: 3.6 };
+  }
+
+  if (boss.shotTimer <= 0 && (boss.type === 'boar' || boss.type === 'giant-scorpion')) {
     boss = { ...boss, shotTimer: 1.25 };
   }
 
-  if (boss.slamTimer <= 0 && boss.type === 'goblin') {
+  if (boss.slamTimer <= 0 && (boss.type === 'goblin' || boss.type === 'wyvern')) {
     boss = { ...boss, slamTimer: 3.6 };
   }
 
   return { ...state, boss, bullets, nextId };
+}
+
+function createBossSpreadBullets(
+  boss: Boss,
+  nextId: number,
+  spread: number[],
+  horizontalSpeed: number,
+  verticalSpeed: number,
+  radius: number,
+): EnemyBullet[] {
+  return spread.map((offset, index) => ({
+    id: nextId + index,
+    x: boss.x,
+    y: boss.y + boss.radius * 0.65,
+    vx: offset * horizontalSpeed,
+    vy: verticalSpeed,
+    radius,
+  }));
 }
 
 function updateBullets(state: GameState, dt: number): GameState {

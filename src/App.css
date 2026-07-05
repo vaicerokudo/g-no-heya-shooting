@@ -441,6 +441,42 @@ button {
   line-height: 1.6;
 }
 
+.stage-area-list {
+  display: grid;
+  gap: 18px;
+  width: min(920px, 100%);
+}
+
+.stage-area-group {
+  display: grid;
+  gap: 10px;
+}
+
+.stage-area-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+
+.stage-area-heading h2,
+.stage-area-heading p {
+  margin: 0;
+}
+
+.stage-area-heading h2 {
+  font-size: 1.08rem;
+  color: #ffd166;
+}
+
+.stage-area-heading p {
+  max-width: 520px;
+  color: rgba(247, 251, 255, 0.72);
+  font-size: 0.84rem;
+  text-align: right;
+}
+
 .stage-select-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -461,6 +497,14 @@ button {
     url("/assets/tcg/scenario-forest.png") center / cover;
   cursor: pointer;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+}
+
+.stage-card.area-sandstorm-wilderness,
+.stage-select-card.area-sandstorm-wilderness {
+  background:
+    linear-gradient(180deg, rgba(255, 239, 190, 0.1), rgba(45, 28, 11, 0.48)),
+    linear-gradient(135deg, rgba(151, 95, 34, 0.62), rgba(49, 38, 32, 0.34)),
+    url("/assets/tcg/scenario-forest.png") center / cover;
 }
 
 .stage-select-card.is-selected,

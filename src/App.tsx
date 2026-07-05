@@ -35,7 +35,7 @@ import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveA
 import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { calculateCoinReward } from './game/rewards';
-import { ASTORIA_GRASSLAND_STAGES, DEFAULT_STAGE_ID, getStageById } from './game/stages';
+import { DEFAULT_STAGE_ID, STAGE_AREAS, getStageById } from './game/stages';
 import type { StageId } from './game/stages';
 import {
   loadOwnedCoins,
@@ -1502,26 +1502,36 @@ function App() {
             <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <div className="stage-select-list">
-            {ASTORIA_GRASSLAND_STAGES.map((stage, index) => {
-              const isSelected = selectedStageId === stage.id;
-              return (
-                <button
-                  className={`stage-select-card ${isSelected ? 'is-selected' : ''}`}
-                  key={stage.id}
-                  type="button"
-                  onClick={() => setSelectedStageId(stage.id)}
-                >
-                  <span>Stage {index + 1}</span>
-                  <h2>{stage.name}</h2>
-                  <p>{`\u96e3\u6613\u5ea6\uff1a${stage.difficultyLabel}`}</p>
-                  <p>{`BOSS\uff1a${stage.bossName}`}</p>
-                  <p>{`\u30af\u30ea\u30a2\u30dc\u30fc\u30ca\u30b9\uff1a+${stage.clearBonus}`}</p>
-                </button>
-              );
-            })}
+          <div className="stage-area-list">
+            {STAGE_AREAS.map((area) => (
+              <section className={`stage-area-group area-${area.id}`} key={area.id}>
+                <div className="stage-area-heading">
+                  <h2>{area.name}</h2>
+                  <p>{area.description}</p>
+                </div>
+                <div className="stage-select-list">
+                  {area.stages.map((stage, index) => {
+                    const isSelected = selectedStageId === stage.id;
+                    return (
+                      <button
+                        className={`stage-select-card area-${stage.areaId} ${isSelected ? 'is-selected' : ''}`}
+                        key={stage.id}
+                        type="button"
+                        onClick={() => setSelectedStageId(stage.id)}
+                      >
+                        <span>{`Stage ${index + 1}`}</span>
+                        <h2>{stage.name}</h2>
+                        <p>{`\u96e3\u6613\u5ea6\uff1a${stage.difficultyLabel}`}</p>
+                        <p>{`BOSS\uff1a${stage.bossName}`}</p>
+                        <p>{`\u30af\u30ea\u30a2\u30dc\u30fc\u30ca\u30b9\uff1a+${stage.clearBonus}`}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
-          <article className="stage-card selected-stage-card">
+          <article className={`stage-card selected-stage-card area-${selectedStage.areaId}`}>
             <span>{selectedStage.difficultyLabel}</span>
             <h2>{selectedStage.name}</h2>
             {mainCharacter.image && <img className="stage-main-image" src={mainCharacter.image} alt={mainCharacter.name} />}
