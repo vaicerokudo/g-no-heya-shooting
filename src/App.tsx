@@ -172,6 +172,7 @@ const assetPaths = {
   player: '/assets/tcg/chibi-socho.png',
   boss: '/assets/tcg/boss-bear.png',
   cardBack: '/assets/tcg/card-back-default.png',
+  maxSupportCardBack: '/assets/tcg/card-back-support-max.png',
   sag: '/assets/tcg/sag-portrait.png',
   enemies: {
     small: '/assets/tcg/enemy-goblin.png',
@@ -1326,6 +1327,8 @@ function App() {
                 cards={summonCards}
                 revealingCardId={revealingCardId}
                 cardBack={assetPaths.cardBack}
+                maxCardBack={assetPaths.maxSupportCardBack}
+                isSupportMaxed={(supportId) => getOwnedSupportLevel(ownedSupports, supportId) >= 5}
                 onChoose={chooseSupportCard}
               />
             )}
@@ -2013,12 +2016,16 @@ function SummonCardStage({
   cards,
   revealingCardId,
   cardBack,
+  maxCardBack,
+  isSupportMaxed,
   onChoose,
 }: {
   phase: SummonPhase;
   cards: SupportCharacter[];
   revealingCardId: string | null;
   cardBack: string;
+  maxCardBack: string;
+  isSupportMaxed: (supportId: SupportId) => boolean;
   onChoose: (support: SupportCharacter) => void;
 }) {
   if (phase === 'idle') {
@@ -2046,18 +2053,20 @@ function SummonCardStage({
         {cards.map((card, index) => {
           const isRevealing = revealingCardId === card.id;
           const isDimmed = phase === 'revealing' && !isRevealing;
+          const isMaxed = isSupportMaxed(card.id);
 
           return (
             <button
               key={card.id}
-              className={`summon-card pick-${index} ${isRevealing ? 'is-revealing' : ''} ${isDimmed ? 'is-dimmed' : ''}`}
+              className={`summon-card pick-${index} ${isRevealing ? 'is-revealing' : ''} ${isDimmed ? 'is-dimmed' : ''} ${isMaxed ? 'is-maxed-support' : ''}`}
               onClick={() => onChoose(card)}
               disabled={phase !== 'cards'}
               type="button"
             >
               <span className="card-inner">
                 <span className="card-face card-back">
-                  <img src={cardBack} alt="" />
+                  <img src={isMaxed ? maxCardBack : cardBack} alt="" />
+                  {isMaxed && <span className="card-max-badge">MAX</span>}
                 </span>
                 <span className="card-face card-front">
                   <img src={card.image} alt="" />
