@@ -2524,6 +2524,8 @@ h1 {
 .field.is-paused .starbreaker-wave,
 .field.is-paused .axe-swing,
 .field.is-paused .mountain-breaker,
+.field.is-paused .shield-bash,
+.field.is-paused .ironwall-shockwave,
 .field.is-paused .support-rockel-break,
 .field.is-paused .support-socho-slash,
 .field.is-paused .support-poison-smoke,
@@ -2585,6 +2587,8 @@ h1 {
 .starbreaker-wave,
 .axe-swing,
 .mountain-breaker,
+.shield-bash,
+.ironwall-shockwave,
 .support-rockel-break,
 .support-socho-slash,
 .support-poison-smoke,
@@ -3547,6 +3551,93 @@ h1 {
   transform: translateX(-50%);
 }
 
+.shield-bash {
+  z-index: 7;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 14px rgba(182, 235, 255, 0.82))
+    drop-shadow(0 0 18px rgba(255, 255, 255, 0.34));
+  animation: shieldBashBurst 220ms ease-out both;
+}
+
+.shield-bash-plate,
+.shield-bash-shock,
+.ironwall-shockwave-core,
+.ironwall-shockwave-wall {
+  position: absolute;
+  pointer-events: none;
+}
+
+.shield-bash-plate {
+  left: 50%;
+  top: 14%;
+  width: min(78px, 74%);
+  height: 68%;
+  border-radius: 42% 42% 52% 52%;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(255, 255, 255, 0.96), rgba(177, 232, 255, 0.64) 30%, transparent 56%),
+    linear-gradient(180deg, rgba(236, 252, 255, 0.9), rgba(91, 172, 218, 0.56) 46%, rgba(30, 76, 119, 0.12));
+  border: 3px solid rgba(226, 250, 255, 0.78);
+  box-shadow:
+    inset 0 0 14px rgba(255, 255, 255, 0.58),
+    0 0 16px rgba(139, 221, 255, 0.62);
+  clip-path: polygon(50% 0%, 88% 17%, 80% 72%, 50% 100%, 20% 72%, 12% 17%);
+  transform: translateX(-50%) scaleY(0.95);
+}
+
+.shield-bash-shock {
+  left: 50%;
+  top: 54%;
+  width: 114%;
+  height: 38%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(255, 255, 255, 0.68), rgba(159, 227, 255, 0.32) 34%, transparent 70%),
+    linear-gradient(90deg, transparent, rgba(226, 250, 255, 0.62) 48%, transparent);
+  border-top: 2px solid rgba(226, 250, 255, 0.48);
+  transform: translateX(-50%);
+}
+
+.ironwall-shockwave {
+  z-index: 8;
+  pointer-events: none;
+  overflow: visible;
+  filter:
+    drop-shadow(0 0 18px rgba(167, 232, 255, 0.86))
+    drop-shadow(0 0 26px rgba(255, 255, 255, 0.42));
+  animation: ironwallShockwaveBurst 320ms ease-out both;
+}
+
+.ironwall-shockwave-core {
+  left: 50%;
+  top: 8%;
+  width: 96%;
+  height: 88%;
+  border-radius: 38% 38% 50% 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(158, 224, 255, 0.28) 42%, transparent 82%),
+    repeating-linear-gradient(90deg, transparent 0 18%, rgba(225, 250, 255, 0.38) 20% 22%, transparent 24% 42%);
+  border: 3px solid rgba(230, 252, 255, 0.58);
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.38),
+    0 0 24px rgba(132, 214, 255, 0.58);
+  transform: translateX(-50%);
+}
+
+.ironwall-shockwave-wall {
+  left: 50%;
+  bottom: 6%;
+  width: 124%;
+  height: 40%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(255, 255, 255, 0.58), rgba(158, 224, 255, 0.34) 36%, transparent 72%),
+    linear-gradient(90deg, transparent, rgba(232, 252, 255, 0.66), transparent);
+  border-top: 2px solid rgba(232, 252, 255, 0.5);
+  transform: translateX(-50%);
+}
+
 .support-rockel-break {
   z-index: 7;
   pointer-events: none;
@@ -4401,6 +4492,36 @@ h1 {
   100% {
     opacity: 0;
     transform: translateY(-12px) scale(1.2) rotate(20deg);
+  }
+}
+
+@keyframes shieldBashBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.76);
+  }
+  48% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.08);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) scale(1.12);
+  }
+}
+
+@keyframes ironwallShockwaveBurst {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scaleX(0.72) scaleY(0.84);
+  }
+  46% {
+    opacity: 1;
+    transform: translateY(-4px) scaleX(1.08) scaleY(1.04);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-8px) scaleX(1.14) scaleY(1.08);
   }
 }
 

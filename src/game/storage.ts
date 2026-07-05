@@ -80,6 +80,7 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
       ...(typeof equipped.rockel === 'string' ? { rockel: equipped.rockel } : {}),
       ...(typeof equipped.nanaichi === 'string' ? { nanaichi: equipped.nanaichi } : {}),
       ...(typeof equipped.myoo === 'string' ? { myoo: equipped.myoo } : {}),
+      ...(typeof equipped.hibiki === 'string' ? { hibiki: equipped.hibiki } : {}),
     };
   } catch {
     return {};

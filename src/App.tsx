@@ -3,6 +3,9 @@ import {
   BOSS_PLAYER_LIMITS,
   FIELD_HEIGHT,
   FIELD_WIDTH,
+  HIBIKI_SHIELD_BASH_BOSS_RANGE,
+  HIBIKI_SHIELD_BASH_VISIBLE_TIME,
+  IRONWALL_SHOCKWAVE_VISIBLE_TIME,
   PLAYER_LIMITS,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
   MYOO_FLAME_SWORD_VISIBLE_TIME,
@@ -79,6 +82,7 @@ import {
   forgeRandomWeapon,
   FORGE_RESULT_LINES,
   getEquippedWeaponForCharacter,
+  getHibikiWeaponTuning,
   getEquippedSochoWeapon,
   getOwnedWeaponLevel,
   getRockelWeaponTuning,
@@ -131,6 +135,7 @@ const trainingCharacters: Array<{
   { id: 'rockel', name: 'ROCKEL', summary: '\u4e21\u5203\u65a7\u30fb\u5e83\u7bc4\u56f2\u3076\u3093\u56de\u3057\u578b' },
   { id: 'nanaichi', name: '7171', summary: '\u6c37\u5263\u30fb\u6563\u5f3e\u30b9\u30ed\u30a6\u578b' },
   { id: 'myoo', name: '\u660e\u738b', summary: '\u708e\u5f3e\u3070\u3089\u307e\u304d\u30fb\u706b\u529b\u5236\u5727\u578b' },
+  { id: 'hibiki', name: 'hibiki', summary: '\u9244\u58c1\u76fe\u30fb\u53cd\u6483\u578b' },
 ];
 
 const astoriaFacilities: Array<{
@@ -323,7 +328,8 @@ function App() {
     mainCharacter.id === 'yabuko-fm' ||
     mainCharacter.id === 'rockel' ||
     mainCharacter.id === 'nanaichi' ||
-    mainCharacter.id === 'myoo'
+    mainCharacter.id === 'myoo' ||
+    mainCharacter.id === 'hibiki'
       ? mainCharacter.id
       : 'socho';
   const equippedMainWeapon = useMemo(
@@ -362,6 +368,10 @@ function App() {
   );
   const rockelWeaponTuning = useMemo(
     () => getRockelWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
+    [equippedMainWeapon.id, equippedMainWeaponLevel],
+  );
+  const hibikiWeaponTuning = useMemo(
+    () => getHibikiWeaponTuning(equippedMainWeapon.id, equippedMainWeaponLevel),
     [equippedMainWeapon.id, equippedMainWeaponLevel],
   );
   const sochoHasSlashWave = hasSochoSlashWave(equippedSochoWeapon.id);
@@ -1775,6 +1785,36 @@ function App() {
               >
                 <span className="mountain-breaker-arc" />
                 <span className="mountain-breaker-shock" />
+              </div>
+            )}
+            {mainCharacter.id === 'hibiki' && game.player.slashTimer > 0 && (
+              <div
+                className="shield-bash"
+                style={{
+                  left: game.player.x - hibikiWeaponTuning.shieldBashHalfWidth,
+                  top: game.player.y - (game.boss ? HIBIKI_SHIELD_BASH_BOSS_RANGE : hibikiWeaponTuning.shieldBashRange),
+                  width: hibikiWeaponTuning.shieldBashHalfWidth * 2,
+                  height: game.boss ? HIBIKI_SHIELD_BASH_BOSS_RANGE : hibikiWeaponTuning.shieldBashRange,
+                  opacity: Math.min(1, game.player.slashTimer / HIBIKI_SHIELD_BASH_VISIBLE_TIME),
+                }}
+              >
+                <span className="shield-bash-plate" />
+                <span className="shield-bash-shock" />
+              </div>
+            )}
+            {mainCharacter.id === 'hibiki' && game.player.shieldShockTimer > 0 && (
+              <div
+                className="ironwall-shockwave"
+                style={{
+                  left: game.player.x - hibikiWeaponTuning.shockwaveHalfWidth,
+                  top: game.player.y - hibikiWeaponTuning.shockwaveRange,
+                  width: hibikiWeaponTuning.shockwaveHalfWidth * 2,
+                  height: hibikiWeaponTuning.shockwaveRange,
+                  opacity: Math.min(1, game.player.shieldShockTimer / IRONWALL_SHOCKWAVE_VISIBLE_TIME),
+                }}
+              >
+                <span className="ironwall-shockwave-core" />
+                <span className="ironwall-shockwave-wall" />
               </div>
             )}
             {game.supportRockelBreak.timer > 0 && (

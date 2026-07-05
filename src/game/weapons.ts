@@ -4,6 +4,13 @@ import {
   DELI_TURRET_DURATION,
   DELI_TURRET_FIRE_INTERVAL,
   DELI_TURRET_MAX_COUNT,
+  HIBIKI_SHIELD_BASH_COOLDOWN,
+  HIBIKI_SHIELD_BASH_HALF_WIDTH,
+  HIBIKI_SHIELD_BASH_RANGE,
+  IRONWALL_SHOCKWAVE_COOLDOWN,
+  IRONWALL_SHOCKWAVE_HALF_WIDTH,
+  IRONWALL_SHOCKWAVE_MIN_COOLDOWN,
+  IRONWALL_SHOCKWAVE_RANGE,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
   MYOO_FLAME_SWORD_COOLDOWN,
   NANAICHI_ICE_SWORD_COOLDOWN,
@@ -48,7 +55,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo' | 'hibiki';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -123,6 +130,16 @@ export type MyooWeaponTuning = {
   flameBulletCount: number;
 };
 
+export type HibikiWeaponTuning = {
+  shieldBashCooldown: number;
+  shieldBashRange: number;
+  shieldBashHalfWidth: number;
+  hasIronwallShockwave: boolean;
+  shockwaveCooldown: number;
+  shockwaveRange: number;
+  shockwaveHalfWidth: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
@@ -133,6 +150,7 @@ export const DEFAULT_YABUKO_FM_WEAPON_ID = 'starter-war-hammer';
 export const DEFAULT_ROCKEL_WEAPON_ID = 'starter-double-axe';
 export const DEFAULT_NANAICHI_WEAPON_ID = 'starter-ice-sword';
 export const DEFAULT_MYOO_WEAPON_ID = 'starter-kurikara-sword';
+export const DEFAULT_HIBIKI_WEAPON_ID = 'starter-guard-shield';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -197,6 +215,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: 'ROCKEL用。最初から使える基本の両刃斧。',
     effectDescription: '前方を大きく横薙ぎし、広めの円弧で敵を巻き込む。',
+  },
+  {
+    id: DEFAULT_HIBIKI_WEAPON_ID,
+    name: '支給盾',
+    owner: 'hibiki',
+    type: '盾',
+    rarity: 'common',
+    description: 'hibiki用。最初から使える扱いやすい盾。',
+    effectDescription: '一定間隔で前方へシールドバッシュを放つ。',
   },
   {
     id: DEFAULT_NANAICHI_WEAPON_ID,
@@ -424,6 +451,10 @@ export function getMyooWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[]
   return [getDefaultOwnedWeapon(DEFAULT_MYOO_WEAPON_ID), ...ownedWeapons.filter((weapon) => isMyooWeapon(weapon.id))];
 }
 
+export function getHibikiWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_HIBIKI_WEAPON_ID), ...ownedWeapons.filter((weapon) => isHibikiWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -457,11 +488,15 @@ export function getEquippedRockelWeapon(equippedWeapons: EquippedWeaponsByCharac
 }
 
 export function getEquippedNanaichiWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
-  return getWeaponById(equippedWeapons.nanaichi ?? DEFAULT_NANAICHI_WEAPON_ID) ?? defaultWeaponDefinitions[7];
+  return getWeaponById(equippedWeapons.nanaichi ?? DEFAULT_NANAICHI_WEAPON_ID) ?? getDefaultOwnedWeapon(DEFAULT_NANAICHI_WEAPON_ID);
 }
 
 export function getEquippedMyooWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
-  return getWeaponById(equippedWeapons.myoo ?? DEFAULT_MYOO_WEAPON_ID) ?? defaultWeaponDefinitions[8];
+  return getWeaponById(equippedWeapons.myoo ?? DEFAULT_MYOO_WEAPON_ID) ?? getDefaultOwnedWeapon(DEFAULT_MYOO_WEAPON_ID);
+}
+
+export function getEquippedHibikiWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.hibiki ?? DEFAULT_HIBIKI_WEAPON_ID) ?? getDefaultOwnedWeapon(DEFAULT_HIBIKI_WEAPON_ID);
 }
 
 export function getEquippedWeaponForCharacter(
@@ -477,6 +512,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'rockel') return getEquippedRockelWeapon(equippedWeapons);
   if (characterId === 'nanaichi') return getEquippedNanaichiWeapon(equippedWeapons);
   if (characterId === 'myoo') return getEquippedMyooWeapon(equippedWeapons);
+  if (characterId === 'hibiki') return getEquippedHibikiWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -492,7 +528,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_YABUKO_FM_WEAPON_ID ||
     weaponId === DEFAULT_ROCKEL_WEAPON_ID ||
     weaponId === DEFAULT_NANAICHI_WEAPON_ID ||
-    weaponId === DEFAULT_MYOO_WEAPON_ID
+    weaponId === DEFAULT_MYOO_WEAPON_ID ||
+    weaponId === DEFAULT_HIBIKI_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -514,6 +551,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'rockel') return getRockelWeaponOptions(ownedWeapons);
   if (characterId === 'nanaichi') return getNanaichiWeaponOptions(ownedWeapons);
   if (characterId === 'myoo') return getMyooWeaponOptions(ownedWeapons);
+  if (characterId === 'hibiki') return getHibikiWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -652,6 +690,26 @@ export function getMyooWeaponTuning(weaponId: string | undefined, level = 1): My
   };
 }
 
+export function getHibikiWeaponTuning(weaponId: string | undefined, level = 1): HibikiWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const levelBonus = normalizedLevel - 1;
+  const hasIronwallShockwave = weaponId === 'ironwall-greatshield';
+
+  return {
+    shieldBashCooldown: HIBIKI_SHIELD_BASH_COOLDOWN,
+    shieldBashRange: HIBIKI_SHIELD_BASH_RANGE,
+    shieldBashHalfWidth: HIBIKI_SHIELD_BASH_HALF_WIDTH,
+    hasIronwallShockwave,
+    shockwaveCooldown: hasIronwallShockwave
+      ? Math.max(IRONWALL_SHOCKWAVE_MIN_COOLDOWN, IRONWALL_SHOCKWAVE_COOLDOWN - levelBonus * 0.4)
+      : IRONWALL_SHOCKWAVE_COOLDOWN,
+    shockwaveRange: hasIronwallShockwave ? IRONWALL_SHOCKWAVE_RANGE + (normalizedLevel >= 3 ? 8 : 0) + (normalizedLevel >= 5 ? 8 : 0) : IRONWALL_SHOCKWAVE_RANGE,
+    shockwaveHalfWidth: hasIronwallShockwave
+      ? IRONWALL_SHOCKWAVE_HALF_WIDTH + (normalizedLevel >= 3 ? 5 : 0) + (normalizedLevel >= 5 ? 5 : 0)
+      : IRONWALL_SHOCKWAVE_HALF_WIDTH,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -699,6 +757,10 @@ export function isNanaichiWeapon(weaponId: string): boolean {
 
 export function isMyooWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_MYOO_WEAPON_ID || weaponId === 'kurikara-flame-sword';
+}
+
+export function isHibikiWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_HIBIKI_WEAPON_ID || weaponId === 'ironwall-greatshield';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

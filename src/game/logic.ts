@@ -15,6 +15,15 @@ import {
   FIELD_HEIGHT,
   FIELD_WIDTH,
   HEART_PICKUP_RADIUS,
+  HIBIKI_SHIELD_BASH_BOSS_DAMAGE,
+  HIBIKI_SHIELD_BASH_BOSS_RANGE,
+  HIBIKI_SHIELD_BASH_DAMAGE,
+  HIBIKI_SHIELD_BASH_KNOCKBACK,
+  HIBIKI_SHIELD_BASH_VISIBLE_TIME,
+  IRONWALL_SHOCKWAVE_BOSS_DAMAGE,
+  IRONWALL_SHOCKWAVE_DAMAGE,
+  IRONWALL_SHOCKWAVE_KNOCKBACK,
+  IRONWALL_SHOCKWAVE_VISIBLE_TIME,
   MOUNTAIN_BREAKER_BOSS_DAMAGE,
   MOUNTAIN_BREAKER_DAMAGE,
   MYOO_FLAME_BULLET_BOSS_DAMAGE,
@@ -100,6 +109,7 @@ import {
   getPlayerWeaponTuning,
   getRokudoWeaponTuning,
   getRockelWeaponTuning,
+  getHibikiWeaponTuning,
   getSochoWeaponTuning,
   getTsutsuWeaponTuning,
   getUshimaruWeaponTuning,
@@ -192,6 +202,8 @@ function createPlayer(): Player {
     hammerBreakTimer: 0,
     axeSwingCount: 0,
     axeBreakTimer: 0,
+    shieldShockCooldown: 0,
+    shieldShockTimer: 0,
   };
 }
 
@@ -241,6 +253,8 @@ export function updateGame(
     next = runAutoIceSword(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'myoo') {
     next = runAutoFlameSword(next, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'hibiki') {
+    next = runAutoShieldGuardian(next, weaponId, weaponLevel, supportId, supportLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -292,6 +306,8 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
     hammerBreakCooldown: Math.max(0, player.hammerBreakCooldown - dt),
     hammerBreakTimer: Math.max(0, player.hammerBreakTimer - dt),
     axeBreakTimer: Math.max(0, player.axeBreakTimer - dt),
+    shieldShockCooldown: Math.max(0, player.shieldShockCooldown - dt),
+    shieldShockTimer: Math.max(0, player.shieldShockTimer - dt),
   };
 }
 
@@ -995,6 +1011,62 @@ function runAutoAxeBerserker(
   };
 }
 
+function runAutoShieldGuardian(
+  state: GameState,
+  weaponId: string | undefined,
+  weaponLevel: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getHibikiWeaponTuning(weaponId, weaponLevel);
+  const shouldIronwall = weaponTuning.hasIronwallShockwave && state.player.shieldShockCooldown <= 0;
+  const { enemies, defeated, coins, hearts, nextId, effects } = damageEnemiesWithShieldGuardian(
+    state.enemies,
+    state.coins,
+    state.hearts,
+    state.effects,
+    state.nextId,
+    state.player,
+    supportId,
+    supportLevel,
+    weaponTuning,
+    shouldIronwall,
+  );
+  const bossHit = damageBossWithShieldGuardian(state.boss, state.player, nextId, weaponTuning, shouldIronwall);
+  let resultNextId = bossHit.nextId;
+  const ironwallEffect: FloatingEffect[] = shouldIronwall
+    ? [
+        {
+          id: resultNextId++,
+          kind: 'support',
+          x: state.player.x,
+          y: state.player.y - 72,
+          text: 'IRON BASH',
+          timer: 0.32,
+        },
+      ]
+    : [];
+
+  return {
+    ...state,
+    enemies,
+    boss: bossHit.boss,
+    coins,
+    hearts,
+    effects: [...effects, ...(bossHit.effect ? [bossHit.effect] : []), ...ironwallEffect],
+    nextId: resultNextId,
+    defeatedEnemies: state.defeatedEnemies + defeated,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.shieldBashCooldown,
+      slashTimer: HIBIKI_SHIELD_BASH_VISIBLE_TIME,
+      shieldShockCooldown: shouldIronwall ? weaponTuning.shockwaveCooldown : state.player.shieldShockCooldown,
+      shieldShockTimer: shouldIronwall ? IRONWALL_SHOCKWAVE_VISIBLE_TIME : 0,
+    },
+  };
+}
+
 function updateDeliTurrets(
   state: GameState,
   dt: number,
@@ -1504,6 +1576,80 @@ function damageBossWithAxeBerserker(
   };
 }
 
+function damageEnemiesWithShieldGuardian(
+  enemies: Enemy[],
+  coins: Coin[],
+  hearts: GameState['hearts'],
+  effects: FloatingEffect[],
+  nextId: number,
+  player: Player,
+  supportId: SupportId | null,
+  supportLevel: number,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+  shouldIronwall: boolean,
+) {
+  let defeated = 0;
+  const nextCoins = [...coins];
+  const nextHearts = [...hearts];
+  const nextEffects = [...effects];
+  const nextEnemies: Enemy[] = [];
+
+  for (const enemy of enemies) {
+    const bashHit = isInShieldBash(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    const shockwaveHit = shouldIronwall && isInIronwallShockwave(player, enemy.x, enemy.y, enemy.radius, weaponTuning);
+    if (!bashHit && !shockwaveHit) {
+      nextEnemies.push(enemy);
+      continue;
+    }
+
+    const damage = (bashHit ? HIBIKI_SHIELD_BASH_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_DAMAGE : 0);
+    const hp = enemy.hp - damage;
+    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
+
+    if (hp <= 0) {
+      defeated += 1;
+      const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
+      nextCoins.push(...drops.coins);
+      nextEffects.push(...drops.effects);
+      nextId = drops.nextId;
+      const heartDrop = createYabukoHeartDrop(enemy, nextId, supportId, supportLevel);
+      nextHearts.push(...heartDrop.hearts);
+      nextEffects.push(...heartDrop.effects);
+      nextId = heartDrop.nextId;
+    } else {
+      nextEnemies.push(
+        knockEnemyFromPlayer(
+          player,
+          { ...enemy, hp, hitTimer: 0.16 },
+          shockwaveHit ? IRONWALL_SHOCKWAVE_KNOCKBACK : HIBIKI_SHIELD_BASH_KNOCKBACK,
+        ),
+      );
+    }
+  }
+
+  return { enemies: nextEnemies, defeated, coins: nextCoins, hearts: nextHearts, nextId, effects: nextEffects };
+}
+
+function damageBossWithShieldGuardian(
+  boss: Boss | null,
+  player: Player,
+  nextId: number,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+  shouldIronwall: boolean,
+) {
+  if (!boss) return { boss, nextId };
+  const bashHit = isInBossShieldBash(player, boss, weaponTuning);
+  const shockwaveHit = shouldIronwall && isInBossIronwallShockwave(player, boss, weaponTuning);
+  if (!bashHit && !shockwaveHit) return { boss, nextId };
+  const damage = (bashHit ? HIBIKI_SHIELD_BASH_BOSS_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_BOSS_DAMAGE : 0);
+
+  return {
+    boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
+    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.18, `-${damage}`),
+    nextId,
+  };
+}
+
 function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
   const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
@@ -1818,6 +1964,61 @@ function isInBossMountainBreaker(
 ): boolean {
   const bossLowerBodyY = boss.y + boss.radius * 0.58;
   return isInMountainBreaker(player, boss.x, bossLowerBodyY, boss.radius * 0.54, weaponTuning);
+}
+
+function isInShieldBash(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.2) return false;
+  if (dy > weaponTuning.shieldBashRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.shieldBashHalfWidth * (0.72 + Math.max(0, dy) / weaponTuning.shieldBashRange * 0.2);
+  return Math.abs(dx) < widthAtPoint + radius * 0.7 && Math.hypot(dx * 0.8, dy) < weaponTuning.shieldBashRange + radius;
+}
+
+function isInBossShieldBash(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.56;
+  const dy = player.y - bossLowerBodyY;
+  if (dy < -boss.radius * 0.2) return false;
+  if (dy > HIBIKI_SHIELD_BASH_BOSS_RANGE + boss.radius * 0.42) return false;
+
+  const widthAtPoint = weaponTuning.shieldBashHalfWidth * (0.82 + Math.max(0, dy) / HIBIKI_SHIELD_BASH_BOSS_RANGE * 0.18);
+  return Math.abs(boss.x - player.x) < widthAtPoint + boss.radius * 0.54;
+}
+
+function isInIronwallShockwave(
+  player: Player,
+  x: number,
+  y: number,
+  radius: number,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+): boolean {
+  const dx = x - player.x;
+  const dy = player.y - y;
+  if (dy < -radius * 0.18) return false;
+  if (dy > weaponTuning.shockwaveRange + radius) return false;
+
+  const widthAtPoint = weaponTuning.shockwaveHalfWidth * (0.72 + Math.max(0, dy) / weaponTuning.shockwaveRange * 0.3);
+  return Math.abs(dx) < widthAtPoint + radius * 0.68;
+}
+
+function isInBossIronwallShockwave(
+  player: Player,
+  boss: Boss,
+  weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
+): boolean {
+  const bossLowerBodyY = boss.y + boss.radius * 0.58;
+  return isInIronwallShockwave(player, boss.x, bossLowerBodyY, boss.radius * 0.52, weaponTuning);
 }
 
 function knockEnemyFromPlayer(player: Player, enemy: Enemy, distance: number): Enemy {

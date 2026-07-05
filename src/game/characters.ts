@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo' | 'hibiki';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker' | 'iceSword' | 'flameSword';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker' | 'iceSword' | 'flameSword' | 'shieldGuardian';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -136,6 +136,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '炎剣散弾',
     image: '/assets/tcg/myoo-player.png',
   },
+  hibiki: {
+    id: 'hibiki',
+    name: 'hibiki',
+    role: '鉄壁盾・反撃型',
+    description: '盾で前方を押し返し、近づいた敵をシールドバッシュで迎え撃つ。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '盾',
+    attackType: 'shieldGuardian',
+    attackLabel: 'シールドバッシュ',
+    image: '/assets/tcg/hibiki-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -156,7 +168,8 @@ export function isMainCharacterId(value: unknown): value is MainCharacterId {
     value === 'yabuko-fm' ||
     value === 'rockel' ||
     value === 'nanaichi' ||
-    value === 'myoo'
+    value === 'myoo' ||
+    value === 'hibiki'
   );
 }
 

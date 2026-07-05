@@ -191,6 +191,8 @@ export type Player = {
   hammerBreakTimer: number;
   axeSwingCount: number;
   axeBreakTimer: number;
+  shieldShockCooldown: number;
+  shieldShockTimer: number;
 };
 
 export type Vector = {
