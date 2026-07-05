@@ -160,7 +160,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '弓',
     rarity: 'common',
     description: 'つつ用。最初から使える基本の弓。',
-    effectDescription: '一定間隔で前方へ矢を放つ。',
+    effectDescription: '一定間隔で前方へ矢を放つ標準の弓。',
   },
   {
     id: DEFAULT_ROKUDO_WEAPON_ID,
@@ -169,7 +169,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '刀',
     rarity: 'common',
     description: 'ROKUDO用。最初から使える影の小刀。',
-    effectDescription: '素早い影斬りで前方の敵を斬る。',
+    effectDescription: '短い間隔で前方へ影斬りを放つ標準の刀。',
   },
   {
     id: DEFAULT_PLAYER_WEAPON_ID,
@@ -178,7 +178,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '拳銃',
     rarity: 'common',
     description: 'Player用。最初から使える支給品の二丁拳銃。',
-    effectDescription: '二丁拳銃で前方へ弾を放つ。',
+    effectDescription: '左右の銃から交互に斜め前方へ弾を放つ。',
   },
   {
     id: DEFAULT_USHIMARU_WEAPON_ID,
@@ -187,7 +187,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '槍',
     rarity: 'common',
     description: 'うしまる用。最初から使える基本の槍。',
-    effectDescription: '正面へ直線突きを放つ。',
+    effectDescription: '正面へ細い直線突きを放つ標準の槍。',
   },
   {
     id: DEFAULT_DELI_WEAPON_ID,
@@ -196,7 +196,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '工具銃',
     rarity: 'common',
     description: 'Deli用。最初から使える工具銃。',
-    effectDescription: '単発拳銃と簡易タレットで戦う。',
+    effectDescription: '単発拳銃と短時間の簡易タレットで戦う。',
   },
   {
     id: DEFAULT_YABUKO_FM_WEAPON_ID,
@@ -205,7 +205,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '大槌',
     rarity: 'common',
     description: 'FMやぶこ用。最初から使える基本の大槌。',
-    effectDescription: '遅めの大槌重撃で前方範囲の敵を叩き、通常敵を少し押し返す。',
+    effectDescription: '遅めの大槌打撃で前方範囲を叩き、通常敵を少し押し返す。',
   },
   {
     id: DEFAULT_ROCKEL_WEAPON_ID,
@@ -223,7 +223,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '盾',
     rarity: 'common',
     description: 'hibiki用。最初から使える扱いやすい盾。',
-    effectDescription: '一定間隔で前方へシールドバッシュを放つ。',
+    effectDescription: '約1.0秒ごとに前方へシールドバッシュを放ち、通常敵を押し返す。',
   },
   {
     id: DEFAULT_NANAICHI_WEAPON_ID,
@@ -232,7 +232,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '片手剣',
     rarity: 'common',
     description: '7171用。最初から使える氷の片手剣。',
-    effectDescription: '約1.1秒ごとに前方寄りへ氷弾を放ち、敵に短時間スロウを付与する。',
+    effectDescription: '氷剣の斬撃から氷弾を1発放ち、通常敵に短時間スロウを付与する。',
   },
   {
     id: DEFAULT_MYOO_WEAPON_ID,
@@ -241,7 +241,7 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     type: '倶利伽羅剣',
     rarity: 'common',
     description: '明王用。最初から使える倶利伽羅剣。',
-    effectDescription: '約1.25秒ごとに前方寄りへ炎弾を放つ。状態異常はないが火力で押し切る。',
+    effectDescription: '炎剣の斬撃から炎弾を1発放つ。状態異常はない。',
   },
 ];
 
@@ -268,8 +268,8 @@ export const weaponCandidates: WeaponDefinition[] = [
     owner: '総長',
     type: '太刀',
     rarity: 'rare',
-    description: '総長用。斬撃に星脈の力を宿す。',
-    effectDescription: '斬撃時に、前方へ細い星脈の斬撃波を放つ。',
+    description: '総長用。斬撃に星脈の力を宿した太刀。',
+    effectDescription: '前方半円斬撃に加え、正面へ細い星脈の斬撃波を放つ。',
     imagePath: '/assets/tcg/weapon-star-vein-tachi.png',
   },
   {
@@ -279,7 +279,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '弓',
     rarity: 'rare',
     description: 'つつ用。風をまとい、素早く矢を番えられる弓。',
-    effectDescription: '風のような速さで矢を放つ弓。つつの攻撃間隔を少し短縮する。Lvでさらに少し短縮。',
+    effectDescription: 'つつの矢の発射間隔を短縮する。Lvが上がるほど少し速くなる。',
     imagePath: '/assets/tcg/weapon-shippu-bow.png',
   },
   {
@@ -289,7 +289,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '刀',
     rarity: 'rare',
     description: 'ROKUDO用。影をまとった刀。',
-    effectDescription: 'ROKUDOの影斬りの間隔を少し短くする。Lvでさらに少し短縮。',
+    effectDescription: 'ROKUDOの影斬り間隔を短縮する。Lvが上がるほど少し速くなる。',
     imagePath: '/assets/tcg/weapon-shadow-stitch-blade.png',
   },
   {
@@ -299,7 +299,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '砲台ユニット',
     rarity: 'common',
     description: 'Deli用。設置砲撃用の試作兵装。',
-    effectDescription: 'Deliのタレット持続時間と射撃間隔を強化する。Lv5で同時設置数が2台になる。',
+    effectDescription: 'タレットの持続時間と射撃間隔を強化する。Lv5で同時設置数が2台になる。',
     imagePath: '/assets/tcg/weapon-prototype-turret.png',
   },
   {
@@ -309,7 +309,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '大盾',
     rarity: 'common',
     description: 'hibiki用。前方防御に優れた大盾。',
-    effectDescription: '今後、対応キャラ実装時に反映予定。',
+    effectDescription: '一定間隔でIRON BASHの盾衝撃波を追加する。Lvで発動間隔と範囲が強化される。',
     imagePath: '/assets/tcg/weapon-ironwall-shield.png',
   },
   {
@@ -319,7 +319,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '槍',
     rarity: 'common',
     description: 'うしまる用。直線突破に向いた槍。',
-    effectDescription: '槍突きの後に、前方へ貫通する槍を投げる。Lvで突き位置と投げ槍が少し強化。',
+    effectDescription: '約6秒ごとに前方へ貫通槍投げを追加する。Lvで通常突きの位置と本数が強化される。',
     imagePath: '/assets/tcg/weapon-fang-spear.png',
   },
   {
@@ -329,7 +329,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '両刃斧',
     rarity: 'epic',
     description: 'ROCKEL用。広範囲を薙ぎ払う重い両刃斧。',
-    effectDescription: '一定回数ごとにMOUNTAIN BREAKを発動し、通常より大きい斧閃で敵を巻き込む。',
+    effectDescription: '一定回数ごとにMOUNTAIN BREAKを発動し、通常より広い斧撃を放つ。',
     imagePath: '/assets/tcg/weapon-mountain-breaker-axe.png',
   },
   {
@@ -339,7 +339,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '拳銃',
     rarity: 'common',
     description: 'Player用。2丁拳銃の基礎武器。',
-    effectDescription: 'Playerの射撃間隔を少し短くする。Lvでさらに少し短縮。',
+    effectDescription: '左右交互射撃の発射間隔を短縮する。Lvが上がるほど少し速くなる。',
     imagePath: '/assets/tcg/weapon-twin-fang-pistols.png',
   },
   {
@@ -349,7 +349,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '大槌',
     rarity: 'rare',
     description: 'FMやぶこ用。星脈の力を込めて地面ごと叩き割る大槌。',
-    effectDescription: '一定間隔で前方へ地割れのような星砕き衝撃波を放つ。Lvで発動間隔、射程、幅が少し強化される。',
+    effectDescription: '一定間隔でSTAR BREAKの星砕き衝撃波を放つ。Lvで間隔、射程、幅が強化される。',
     imagePath: '/assets/tcg/weapon-starbreaker-hammer.png',
   },
   {
@@ -359,7 +359,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '片手剣',
     rarity: 'rare',
     description: '7171用。氷晶を宿した片手剣。',
-    effectDescription: 'Lvが上がるごとに氷弾数が増え、前方寄りのランダム散弾で敵を鈍らせる。',
+    effectDescription: 'Lvに応じて氷弾数が1〜5発に増加する。氷弾は通常敵にスロウを付与する。',
     imagePath: '/assets/tcg/weapon-ice-crystal-sword.png',
   },
   {
@@ -369,7 +369,7 @@ export const weaponCandidates: WeaponDefinition[] = [
     type: '倶利伽羅剣',
     rarity: 'epic',
     description: '明王用。炎を宿した倶利伽羅剣。',
-    effectDescription: 'Lvが上がるごとに炎弾数が増え、前方寄りのランダム散弾で敵を焼き払う。',
+    effectDescription: 'Lvに応じて炎弾数が2/4/6/8/10発に増加する。状態異常なしの火力武器。',
     imagePath: '/assets/tcg/weapon-kurikara-flame-sword.png',
   },
 ];
