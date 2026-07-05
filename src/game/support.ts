@@ -103,8 +103,30 @@ const TSUTSU_SUPPORT_DIRECTIONS: Vector[] = [
   { x: 0.34, y: -0.94 },
 ];
 
-export function updateSupportEffects(state: GameState, dt: number, supportId: SupportId | null, supportLevel = 1): GameState {
+export type SupportAbilitySource = {
+  id: SupportId;
+  level: number;
+};
+
+export function updateSupportEffects(
+  state: GameState,
+  dt: number,
+  supportId: SupportId | null,
+  supportLevel = 1,
+  auraSupportId: SupportId | null = null,
+  auraSupportLevel = 1,
+): GameState {
   let next = updateSupportBullets(state, dt);
+  next = applySupportAbilityEffects(next, dt, supportId, supportLevel);
+  if (auraSupportId && auraSupportId !== supportId) {
+    next = applySupportAbilityEffects(next, dt, auraSupportId, auraSupportLevel);
+  }
+
+  return next;
+}
+
+function applySupportAbilityEffects(state: GameState, dt: number, supportId: SupportId | null, supportLevel = 1): GameState {
+  let next = state;
   next = updateHibikiShield(next, dt, supportId, supportLevel);
   next = updateMyououGaruda(next, dt, supportId, supportLevel);
   next = updateUshimaruCounter(next, dt, supportId, supportLevel);
@@ -132,8 +154,17 @@ export function updateSupportEffects(state: GameState, dt: number, supportId: Su
   return spawnPlayerGunfire(next, cooldown, supportLevel);
 }
 
-export function is7171Support(supportId: SupportId | null): boolean {
-  return supportId === '7171';
+type SupportAbilityTarget = SupportId | null | SupportAbilitySource[];
+
+function getSupportAbilityLevel(supportId: SupportAbilityTarget, supportLevel: number, targetId: SupportId): number {
+  if (Array.isArray(supportId)) {
+    return supportId.find((source) => source.id === targetId)?.level ?? 0;
+  }
+  return supportId === targetId ? supportLevel : 0;
+}
+
+export function is7171Support(supportId: SupportAbilityTarget): boolean {
+  return getSupportAbilityLevel(supportId, 1, '7171') > 0;
 }
 
 export function isYabukoSupport(supportId: SupportId | null): boolean {
@@ -172,26 +203,30 @@ export function isSochoSupport(supportId: SupportId | null): boolean {
   return supportId === 'socho';
 }
 
-export function getCoinMagnetRadius(supportId: SupportId | null, supportLevel = 1): number {
-  if (!is7171Support(supportId)) return COIN_MAGNET_RADIUS;
-  return COIN_MAGNET_RADIUS * (NANA_SUPPORT_MAGNET_MULTIPLIER + getLevelBonus(supportLevel) * 0.06);
+export function getCoinMagnetRadius(supportId: SupportAbilityTarget, supportLevel = 1): number {
+  const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
+  if (nanaLevel <= 0) return COIN_MAGNET_RADIUS;
+  return COIN_MAGNET_RADIUS * (NANA_SUPPORT_MAGNET_MULTIPLIER + getLevelBonus(nanaLevel) * 0.06);
 }
 
-export function getCoinPickupRadius(supportId: SupportId | null, supportLevel = 1): number {
-  if (!is7171Support(supportId)) return COIN_PICKUP_RADIUS;
-  return COIN_PICKUP_RADIUS * (NANA_SUPPORT_PICKUP_MULTIPLIER + getLevelBonus(supportLevel) * 0.025);
+export function getCoinPickupRadius(supportId: SupportAbilityTarget, supportLevel = 1): number {
+  const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
+  if (nanaLevel <= 0) return COIN_PICKUP_RADIUS;
+  return COIN_PICKUP_RADIUS * (NANA_SUPPORT_PICKUP_MULTIPLIER + getLevelBonus(nanaLevel) * 0.025);
 }
 
-export function get7171BossClearCoinBonus(supportId: SupportId | null, supportLevel = 1): number {
-  return is7171Support(supportId) ? NANA_SUPPORT_BOSS_BONUS_COINS + Math.floor(getLevelBonus(supportLevel) / 2) : 0;
+export function get7171BossClearCoinBonus(supportId: SupportAbilityTarget, supportLevel = 1): number {
+  const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
+  return nanaLevel > 0 ? NANA_SUPPORT_BOSS_BONUS_COINS + Math.floor(getLevelBonus(nanaLevel) / 2) : 0;
 }
 
-export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: SupportId | null, supportLevel = 1) {
+export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: SupportAbilityTarget, supportLevel = 1) {
   const coins: Coin[] = [{ id: nextId++, x: enemy.x, y: enemy.y, value: enemy.kind === 'charger' ? 3 : 1 }];
   const effects: FloatingEffect[] = [];
 
-  const bonusCoinChance = Math.min(0.42, NANA_SUPPORT_BONUS_COIN_CHANCE + getLevelBonus(supportLevel) * 0.018);
-  if (is7171Support(supportId) && Math.random() < bonusCoinChance) {
+  const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
+  const bonusCoinChance = Math.min(0.42, NANA_SUPPORT_BONUS_COIN_CHANCE + getLevelBonus(nanaLevel) * 0.018);
+  if (nanaLevel > 0 && Math.random() < bonusCoinChance) {
     const xOffset = Math.random() > 0.5 ? 14 : -14;
     coins.push({ id: nextId++, x: enemy.x + xOffset, y: enemy.y - 8, value: 1, isBonus: true });
     effects.push({
@@ -207,18 +242,19 @@ export function createEnemyCoinDrops(enemy: Enemy, nextId: number, supportId: Su
   return { coins, effects, nextId };
 }
 
-export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: SupportId | null, supportLevel = 1) {
+export function createYabukoHeartDrop(enemy: Enemy, nextId: number, supportId: SupportAbilityTarget, supportLevel = 1) {
   const hearts: HeartPickup[] = [];
   const effects: FloatingEffect[] = [];
 
-  const heartDropChance = Math.min(0.36, YABUKO_HEART_DROP_CHANCE + getLevelBonus(supportLevel) * 0.012);
-  if (isYabukoSupport(supportId) && Math.random() < heartDropChance) {
+  const yabukoLevel = getSupportAbilityLevel(supportId, supportLevel, 'yabuko');
+  const heartDropChance = Math.min(0.36, YABUKO_HEART_DROP_CHANCE + getLevelBonus(yabukoLevel) * 0.012);
+  if (yabukoLevel > 0 && Math.random() < heartDropChance) {
     hearts.push({
       id: nextId++,
       x: enemy.x + (Math.random() > 0.5 ? 12 : -12),
       y: enemy.y - 10,
       heartType: 'red',
-      healAmount: YABUKO_RED_HEART_HEAL + getLevelBonus(supportLevel) * 2,
+      healAmount: YABUKO_RED_HEART_HEAL + getLevelBonus(yabukoLevel) * 2,
     });
     effects.push({
       id: nextId++,

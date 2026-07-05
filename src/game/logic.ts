@@ -1,4 +1,4 @@
-import {
+﻿import {
   BOSS_PLAYER_LIMITS,
   BOSS_APPEAR_KILLS,
   BOSS_APPEAR_TIME,
@@ -101,6 +101,7 @@ import {
   is7171Support,
   updateSupportEffects,
 } from './support';
+import type { SupportAbilitySource } from './support';
 import type { Boss, Coin, DeliTurret, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
 import {
   getDeliWeaponTuning,
@@ -116,6 +117,8 @@ import {
   getYabukoFmWeaponTuning,
   hasSochoSlashWave,
 } from './weapons';
+
+type SupportAbilityTarget = SupportId | null | SupportAbilitySource[];
 
 export const createInitialGameState = (): GameState => ({
   status: 'title',
@@ -207,12 +210,26 @@ function createPlayer(): Player {
   };
 }
 
+function createSupportAbilitySources(
+  supportId: SupportId | null,
+  supportLevel: number,
+  auraSupportId: SupportId | null,
+  auraSupportLevel: number,
+): SupportAbilitySource[] {
+  const sources: SupportAbilitySource[] = [];
+  if (supportId) sources.push({ id: supportId, level: supportLevel });
+  if (auraSupportId && auraSupportId !== supportId) sources.push({ id: auraSupportId, level: auraSupportLevel });
+  return sources;
+}
+
 export function updateGame(
   state: GameState,
   dt: number,
   move: Vector,
   supportId: SupportId | null = null,
   supportLevel = 1,
+  auraSupportId: SupportId | null = null,
+  auraSupportLevel = 1,
   weaponId: string | undefined = undefined,
   weaponLevel = 1,
   mainCharacterId: MainCharacterId = 'socho',
@@ -225,6 +242,7 @@ export function updateGame(
     player: updatePlayer(state.player, dt, move, Boolean(state.boss)),
     spawnTimer: state.spawnTimer - dt,
   };
+  const supportSources = createSupportAbilitySources(supportId, supportLevel, auraSupportId, auraSupportLevel);
 
   next = maybeSpawnEnemy(next);
   if (!next.isTraining) {
@@ -235,34 +253,34 @@ export function updateGame(
   next = updateEnemyAttacks(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
-  next = updateSupportEffects(next, dt, supportId, supportLevel);
+  next = updateSupportEffects(next, dt, supportId, supportLevel, auraSupportId, auraSupportLevel);
   if (mainCharacterId === 'tsutsu') {
     next = runAutoBow(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'rokudo') {
-    next = runAutoShadowSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+    next = runAutoShadowSlash(next, dt, supportSources, supportLevel, weaponId, weaponLevel);
   } else if (mainCharacterId === 'player') {
     next = runAutoGunfire(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'ushimaru') {
-    next = runAutoSpearThrust(next, weaponId, weaponLevel, supportId, supportLevel);
+    next = runAutoSpearThrust(next, weaponId, weaponLevel, supportSources, supportLevel);
   } else if (mainCharacterId === 'deli') {
     next = runAutoToolGun(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'yabuko-fm') {
-    next = runAutoHammerBreaker(next, weaponId, weaponLevel, supportId, supportLevel);
+    next = runAutoHammerBreaker(next, weaponId, weaponLevel, supportSources, supportLevel);
   } else if (mainCharacterId === 'rockel') {
-    next = runAutoAxeBerserker(next, weaponId, weaponLevel, supportId, supportLevel);
+    next = runAutoAxeBerserker(next, weaponId, weaponLevel, supportSources, supportLevel);
   } else if (mainCharacterId === 'nanaichi') {
     next = runAutoIceSword(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'myoo') {
     next = runAutoFlameSword(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'hibiki') {
-    next = runAutoShieldGuardian(next, weaponId, weaponLevel, supportId, supportLevel);
+    next = runAutoShieldGuardian(next, weaponId, weaponLevel, supportSources, supportLevel);
   } else {
-    next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
+    next = runAutoSlash(next, dt, supportSources, supportLevel, weaponId, weaponLevel);
   }
   next = updateDeliTurrets(next, dt, mainCharacterId, weaponId, weaponLevel);
-  next = updatePlayerArrows(next, dt, supportId, supportLevel);
-  next = updateCoins(next, dt, supportId, supportLevel);
-  next = collectCoins(next, supportId, supportLevel);
+  next = updatePlayerArrows(next, dt, supportSources, supportLevel);
+  next = updateCoins(next, dt, supportSources, supportLevel);
+  next = collectCoins(next, supportSources, supportLevel);
   next = collectHearts(next);
   next = resolvePlayerDamage(next);
   next = updateEffects(next, dt);
@@ -276,7 +294,7 @@ export function updateGame(
   }
 
   if (next.boss && next.boss.hp <= 0) {
-    const supportBonusCoins = get7171BossClearCoinBonus(supportId, supportLevel);
+    const supportBonusCoins = get7171BossClearCoinBonus(supportSources, supportLevel);
     const stageCoins = next.coinsCollected + supportBonusCoins;
     return {
       ...next,
@@ -608,7 +626,7 @@ function updateBullets(state: GameState, dt: number): GameState {
 function runAutoSlash(
   state: GameState,
   dt: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponId: string | undefined,
   weaponLevel: number,
@@ -651,7 +669,7 @@ function runAutoSlash(
 function runAutoShadowSlash(
   state: GameState,
   dt: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponId: string | undefined,
   weaponLevel: number,
@@ -901,7 +919,7 @@ function runAutoSpearThrust(
   state: GameState,
   weaponId: string | undefined,
   weaponLevel: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   if (state.player.attackCooldown > 0) return state;
@@ -990,7 +1008,7 @@ function runAutoHammerBreaker(
   state: GameState,
   weaponId: string | undefined,
   weaponLevel: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   if (state.player.attackCooldown > 0) return state;
@@ -1062,7 +1080,7 @@ function runAutoAxeBerserker(
   state: GameState,
   weaponId: string | undefined,
   weaponLevel: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   if (state.player.attackCooldown > 0) return state;
@@ -1135,7 +1153,7 @@ function runAutoShieldGuardian(
   state: GameState,
   weaponId: string | undefined,
   weaponLevel: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   if (state.player.attackCooldown > 0) return state;
@@ -1289,7 +1307,7 @@ function findTurretTarget(state: GameState, turret: DeliTurret): Vector | null {
 function updatePlayerArrows(
   state: GameState,
   dt: number,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   const movedArrows = state.playerArrows
@@ -1306,7 +1324,7 @@ function updatePlayerArrows(
 
 function resolvePlayerArrowHits(
   state: GameState,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ): GameState {
   let nextId = state.nextId;
@@ -1393,7 +1411,7 @@ function damageEnemiesWithSlash(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   hasSlashWave: boolean,
   weaponTuning: ReturnType<typeof getSochoWeaponTuning>,
@@ -1459,7 +1477,7 @@ function damageEnemiesWithShadowSlash(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
 ) {
   let defeated = 0;
@@ -1510,7 +1528,7 @@ function damageEnemiesWithSpearThrust(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponTuning: ReturnType<typeof getUshimaruWeaponTuning>,
 ) {
@@ -1567,7 +1585,7 @@ function damageEnemiesWithHammerBreaker(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponTuning: ReturnType<typeof getYabukoFmWeaponTuning>,
   shouldStarBreak: boolean,
@@ -1635,7 +1653,7 @@ function damageEnemiesWithAxeBerserker(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponTuning: ReturnType<typeof getRockelWeaponTuning>,
   shouldMountainBreak: boolean,
@@ -1703,7 +1721,7 @@ function damageEnemiesWithShieldGuardian(
   effects: FloatingEffect[],
   nextId: number,
   player: Player,
-  supportId: SupportId | null,
+  supportId: SupportAbilityTarget,
   supportLevel: number,
   weaponTuning: ReturnType<typeof getHibikiWeaponTuning>,
   shouldIronwall: boolean,
@@ -1770,7 +1788,7 @@ function damageBossWithShieldGuardian(
   };
 }
 
-function updateCoins(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateCoins(state: GameState, dt: number, supportId: SupportAbilityTarget, supportLevel: number): GameState {
   const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
   const coins = state.coins.map((coin) => {
     const dx = state.player.x - coin.x;
@@ -1789,7 +1807,7 @@ function updateCoins(state: GameState, dt: number, supportId: SupportId | null, 
   return { ...state, coins };
 }
 
-function collectCoins(state: GameState, supportId: SupportId | null, supportLevel: number): GameState {
+function collectCoins(state: GameState, supportId: SupportAbilityTarget, supportLevel: number): GameState {
   let collected = 0;
   let nextId = state.nextId;
   const effects = [...state.effects];
@@ -2210,3 +2228,5 @@ function normalize(vector: Vector): Vector {
   const length = Math.hypot(vector.x, vector.y) || 1;
   return { x: vector.x / length, y: vector.y / length };
 }
+
+

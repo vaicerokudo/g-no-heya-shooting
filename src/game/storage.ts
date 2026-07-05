@@ -2,6 +2,8 @@ import { hydrateOwnedSupport } from './supports';
 import { hydrateOwnedWeapon } from './weapons';
 import { resolveActiveMainCharacterId } from './characters';
 import type { MainCharacterId } from './characters';
+import { isAuraId } from './auras';
+import type { AuraId } from './auras';
 import { normalizeCharacterSkinId } from './skins';
 import type { SelectedSkinsByCharacter } from './skins';
 import type { OwnedSupport } from './supports';
@@ -13,6 +15,8 @@ const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 const STAR_DUST_FRAGMENTS_KEY = 'g-no-heya-shooting:star-dust-fragments';
+const OWNED_AURAS_KEY = 'g-no-heya-shooting:owned-auras';
+const SELECTED_AURA_KEY = 'g-no-heya-shooting:selected-aura';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
 const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
 const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-id';
@@ -46,6 +50,41 @@ export function loadStarDustFragments(): number {
 export function saveStarDustFragments(fragments: number) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STAR_DUST_FRAGMENTS_KEY, String(Math.max(0, Math.floor(fragments))));
+}
+
+export function loadOwnedAuras(): AuraId[] {
+  if (typeof window === 'undefined') return [];
+
+  const rawValue = window.localStorage.getItem(OWNED_AURAS_KEY);
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(new Set(parsed.filter(isAuraId)));
+  } catch {
+    return [];
+  }
+}
+
+export function saveOwnedAuras(ownedAuras: AuraId[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(OWNED_AURAS_KEY, JSON.stringify(Array.from(new Set(ownedAuras.filter(isAuraId)))));
+}
+
+export function loadSelectedAura(): AuraId | null {
+  if (typeof window === 'undefined') return null;
+  const rawValue = window.localStorage.getItem(SELECTED_AURA_KEY);
+  return isAuraId(rawValue) ? rawValue : null;
+}
+
+export function saveSelectedAura(auraId: AuraId | null) {
+  if (typeof window === 'undefined') return;
+  if (!auraId) {
+    window.localStorage.removeItem(SELECTED_AURA_KEY);
+    return;
+  }
+  window.localStorage.setItem(SELECTED_AURA_KEY, auraId);
 }
 
 export function loadOwnedWeapons(): OwnedWeapon[] {

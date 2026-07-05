@@ -11,6 +11,7 @@ export type GameStatus =
   | 'guildEquipment'
   | 'guildWeapons'
   | 'guildSkins'
+  | 'guildMyououRoom'
   | 'forge'
   | 'forgeDraw'
   | 'forgeWeapons'

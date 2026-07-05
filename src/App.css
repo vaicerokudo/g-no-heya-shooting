@@ -719,6 +719,36 @@ button {
   outline: none;
 }
 
+.guild-myouou-room-button {
+  position: absolute;
+  z-index: 2;
+  right: 7%;
+  top: 16%;
+  min-width: 112px;
+  min-height: 50px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 91, 91, 0.5);
+  border-radius: 999px;
+  color: #ffe7c2;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 190, 86, 0.22), transparent 62%),
+    rgba(32, 14, 12, 0.76);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 204, 0.08),
+    0 0 22px rgba(255, 72, 72, 0.24);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.guild-myouou-room-button:hover,
+.guild-myouou-room-button:focus-visible {
+  border-color: rgba(255, 198, 91, 0.86);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 244, 204, 0.18),
+    0 0 28px rgba(255, 132, 72, 0.52);
+  outline: none;
+}
+
 .guild-hotspot {
   position: absolute;
   z-index: 1;
@@ -1383,6 +1413,110 @@ button {
     0 0 10px rgba(255, 214, 112, 0.62),
     0 0 18px rgba(255, 82, 82, 0.32);
 }
+
+.aura-room-screen {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 86, 86, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(37, 23, 30, 0.94), rgba(12, 15, 22, 0.96));
+}
+
+.aura-equipped-panel {
+  width: min(760px, 100%);
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid rgba(255, 209, 102, 0.3);
+  border-radius: 8px;
+  background: rgba(15, 17, 22, 0.72);
+}
+
+.aura-equipped-panel span,
+.aura-equipped-panel p {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.74);
+}
+
+.aura-equipped-panel strong {
+  color: #ffd166;
+  font-size: 1.18rem;
+}
+
+.aura-grid {
+  width: min(900px, 100%);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+}
+
+.aura-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(247, 251, 255, 0.16);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 18% 14%, var(--aura-glow, rgba(255, 255, 255, 0.18)), transparent 38%),
+    rgba(18, 18, 22, 0.82);
+}
+
+.aura-card.is-selected {
+  border-color: rgba(255, 209, 102, 0.72);
+  box-shadow: 0 0 22px rgba(255, 209, 102, 0.2);
+}
+
+.aura-card.is-locked {
+  filter: saturate(0.72);
+}
+
+.aura-orb {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #fff, var(--aura-color, #ffd166) 42%, transparent 72%);
+  box-shadow: 0 0 18px var(--aura-color, rgba(255, 209, 102, 0.8));
+}
+
+.aura-card h2,
+.aura-card p {
+  margin: 0;
+}
+
+.aura-card h2 {
+  font-size: 1.02rem;
+}
+
+.aura-card strong,
+.aura-color-label {
+  color: rgba(247, 251, 255, 0.76);
+  font-size: 0.78rem;
+}
+
+.aura-card-actions {
+  grid-column: 1 / -1;
+}
+
+.aura-card-actions button {
+  width: 100%;
+}
+
+.aura-duplicate-note {
+  color: #ffd166 !important;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.aura-socho { --aura-color: rgba(245, 250, 255, 0.95); --aura-glow: rgba(245, 250, 255, 0.22); }
+.aura-tsutsu { --aura-color: rgba(98, 232, 126, 0.95); --aura-glow: rgba(98, 232, 126, 0.18); }
+.aura-rokudo { --aura-color: rgba(28, 22, 42, 0.95); --aura-glow: rgba(130, 90, 210, 0.18); }
+.aura-nanaichi { --aura-color: rgba(178, 78, 45, 0.95); --aura-glow: rgba(178, 78, 45, 0.2); }
+.aura-yabuko { --aura-color: rgba(88, 172, 255, 0.95); --aura-glow: rgba(88, 172, 255, 0.2); }
+.aura-hibiki { --aura-color: rgba(174, 95, 255, 0.95); --aura-glow: rgba(174, 95, 255, 0.2); }
+.aura-myoo { --aura-color: rgba(255, 86, 42, 0.95); --aura-glow: rgba(255, 177, 64, 0.22); }
+.aura-ushimaru { --aura-color: rgba(255, 143, 48, 0.95); --aura-glow: rgba(255, 143, 48, 0.2); }
+.aura-deli { --aura-color: rgba(61, 92, 210, 0.95); --aura-glow: rgba(61, 92, 210, 0.2); }
+.aura-rockel { --aura-color: rgba(194, 238, 77, 0.95); --aura-glow: rgba(194, 238, 77, 0.18); }
+.aura-player { --aura-color: rgba(255, 221, 76, 0.95); --aura-glow: rgba(255, 221, 76, 0.2); }
 
 .support-inventory {
   width: min(560px, 100%);
@@ -2419,6 +2553,7 @@ h1 {
 .hud-stage,
 .hud-main,
 .hud-support,
+.hud-aura,
 .hud-weapon {
   justify-content: start;
   color: #c8ffdf;
@@ -2444,6 +2579,7 @@ h1 {
 
 .hud-main,
 .hud-support,
+.hud-aura,
 .hud-weapon,
 .hud-no-damage {
   min-height: 34px;
@@ -2474,6 +2610,13 @@ h1 {
 
 .hud-weapon {
   background: rgba(255, 255, 255, 0.08);
+}
+
+.hud-aura {
+  background:
+    radial-gradient(circle at 8% 50%, var(--aura-glow, rgba(255, 209, 102, 0.14)), transparent 42%),
+    rgba(190, 160, 255, 0.08);
+  color: #eadcff;
 }
 
 .pause-button {
@@ -2655,6 +2798,7 @@ h1 {
 .field.is-paused .enemy.is-slashed,
 .field.is-paused .boss.is-slashed,
 .field.is-paused .player.is-hit,
+.field.is-paused .player-aura-ring,
 .field.is-paused .floating-effect,
 .field.is-paused .spark {
   animation-play-state: paused !important;
@@ -2741,6 +2885,23 @@ h1 {
 
 .player::before {
   content: none;
+}
+
+.player-aura-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 62px;
+  height: 30px;
+  transform: translateX(-50%);
+  border: 2px solid var(--aura-color, rgba(255, 209, 102, 0.84));
+  border-radius: 50%;
+  box-shadow:
+    0 0 18px var(--aura-color, rgba(255, 209, 102, 0.66)),
+    inset 0 0 14px var(--aura-glow, rgba(255, 209, 102, 0.22));
+  opacity: 0.82;
+  pointer-events: none;
+  animation: playerAuraPulse 1.4s ease-in-out infinite alternate;
 }
 
 .player img {
@@ -4759,6 +4920,17 @@ h1 {
   to {
     transform: scale(1.02) rotate(2deg);
     opacity: 0.92;
+  }
+}
+
+@keyframes playerAuraPulse {
+  from {
+    transform: translateX(-50%) scale(0.92);
+    opacity: 0.5;
+  }
+  to {
+    transform: translateX(-50%) scale(1.08);
+    opacity: 0.9;
   }
 }
 

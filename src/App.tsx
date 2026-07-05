@@ -31,6 +31,8 @@ import {
   STARBREAKER_SHOCKWAVE_VISIBLE_TIME,
   YABUKO_FM_HAMMER_BOSS_RANGE,
 } from './game/constants';
+import { AURA_EXCHANGE_COST, auraDefinitions, getAuraById } from './game/auras';
+import type { AuraId } from './game/auras';
 import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveActiveMainCharacterId } from './game/characters';
 import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
@@ -44,7 +46,9 @@ import {
   loadActiveSupportId,
   loadEquippedWeapons,
   loadFreeSupportSummonUsed,
+  loadOwnedAuras,
   loadOwnedSupports,
+  loadSelectedAura,
   loadSelectedSkinsByCharacter,
   loadStarDustFragments,
   resetOwnedCoins,
@@ -54,7 +58,9 @@ import {
   saveActiveSupportId,
   saveEquippedWeapons,
   saveFreeSupportSummonUsed,
+  saveOwnedAuras,
   saveOwnedSupports,
+  saveSelectedAura,
   saveOwnedWeapons,
   saveSelectedSkinsByCharacter,
   saveStarDustFragments,
@@ -70,6 +76,7 @@ import {
 } from './game/supports';
 import type { OwnedSupport, SupportCharacter } from './game/supports';
 import { getCoinMagnetRadius, getHibikiShieldView, getMyououGarudaView } from './game/support';
+import type { SupportAbilitySource } from './game/support';
 import type { EnemyKind, GameState, SupportId, Vector } from './game/types';
 import {
   getCharacterSkinImage,
@@ -221,6 +228,8 @@ function App() {
   const [starDustFragments, setStarDustFragments] = useState(() => loadStarDustFragments());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
+  const [ownedAuras, setOwnedAuras] = useState<AuraId[]>(() => loadOwnedAuras());
+  const [selectedAuraId, setSelectedAuraId] = useState<AuraId | null>(() => loadSelectedAura());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
   const [selectedSkins, setSelectedSkins] = useState<SelectedSkinsByCharacter>(() => loadSelectedSkinsByCharacter());
@@ -237,6 +246,8 @@ function App() {
   const [guildReceptionOpen, setGuildReceptionOpen] = useState(false);
   const supportId = useRef<SupportId | null>(null);
   const supportLevel = useRef(1);
+  const auraSupportId = useRef<SupportId | null>(null);
+  const auraSupportLevel = useRef(1);
   const mainCharacterId = useRef<MainCharacterId>('socho');
   const equippedWeaponId = useRef('iron-tachi');
   const equippedWeaponLevel = useRef(1);
@@ -251,6 +262,12 @@ function App() {
   useEffect(() => {
     supportId.current = selectedSupport?.id ?? null;
   }, [selectedSupport]);
+
+  useEffect(() => {
+    const selectedAura = getAuraById(selectedAuraId);
+    auraSupportId.current = selectedAura?.supportId ?? null;
+    auraSupportLevel.current = selectedAura ? getOwnedSupportLevel(ownedSupports, selectedAura.supportId) : 1;
+  }, [ownedSupports, selectedAuraId]);
 
   useEffect(() => {
     if (!selectedSupport) return;
@@ -300,6 +317,8 @@ function App() {
           getMoveVector(current, pressedKeys.current, dragTarget.current, joystickVector.current),
           supportId.current,
           supportLevel.current,
+          auraSupportId.current,
+          auraSupportLevel.current,
           equippedWeaponId.current,
           equippedWeaponLevel.current,
           mainCharacterId.current,
@@ -356,6 +375,19 @@ function App() {
     () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
     [ownedSupports, selectedSupport?.id],
   );
+  const selectedAura = useMemo(() => getAuraById(selectedAuraId), [selectedAuraId]);
+  const selectedAuraSupportLevel = useMemo(
+    () => (selectedAura ? getOwnedSupportLevel(ownedSupports, selectedAura.supportId) : 1),
+    [ownedSupports, selectedAura],
+  );
+  const activeSupportSources = useMemo<SupportAbilitySource[]>(() => {
+    const sources: SupportAbilitySource[] = [];
+    if (selectedSupport) sources.push({ id: selectedSupport.id, level: selectedSupportLevel });
+    if (selectedAura && selectedAura.supportId !== selectedSupport?.id) {
+      sources.push({ id: selectedAura.supportId, level: selectedAuraSupportLevel });
+    }
+    return sources;
+  }, [selectedAura, selectedAuraSupportLevel, selectedSupport, selectedSupportLevel]);
   const equippedSochoWeaponLevel = useMemo(
     () => getOwnedWeaponLevel(ownedWeapons, equippedSochoWeapon.id),
     [ownedWeapons, equippedSochoWeapon.id],
@@ -521,6 +553,30 @@ function App() {
   const goToGuildSkins = () => {
     setGuildReceptionOpen(false);
     setGame((current) => ({ ...current, status: 'guildSkins' }));
+  };
+
+  const goToGuildMyououRoom = () => {
+    setGuildReceptionOpen(false);
+    setGame((current) => ({ ...current, status: 'guildMyououRoom' }));
+  };
+
+  const exchangeAura = (auraId: AuraId) => {
+    if (ownedAuras.includes(auraId) || starDustFragments < AURA_EXCHANGE_COST) return;
+
+    const nextOwnedAuras = [...ownedAuras, auraId];
+    const nextStarDustFragments = starDustFragments - AURA_EXCHANGE_COST;
+    setOwnedAuras(nextOwnedAuras);
+    saveOwnedAuras(nextOwnedAuras);
+    setStarDustFragments(nextStarDustFragments);
+    saveStarDustFragments(nextStarDustFragments);
+    setSelectedAuraId(auraId);
+    saveSelectedAura(auraId);
+  };
+
+  const equipAura = (auraId: AuraId | null) => {
+    if (auraId && !ownedAuras.includes(auraId)) return;
+    setSelectedAuraId(auraId);
+    saveSelectedAura(auraId);
   };
 
   const goToForge = () => {
@@ -952,6 +1008,9 @@ function App() {
                 <button type="button" onClick={goToGuildSkins} role="menuitem">{'\u30b9\u30ad\u30f3\u5909\u66f4'}</button>
               </div>
             )}
+            <button className="guild-myouou-room-button" type="button" onClick={goToGuildMyououRoom}>
+              <span>明王の部屋</span>
+            </button>
             {guildLobbyHotspots.filter((hotspot) => hotspot.id === 'map').map((hotspot) => (
               <button
                 key={hotspot.id}
@@ -1026,6 +1085,67 @@ function App() {
           </div>
           <div className="prepare-actions">
             <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
+          </div>
+        </section>
+      )}
+
+      {game.status === 'guildMyououRoom' && (
+        <section className="menu-screen prepare-screen guild-subscreen aura-room-screen">
+          <p className="eyebrow">MYOUOU ROOM</p>
+          <h1>明王の部屋</h1>
+          <div className="owned-coins-panel compact star-dust-panel">
+            <span>星屑のかけら</span>
+            <strong>{starDustFragments}</strong>
+          </div>
+          <p className="control-note">
+            星屑のかけらを使ってオーラを交換できます。装備中オーラは、対応サポート能力を同行サポートとは別枠で発動します。
+          </p>
+          <div className="aura-equipped-panel">
+            <span>装備中オーラ</span>
+            <strong>{selectedAura ? selectedAura.name : 'なし'}</strong>
+            {selectedAura && (
+              <p>
+                {getSupportById(selectedAura.supportId).name} Lv {selectedAuraSupportLevel}
+                {selectedSupport?.id === selectedAura.supportId ? ' / 同行サポートと同じため戦闘中は重複発動なし' : ' / 追加サポート能力として発動'}
+              </p>
+            )}
+            {selectedAura && <button className="secondary-button" type="button" onClick={() => equipAura(null)}>オーラを外す</button>}
+          </div>
+          <div className="aura-grid">
+            {auraDefinitions.map((aura) => {
+              const isOwned = ownedAuras.includes(aura.id);
+              const isSelected = selectedAuraId === aura.id;
+              const support = getSupportById(aura.supportId);
+              const supportLevel = getOwnedSupportLevel(ownedSupports, aura.supportId);
+              const isDuplicateSupport = selectedSupport?.id === aura.supportId;
+              return (
+                <article className={`aura-card ${aura.cssClass} ${isOwned ? 'is-owned' : 'is-locked'} ${isSelected ? 'is-selected' : ''}`} key={aura.id}>
+                  <div className="aura-orb" aria-hidden="true" />
+                  <div>
+                    <span className="aura-color-label">{aura.colorName}オーラ</span>
+                    <h2>{aura.name}</h2>
+                    <strong>{support.name} Lv {supportLevel}</strong>
+                    <p>{aura.description}</p>
+                    {isDuplicateSupport && <p className="aura-duplicate-note">同行サポートと同じため、戦闘中はオーラ側をスキップします。</p>}
+                  </div>
+                  <div className="aura-card-actions">
+                    {isOwned ? (
+                      <button className="primary-button" type="button" onClick={() => equipAura(aura.id)} disabled={isSelected}>
+                        {isSelected ? '装備中' : '装備する'}
+                      </button>
+                    ) : (
+                      <button className="primary-button" type="button" onClick={() => exchangeAura(aura.id)} disabled={starDustFragments < AURA_EXCHANGE_COST}>
+                        星屑{AURA_EXCHANGE_COST}で交換
+                      </button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+          <div className="prepare-actions">
+            <button className="secondary-button" onClick={goToGuildLobby}>ロビーへ戻る</button>
+            <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
           </div>
         </section>
       )}
@@ -1106,6 +1226,19 @@ function App() {
                 <div className="empty-support">
                   まだ同行サポートがいません。雑貨屋で初回無料召喚をしてみよう。
                 </div>
+              )}
+            </article>
+            <article className={`formation-card support-card sortie-card aura-summary-card ${selectedAura ? 'has-support' : ''}`}>
+              <span className="slot-label">装備オーラ</span>
+              {selectedAura ? (
+                <div>
+                  <h2>{selectedAura.name}</h2>
+                  <strong>{getSupportById(selectedAura.supportId).name} Lv {selectedAuraSupportLevel}</strong>
+                  <p>{selectedAura.description}</p>
+                  {selectedSupport?.id === selectedAura.supportId && <p className="aura-duplicate-note">同行サポートと同じため、戦闘中は重複発動しません。</p>}
+                </div>
+              ) : (
+                <div className="empty-support">明王の部屋でオーラを交換・装備できます。</div>
               )}
             </article>
           </div>
@@ -1577,6 +1710,7 @@ function App() {
             ) : (
               <p>{freeSupportSummonUsed ? '\u540c\u884c\uff1a\u306a\u3057\u3002G\u306e\u90e8\u5c4b\u3067\u30b5\u30dd\u30fc\u30c8\u3092\u9078\u307c\u3046\u3002' : '\u540c\u884c\uff1a\u306a\u3057\u3002\u521d\u56de\u7121\u6599\u53ec\u559a\u306f\u96d1\u8ca8\u5c4b\u3067\u3067\u304d\u307e\u3059\u3002'}</p>
             )}
+            <p>{selectedAura ? `オーラ：${selectedAura.name}（${getSupportById(selectedAura.supportId).name} Lv ${selectedAuraSupportLevel}）` : 'オーラ：なし'}</p>
             <p className="equipped-weapon-label">{`\u6b66\u5668\uff1a${mainWeaponLabel}`}</p>
             <p className="equipped-weapon-label">{`\u653b\u6483\uff1a${mainCharacter.attackLabel}`}</p>
             <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
@@ -1615,6 +1749,7 @@ function App() {
             )}
             <div className="hud-main">メイン：{mainCharacter.name}</div>
             <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
+            <div className="hud-aura">オーラ：{selectedAura ? `${selectedAura.colorName} / ${getSupportById(selectedAura.supportId).name} Lv ${selectedAuraSupportLevel}` : 'なし'}</div>
             <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>
             <div className={`hud-no-damage ${game.hasTakenDamage ? 'is-failed' : ''}`}>
               {game.hasTakenDamage ? 'ノーダメ失敗' : 'ノーダメ継続中'}
@@ -1911,7 +2046,7 @@ function App() {
               <div
                 key={coin.id}
                 className={`coin ${coin.isBonus ? 'is-bonus' : ''} ${
-                  isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y, supportId.current, supportLevel.current) ? 'is-attracted' : ''
+                  isCoinAttracted(coin.x, coin.y, game.player.x, game.player.y, activeSupportSources, 1) ? 'is-attracted' : ''
                 }`}
                 style={place(coin.x, coin.y, 18)}
               >
@@ -2023,9 +2158,10 @@ function App() {
             ))}
 
             <div
-              className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''}`}
+              className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''} ${selectedAura ? `has-aura ${selectedAura.cssClass}` : ''}`}
               style={place(game.player.x, game.player.y, game.player.radius * 2)}
             >
+              {selectedAura && <span className="player-aura-ring" aria-hidden="true" />}
               {mainCharacter.image ? <img src={mainCharacter.image} alt={mainCharacter.name} /> : mainCharacter.name}
             </div>
 
@@ -2336,7 +2472,7 @@ function isCoinAttracted(
   coinY: number,
   playerX: number,
   playerY: number,
-  supportId: SupportId | null,
+  supportId: SupportId | null | SupportAbilitySource[],
   supportLevel: number,
 ) {
   return Math.hypot(playerX - coinX, playerY - coinY) < getCoinMagnetRadius(supportId, supportLevel);
