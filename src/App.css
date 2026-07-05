@@ -2535,6 +2535,13 @@ h1 {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
+.field.area-sandstorm-wilderness {
+  background:
+    linear-gradient(180deg, rgba(255, 226, 168, 0.04), rgba(77, 42, 18, 0.36)),
+    url("/assets/tcg/stage-desert.webp") center / cover,
+    #4c301a;
+}
+
 .field::before {
   content: "";
   position: absolute;
@@ -2549,6 +2556,11 @@ h1 {
   pointer-events: none;
 }
 
+.field.area-sandstorm-wilderness::before {
+  opacity: 0.2;
+  filter: drop-shadow(0 0 18px rgba(255, 218, 134, 0.44));
+}
+
 .field::after {
   content: "";
   position: absolute;
@@ -2557,6 +2569,12 @@ h1 {
     linear-gradient(180deg, rgba(255, 235, 190, 0.12), transparent 32%),
     linear-gradient(90deg, rgba(15, 19, 11, 0.45), transparent 18%, transparent 82%, rgba(15, 19, 11, 0.45));
   pointer-events: none;
+}
+
+.field.area-sandstorm-wilderness::after {
+  background:
+    linear-gradient(180deg, rgba(255, 223, 162, 0.15), rgba(126, 72, 24, 0.08) 46%, rgba(45, 26, 13, 0.26)),
+    linear-gradient(90deg, rgba(54, 34, 16, 0.38), transparent 20%, transparent 80%, rgba(54, 34, 16, 0.38));
 }
 
 .field.is-paused .scroll-band,
@@ -3075,6 +3093,27 @@ h1 {
   width: 190%;
   height: 190%;
   transform: translate(-24%, -26%);
+}
+
+.enemy-scorpion img {
+  width: 185%;
+  height: 185%;
+  transform: translate(-23%, -25%);
+  filter: drop-shadow(0 0 8px rgba(255, 181, 84, 0.36));
+}
+
+.enemy-rockGolem img {
+  width: 178%;
+  height: 178%;
+  transform: translate(-22%, -24%);
+  filter: drop-shadow(0 7px 8px rgba(0, 0, 0, 0.68));
+}
+
+.field.area-sandstorm-wilderness .enemy-bullet {
+  background: radial-gradient(circle, #f8e3a3, #c77131 56%, rgba(150, 66, 28, 0.18));
+  box-shadow:
+    0 0 10px rgba(255, 206, 112, 0.78),
+    0 0 16px rgba(119, 48, 18, 0.5);
 }
 
 .boss {

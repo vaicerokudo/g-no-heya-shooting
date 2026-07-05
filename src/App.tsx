@@ -183,6 +183,8 @@ const enemyLabels: Record<EnemyKind, string> = {
   small: '小型敵',
   flying: '飛行敵',
   charger: '突進敵',
+  scorpion: 'スコーピオン',
+  rockGolem: 'ロックゴーレム',
 };
 
 const assetPaths = {
@@ -195,6 +197,8 @@ const assetPaths = {
     small: '/assets/tcg/enemy-goblin.png',
     flying: '/assets/tcg/enemy-lesser-wyvern.png',
     charger: '/assets/tcg/enemy-boar.png',
+    scorpion: '/assets/tcg/enemy-scorpion.png',
+    rockGolem: '/assets/tcg/enemy-rock-golem.png',
   },
 };
 
@@ -303,7 +307,8 @@ function App() {
 
   const hpPercent = Math.max(0, (game.player.hp / game.player.maxHp) * 100);
   const bossHpPercent = game.boss ? Math.max(0, (game.boss.hp / game.boss.maxHp) * 100) : 0;
-  const bossHudImage = game.boss?.image || getStageById(game.stageId).bossImage || assetPaths.boss;
+  const activeStage = useMemo(() => getStageById(game.stageId), [game.stageId]);
+  const bossHudImage = game.boss?.image || activeStage.bossImage || assetPaths.boss;
   const activeSlashRadius = game.boss ? SLASH_BOSS_RADIUS : SLASH_RADIUS;
   const activeShadowSlashRadius = game.boss ? ROKUDO_SHADOW_SLASH_BOSS_RADIUS : ROKUDO_SHADOW_SLASH_RADIUS;
   const hibikiShield = getHibikiShieldView(game);
@@ -1620,7 +1625,7 @@ function App() {
           )}
 
           <div
-            className={`field ${game.status === 'paused' ? 'is-paused' : ''}`}
+            className={`field area-${activeStage.areaId} ${game.status === 'paused' ? 'is-paused' : ''}`}
             ref={fieldRef}
             onPointerDown={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}
             onPointerMove={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}

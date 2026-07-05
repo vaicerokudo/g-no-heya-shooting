@@ -23,7 +23,7 @@ export type GameStatus =
   | 'clear'
   | 'gameOver';
 
-export type EnemyKind = 'small' | 'flying' | 'charger';
+export type EnemyKind = 'small' | 'flying' | 'charger' | 'scorpion' | 'rockGolem';
 
 export type SupportId =
   | '7171'
@@ -50,6 +50,7 @@ export type Enemy = {
   spawnTime: number;
   hitTimer?: number;
   slowTimer?: number;
+  shotCooldown?: number;
   chargeTarget?: Vector;
   isCharging?: boolean;
 };

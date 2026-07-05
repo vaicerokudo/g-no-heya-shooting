@@ -232,6 +232,7 @@ export function updateGame(
   }
   next = updateBossIntro(next, dt);
   next = updateEnemies(next, dt);
+  next = updateEnemyAttacks(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
   next = updateSupportEffects(next, dt, supportId, supportLevel);
@@ -314,9 +315,13 @@ function updatePlayer(player: Player, dt: number, move: Vector, isBossBattle: bo
 function maybeSpawnEnemy(state: GameState): GameState {
   if (state.boss || state.bossIntroTimer > 0 || state.elapsed > BOSS_APPEAR_TIME + 6 || state.spawnTimer > 0) return state;
 
-  const kind = chooseEnemyKind(state.elapsed, state.defeatedEnemies);
+  const stage = getStageById(state.stageId);
+  const kind = chooseEnemyKind(state.elapsed, state.defeatedEnemies, stage.areaId);
   const enemy = createEnemy(state.nextId, kind, state.elapsed);
-  const spawnRate = Math.max(0.55, 1.35 - state.elapsed * 0.012);
+  const spawnRate =
+    stage.areaId === 'sandstorm-wilderness'
+      ? Math.max(0.62, 1.45 - state.elapsed * 0.01)
+      : Math.max(0.55, 1.35 - state.elapsed * 0.012);
 
   return {
     ...state,
@@ -411,10 +416,45 @@ function moveEnemy(enemy: Enemy, player: Player, elapsed: number, dt: number): E
     }
   }
 
+  if (enemy.kind === 'scorpion') {
+    return {
+      ...enemy,
+      x: clamp(enemy.x + Math.sin((elapsed - enemy.spawnTime) * 3.2) * 16 * dt, 28, FIELD_WIDTH - 28),
+      y: enemy.y + enemy.speed * speedMultiplier * dt,
+    };
+  }
+
   return {
     ...enemy,
     y: enemy.y + enemy.speed * speedMultiplier * dt,
   };
+}
+
+function updateEnemyAttacks(state: GameState, dt: number): GameState {
+  let nextId = state.nextId;
+  const bullets = [...state.bullets];
+  const enemies = state.enemies.map((enemy) => {
+    if (enemy.kind !== 'scorpion') return enemy;
+
+    const shotCooldown = Math.max(0, (enemy.shotCooldown ?? 1.4) - dt);
+    if (shotCooldown > 0 || enemy.y < 16 || enemy.y > FIELD_HEIGHT - 84) {
+      return { ...enemy, shotCooldown };
+    }
+
+    const direction = normalize({ x: state.player.x - enemy.x, y: state.player.y - enemy.y });
+    bullets.push({
+      id: nextId++,
+      x: enemy.x,
+      y: enemy.y + enemy.radius * 0.8,
+      vx: direction.x * 74,
+      vy: Math.max(92, direction.y * 122),
+      radius: 5,
+    });
+
+    return { ...enemy, shotCooldown: 2.25 };
+  });
+
+  return { ...state, enemies, bullets, nextId };
 }
 
 function updateBoss(state: GameState, dt: number): GameState {

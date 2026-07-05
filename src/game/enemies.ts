@@ -1,13 +1,22 @@
 import { FIELD_WIDTH } from './constants';
+import type { StageAreaId } from './stages';
 import type { Enemy, EnemyKind } from './types';
 
 const enemyStats: Record<EnemyKind, Pick<Enemy, 'radius' | 'hp' | 'maxHp' | 'speed'>> = {
   small: { radius: 15, hp: 1, maxHp: 1, speed: 90 },
   flying: { radius: 17, hp: 1, maxHp: 1, speed: 74 },
   charger: { radius: 19, hp: 2, maxHp: 2, speed: 58 },
+  scorpion: { radius: 17, hp: 2, maxHp: 2, speed: 74 },
+  rockGolem: { radius: 24, hp: 5, maxHp: 5, speed: 34 },
 };
 
-export function chooseEnemyKind(elapsed: number, defeatedEnemies: number): EnemyKind {
+export function chooseEnemyKind(elapsed: number, defeatedEnemies: number, areaId: StageAreaId = 'astoria-grassland'): EnemyKind {
+  if (areaId === 'sandstorm-wilderness') {
+    if (elapsed < 8) return 'scorpion';
+    if (defeatedEnemies % 6 === 4 || defeatedEnemies % 9 === 6) return 'rockGolem';
+    return 'scorpion';
+  }
+
   if (elapsed < 10) return 'small';
   if (defeatedEnemies % 7 === 4) return 'charger';
   if (defeatedEnemies % 3 === 1) return 'flying';
@@ -25,6 +34,7 @@ export function createEnemy(id: number, kind: EnemyKind, elapsed: number): Enemy
     x,
     y: -36,
     spawnTime: elapsed,
+    ...(kind === 'scorpion' ? { shotCooldown: 1.1 + (id % 3) * 0.32 } : {}),
     ...stats,
   };
 }
