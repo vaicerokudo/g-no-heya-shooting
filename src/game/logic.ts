@@ -17,6 +17,12 @@ import {
   HEART_PICKUP_RADIUS,
   MOUNTAIN_BREAKER_BOSS_DAMAGE,
   MOUNTAIN_BREAKER_DAMAGE,
+  MYOO_FLAME_BULLET_BOSS_DAMAGE,
+  MYOO_FLAME_BULLET_DAMAGE,
+  MYOO_FLAME_BULLET_LIFE,
+  MYOO_FLAME_BULLET_RADIUS,
+  MYOO_FLAME_BULLET_SPEED,
+  MYOO_FLAME_SWORD_VISIBLE_TIME,
   MYOUOU_GARUDA_INITIAL_DELAY,
   NANAICHI_ICE_SHARD_BOSS_DAMAGE,
   NANAICHI_ICE_SHARD_DAMAGE,
@@ -89,6 +95,7 @@ import {
 import type { Boss, Coin, DeliTurret, Enemy, EnemyBullet, FloatingEffect, GameState, Player, PlayerArrow, SupportId, Vector } from './types';
 import {
   getDeliWeaponTuning,
+  getMyooWeaponTuning,
   getNanaichiWeaponTuning,
   getPlayerWeaponTuning,
   getRokudoWeaponTuning,
@@ -227,6 +234,8 @@ export function updateGame(
     next = runAutoAxeBerserker(next, weaponId, weaponLevel, supportId, supportLevel);
   } else if (mainCharacterId === 'nanaichi') {
     next = runAutoIceSword(next, weaponId, weaponLevel);
+  } else if (mainCharacterId === 'myoo') {
+    next = runAutoFlameSword(next, weaponId, weaponLevel);
   } else {
     next = runAutoSlash(next, dt, supportId, supportLevel, weaponId, weaponLevel);
   }
@@ -616,6 +625,50 @@ function runAutoIceSword(state: GameState, weaponId: string | undefined, weaponL
       ...state.player,
       attackCooldown: weaponTuning.iceSwordCooldown,
       slashTimer: NANAICHI_ICE_SWORD_VISIBLE_TIME,
+    },
+  };
+}
+
+function runAutoFlameSword(state: GameState, weaponId: string | undefined, weaponLevel: number): GameState {
+  if (state.player.attackCooldown > 0) return state;
+  const weaponTuning = getMyooWeaponTuning(weaponId, weaponLevel);
+  let nextId = state.nextId;
+  const bullets: PlayerArrow[] = Array.from({ length: weaponTuning.flameBulletCount }, (_, index) => {
+    const direction = createFlameBulletDirection(index, weaponTuning.flameBulletCount);
+    const xOffset = (index - (weaponTuning.flameBulletCount - 1) / 2) * 3.8;
+    return {
+      id: nextId++,
+      x: state.player.x + xOffset,
+      y: state.player.y - 28,
+      vx: direction.x * MYOO_FLAME_BULLET_SPEED,
+      vy: direction.y * MYOO_FLAME_BULLET_SPEED,
+      radius: MYOO_FLAME_BULLET_RADIUS,
+      damage: MYOO_FLAME_BULLET_DAMAGE,
+      bossDamage: MYOO_FLAME_BULLET_BOSS_DAMAGE,
+      life: MYOO_FLAME_BULLET_LIFE,
+      kind: 'flame',
+    };
+  });
+
+  return {
+    ...state,
+    playerArrows: [...state.playerArrows, ...bullets],
+    effects: [
+      ...state.effects,
+      {
+        id: nextId++,
+        kind: 'support',
+        x: state.player.x,
+        y: state.player.y - 42,
+        text: 'FLAME',
+        timer: 0.24,
+      },
+    ],
+    nextId,
+    player: {
+      ...state.player,
+      attackCooldown: weaponTuning.flameSwordCooldown,
+      slashTimer: MYOO_FLAME_SWORD_VISIBLE_TIME,
     },
   };
 }
@@ -1808,6 +1861,15 @@ function createShadowHitEffect(id: number, x: number, y: number, text: string): 
 function createIceShardDirection(index: number, count: number): Vector {
   const spreadBase = count === 1 ? 0 : (index - (count - 1) / 2) * 0.16;
   const randomSpread = (Math.random() - 0.5) * 0.24;
+  return normalize({
+    x: spreadBase + randomSpread,
+    y: -1,
+  });
+}
+
+function createFlameBulletDirection(index: number, count: number): Vector {
+  const spreadBase = count === 1 ? 0 : (index - (count - 1) / 2) * 0.11;
+  const randomSpread = (Math.random() - 0.5) * 0.3;
   return normalize({
     x: spreadBase + randomSpread,
     y: -1,

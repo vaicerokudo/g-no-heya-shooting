@@ -5,6 +5,7 @@ import {
   DELI_TURRET_FIRE_INTERVAL,
   DELI_TURRET_MAX_COUNT,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
+  MYOO_FLAME_SWORD_COOLDOWN,
   NANAICHI_ICE_SWORD_COOLDOWN,
   PLAYER_MAIN_GUN_COOLDOWN,
   ROKUDO_SHADOW_SLASH_COOLDOWN,
@@ -47,7 +48,7 @@ export type OwnedWeapon = WeaponDefinition & {
   level: number;
 };
 
-export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi';
+export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo';
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
@@ -117,6 +118,11 @@ export type NanaichiWeaponTuning = {
   iceShardCount: number;
 };
 
+export type MyooWeaponTuning = {
+  flameSwordCooldown: number;
+  flameBulletCount: number;
+};
+
 export const DEFAULT_SOCHO_WEAPON_ID = 'iron-tachi';
 export const DEFAULT_TSUTSU_WEAPON_ID = 'basic-bow';
 export const DEFAULT_ROKUDO_WEAPON_ID = 'shadow-starter-blade';
@@ -126,6 +132,7 @@ export const DEFAULT_DELI_WEAPON_ID = 'starter-tool-gun';
 export const DEFAULT_YABUKO_FM_WEAPON_ID = 'starter-war-hammer';
 export const DEFAULT_ROCKEL_WEAPON_ID = 'starter-double-axe';
 export const DEFAULT_NANAICHI_WEAPON_ID = 'starter-ice-sword';
+export const DEFAULT_MYOO_WEAPON_ID = 'starter-kurikara-sword';
 
 export const defaultWeaponDefinitions: WeaponDefinition[] = [
   {
@@ -199,6 +206,15 @@ export const defaultWeaponDefinitions: WeaponDefinition[] = [
     rarity: 'common',
     description: '7171用。最初から使える氷の片手剣。',
     effectDescription: '約1.1秒ごとに前方寄りへ氷弾を放ち、敵に短時間スロウを付与する。',
+  },
+  {
+    id: DEFAULT_MYOO_WEAPON_ID,
+    name: '支給倶利伽羅剣',
+    owner: '明王',
+    type: '倶利伽羅剣',
+    rarity: 'common',
+    description: '明王用。最初から使える倶利伽羅剣。',
+    effectDescription: '約1.25秒ごとに前方寄りへ炎弾を放つ。状態異常はないが火力で押し切る。',
   },
 ];
 
@@ -319,6 +335,16 @@ export const weaponCandidates: WeaponDefinition[] = [
     effectDescription: 'Lvが上がるごとに氷弾数が増え、前方寄りのランダム散弾で敵を鈍らせる。',
     imagePath: '/assets/tcg/weapon-ice-crystal-sword.png',
   },
+  {
+    id: 'kurikara-flame-sword',
+    name: '倶利伽羅炎剣',
+    owner: '明王',
+    type: '倶利伽羅剣',
+    rarity: 'epic',
+    description: '明王用。炎を宿した倶利伽羅剣。',
+    effectDescription: 'Lvが上がるごとに炎弾数が増え、前方寄りのランダム散弾で敵を焼き払う。',
+    imagePath: '/assets/tcg/weapon-kurikara-flame-sword.png',
+  },
 ];
 
 export const FORGE_RESULT_LINES: Record<WeaponRarity, string> = {
@@ -394,6 +420,10 @@ export function getNanaichiWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeap
   return [getDefaultOwnedWeapon(DEFAULT_NANAICHI_WEAPON_ID), ...ownedWeapons.filter((weapon) => isNanaichiWeapon(weapon.id))];
 }
 
+export function getMyooWeaponOptions(ownedWeapons: OwnedWeapon[]): OwnedWeapon[] {
+  return [getDefaultOwnedWeapon(DEFAULT_MYOO_WEAPON_ID), ...ownedWeapons.filter((weapon) => isMyooWeapon(weapon.id))];
+}
+
 export function getEquippedSochoWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
   return getWeaponById(equippedWeapons.socho ?? DEFAULT_SOCHO_WEAPON_ID) ?? weaponCandidates[0];
 }
@@ -430,6 +460,10 @@ export function getEquippedNanaichiWeapon(equippedWeapons: EquippedWeaponsByChar
   return getWeaponById(equippedWeapons.nanaichi ?? DEFAULT_NANAICHI_WEAPON_ID) ?? defaultWeaponDefinitions[7];
 }
 
+export function getEquippedMyooWeapon(equippedWeapons: EquippedWeaponsByCharacter): WeaponDefinition {
+  return getWeaponById(equippedWeapons.myoo ?? DEFAULT_MYOO_WEAPON_ID) ?? defaultWeaponDefinitions[8];
+}
+
 export function getEquippedWeaponForCharacter(
   equippedWeapons: EquippedWeaponsByCharacter,
   characterId: CharacterId,
@@ -442,6 +476,7 @@ export function getEquippedWeaponForCharacter(
   if (characterId === 'yabuko-fm') return getEquippedYabukoFmWeapon(equippedWeapons);
   if (characterId === 'rockel') return getEquippedRockelWeapon(equippedWeapons);
   if (characterId === 'nanaichi') return getEquippedNanaichiWeapon(equippedWeapons);
+  if (characterId === 'myoo') return getEquippedMyooWeapon(equippedWeapons);
   return getEquippedSochoWeapon(equippedWeapons);
 }
 
@@ -456,7 +491,8 @@ export function getOwnedWeaponLevel(ownedWeapons: OwnedWeapon[], weaponId: strin
     weaponId === DEFAULT_DELI_WEAPON_ID ||
     weaponId === DEFAULT_YABUKO_FM_WEAPON_ID ||
     weaponId === DEFAULT_ROCKEL_WEAPON_ID ||
-    weaponId === DEFAULT_NANAICHI_WEAPON_ID
+    weaponId === DEFAULT_NANAICHI_WEAPON_ID ||
+    weaponId === DEFAULT_MYOO_WEAPON_ID
   ) {
     return ownedWeapons.find((weapon) => weapon.id === weaponId)?.level ?? 1;
   }
@@ -477,6 +513,7 @@ export function getWeaponOptionsForCharacter(characterId: CharacterId, ownedWeap
   if (characterId === 'yabuko-fm') return getYabukoFmWeaponOptions(ownedWeapons);
   if (characterId === 'rockel') return getRockelWeaponOptions(ownedWeapons);
   if (characterId === 'nanaichi') return getNanaichiWeaponOptions(ownedWeapons);
+  if (characterId === 'myoo') return getMyooWeaponOptions(ownedWeapons);
   return getSochoWeaponOptions(ownedWeapons);
 }
 
@@ -605,6 +642,16 @@ export function getNanaichiWeaponTuning(weaponId: string | undefined, level = 1)
   };
 }
 
+export function getMyooWeaponTuning(weaponId: string | undefined, level = 1): MyooWeaponTuning {
+  const normalizedLevel = normalizeWeaponLevel(level);
+  const hasKurikaraFlameSword = weaponId === 'kurikara-flame-sword';
+
+  return {
+    flameSwordCooldown: MYOO_FLAME_SWORD_COOLDOWN,
+    flameBulletCount: hasKurikaraFlameSword ? normalizedLevel * 2 : 1,
+  };
+}
+
 export function getSochoWeaponEffect(weaponId: string | undefined): SochoWeaponEffect {
   if (weaponId === 'star-vein-tachi') return 'starSlashWave';
   return 'standardSlash';
@@ -648,6 +695,10 @@ export function isRockelWeapon(weaponId: string): boolean {
 
 export function isNanaichiWeapon(weaponId: string): boolean {
   return weaponId === DEFAULT_NANAICHI_WEAPON_ID || weaponId === 'ice-crystal-sword';
+}
+
+export function isMyooWeapon(weaponId: string): boolean {
+  return weaponId === DEFAULT_MYOO_WEAPON_ID || weaponId === 'kurikara-flame-sword';
 }
 
 function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {

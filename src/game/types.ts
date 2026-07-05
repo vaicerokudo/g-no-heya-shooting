@@ -132,7 +132,7 @@ export type PlayerArrow = {
   damage: number;
   bossDamage: number;
   life: number;
-  kind?: 'arrow' | 'gun' | 'spear' | 'turret' | 'ice';
+  kind?: 'arrow' | 'gun' | 'spear' | 'turret' | 'ice' | 'flame';
   piercing?: boolean;
   hitEnemyIds?: number[];
   hasHitBoss?: boolean;

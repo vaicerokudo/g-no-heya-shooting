@@ -5,6 +5,7 @@ import {
   FIELD_WIDTH,
   PLAYER_LIMITS,
   MOUNTAIN_BREAKER_VISIBLE_TIME,
+  MYOO_FLAME_SWORD_VISIBLE_TIME,
   NANAICHI_ICE_SWORD_VISIBLE_TIME,
   ROKUDO_SUPPORT_POISON_RADIUS,
   ROKUDO_SHADOW_SLASH_BOSS_RADIUS,
@@ -117,6 +118,7 @@ const trainingCharacters: Array<{
   { id: 'yabuko-fm', name: 'FM\u3084\u3076\u3053', summary: '\u91cd\u6483\u30fb\u7bc4\u56f2\u5236\u5727\u578b' },
   { id: 'rockel', name: 'ROCKEL', summary: '\u4e21\u5203\u65a7\u30fb\u5e83\u7bc4\u56f2\u3076\u3093\u56de\u3057\u578b' },
   { id: 'nanaichi', name: '7171', summary: '\u6c37\u5263\u30fb\u6563\u5f3e\u30b9\u30ed\u30a6\u578b' },
+  { id: 'myoo', name: '\u660e\u738b', summary: '\u708e\u5f3e\u3070\u3089\u307e\u304d\u30fb\u706b\u529b\u5236\u5727\u578b' },
 ];
 
 const astoriaFacilities: Array<{
@@ -296,7 +298,8 @@ function App() {
     mainCharacter.id === 'deli' ||
     mainCharacter.id === 'yabuko-fm' ||
     mainCharacter.id === 'rockel' ||
-    mainCharacter.id === 'nanaichi'
+    mainCharacter.id === 'nanaichi' ||
+    mainCharacter.id === 'myoo'
       ? mainCharacter.id
       : 'socho';
   const equippedMainWeapon = useMemo(
@@ -1514,6 +1517,23 @@ function App() {
                 <span className="nanaichi-ice-slash-spark spark-two" />
               </div>
             )}
+            {mainCharacter.id === 'myoo' && game.player.slashTimer > 0 && (
+              <div
+                className="myoo-flame-slash"
+                style={{
+                  left: game.player.x - 62,
+                  top: game.player.y - 96,
+                  width: 124,
+                  height: 88,
+                  opacity: Math.min(1, game.player.slashTimer / MYOO_FLAME_SWORD_VISIBLE_TIME),
+                }}
+              >
+                <span className="myoo-flame-slash-arc" />
+                <span className="myoo-flame-slash-edge" />
+                <span className="myoo-flame-slash-ember ember-one" />
+                <span className="myoo-flame-slash-ember ember-two" />
+              </div>
+            )}
             {mainCharacter.id === 'ushimaru' && game.player.slashTimer > 0 && (
               <div
                 className="spear-thrust-set"
@@ -1707,12 +1727,12 @@ function App() {
                 key={arrow.id}
                 className={`player-arrow ${arrow.kind === 'gun' ? 'player-gunshot' : ''} ${arrow.kind === 'spear' ? 'player-spear' : ''} ${
                   arrow.kind === 'turret' ? 'turret-shot' : ''
-                } ${arrow.kind === 'ice' ? 'player-ice-shard' : ''}`}
+                } ${arrow.kind === 'ice' ? 'player-ice-shard' : ''} ${arrow.kind === 'flame' ? 'player-flame-bullet' : ''}`}
                 style={place(
                   arrow.x,
                   arrow.y,
                   arrow.radius * 2.2,
-                  arrow.kind === 'gun' ? 18 : arrow.kind === 'spear' ? 42 : arrow.kind === 'ice' ? 20 : 34,
+                  arrow.kind === 'gun' ? 18 : arrow.kind === 'spear' ? 42 : arrow.kind === 'ice' || arrow.kind === 'flame' ? 20 : 34,
                 )}
               />
             ))}

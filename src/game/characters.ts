@@ -1,6 +1,6 @@
-export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi';
+export type MainCharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' | 'deli' | 'yabuko-fm' | 'rockel' | 'nanaichi' | 'myoo';
 export type MainCharacterStatus = 'available' | 'locked';
-export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker' | 'iceSword';
+export type MainCharacterAttackType = 'slash' | 'bow' | 'shadowSlash' | 'gun' | 'spearThrust' | 'turretEngineer' | 'hammerBreaker' | 'axeBerserker' | 'iceSword' | 'flameSword';
 
 export type MainCharacterDefinition = {
   id: MainCharacterId;
@@ -124,6 +124,18 @@ export const mainCharacters: Record<MainCharacterId, MainCharacterDefinition> = 
     attackLabel: '氷剣散弾',
     image: '/assets/tcg/nanaichi-player.png',
   },
+  myoo: {
+    id: 'myoo',
+    name: '明王',
+    role: '炎弾ばらまき・火力制圧型',
+    description: '倶利伽羅剣から炎弾をばらまき、前方の敵を火力で押し切る。',
+    status: 'available',
+    statusLabel: '使用可能',
+    weaponType: '倶利伽羅剣',
+    attackType: 'flameSword',
+    attackLabel: '炎剣散弾',
+    image: '/assets/tcg/myoo-player.png',
+  },
 };
 
 export const DEFAULT_MAIN_CHARACTER_ID: MainCharacterId = 'socho';
@@ -143,7 +155,8 @@ export function isMainCharacterId(value: unknown): value is MainCharacterId {
     value === 'deli' ||
     value === 'yabuko-fm' ||
     value === 'rockel' ||
-    value === 'nanaichi'
+    value === 'nanaichi' ||
+    value === 'myoo'
   );
 }
 

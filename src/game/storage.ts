@@ -76,6 +76,7 @@ export function loadEquippedWeapons(): EquippedWeaponsByCharacter {
       ...(typeof equipped['yabuko-fm'] === 'string' ? { 'yabuko-fm': equipped['yabuko-fm'] } : {}),
       ...(typeof equipped.rockel === 'string' ? { rockel: equipped.rockel } : {}),
       ...(typeof equipped.nanaichi === 'string' ? { nanaichi: equipped.nanaichi } : {}),
+      ...(typeof equipped.myoo === 'string' ? { myoo: equipped.myoo } : {}),
     };
   } catch {
     return {};
