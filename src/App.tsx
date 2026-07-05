@@ -46,6 +46,7 @@ import {
   loadFreeSupportSummonUsed,
   loadOwnedSupports,
   loadSelectedSkinsByCharacter,
+  loadStarDustFragments,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
@@ -56,6 +57,7 @@ import {
   saveOwnedSupports,
   saveOwnedWeapons,
   saveSelectedSkinsByCharacter,
+  saveStarDustFragments,
 } from './game/storage';
 import {
   addOwnedSupport,
@@ -213,6 +215,7 @@ function App() {
   const [revealingCardId, setRevealingCardId] = useState<string | null>(null);
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
+  const [starDustFragments, setStarDustFragments] = useState(() => loadStarDustFragments());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
@@ -227,6 +230,7 @@ function App() {
   const [isForging, setIsForging] = useState(false);
   const [summonContext, setSummonContext] = useState<SummonContext>('shopPaid');
   const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
+  const [shopSummonStarDustGained, setShopSummonStarDustGained] = useState(false);
   const [guildReceptionOpen, setGuildReceptionOpen] = useState(false);
   const supportId = useRef<SupportId | null>(null);
   const supportLevel = useRef(1);
@@ -615,6 +619,7 @@ function App() {
       saveOwnedCoins(nextCoins);
     }
     setShopSummonResult(null);
+    setShopSummonStarDustGained(false);
     setSummonContext(isFreeSummon ? 'shopFree' : 'shopPaid');
     setSummonPhase('gate');
     window.setTimeout(() => {
@@ -628,6 +633,7 @@ function App() {
 
     setRevealingCardId(support.id);
     setSummonPhase('revealing');
+    const isMaxedDuplicate = getOwnedSupportLevel(ownedSupports, support.id) >= 5;
     window.setTimeout(() => {
       setSelectedSupport(support);
       saveActiveSupportId(support.id);
@@ -636,6 +642,12 @@ function App() {
         saveOwnedSupports(nextSupports);
         return nextSupports;
       });
+      if (isMaxedDuplicate) {
+        const nextStarDustFragments = starDustFragments + 1;
+        setStarDustFragments(nextStarDustFragments);
+        saveStarDustFragments(nextStarDustFragments);
+      }
+      setShopSummonStarDustGained(isMaxedDuplicate);
       if (summonContext === 'shopFree') {
         setFreeSupportSummonUsed(true);
         saveFreeSupportSummonUsed(true);
@@ -1380,6 +1392,10 @@ function App() {
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
+          <div className="owned-coins-panel compact star-dust-panel">
+            <span>星屑のかけら</span>
+            <strong>{starDustFragments}</strong>
+          </div>
           <div className="shop-dialogue-stage">
             <img className="shopkeeper-portrait" src="/assets/tcg/shopkeeper.png" alt="Shopkeeper" />
             <article className="shop-dialogue-panel">
@@ -1409,6 +1425,10 @@ function App() {
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
+          <div className="owned-coins-panel compact star-dust-panel">
+            <span>星屑のかけら</span>
+            <strong>{starDustFragments}</strong>
+          </div>
           <div className="shop-cost-card">
             <span>{freeSupportSummonUsed ? '\u53ec\u559a\u8cbb\u7528' : '\u521d\u56de\u9650\u5b9a'}</span>
             <strong>{freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : '\u7121\u6599'}</strong>
@@ -1428,6 +1448,7 @@ function App() {
                   <strong>{shopSummonResult.role}</strong>
                   <p>{shopSummonResult.effectDescription}</p>
                   <p className="summon-success">Lv {getOwnedSupportLevel(ownedSupports, shopSummonResult.id)}</p>
+                  {shopSummonStarDustGained && <p className="summon-success star-dust-reward">星屑のかけら +1</p>}
                   <p className="summon-success">{'\u5e97\u4e3b'}「{SHOPKEEPER_SUPPORT_LINES[shopSummonResult.id]}」</p>
                 </div>
               </>

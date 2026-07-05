@@ -12,6 +12,7 @@ const OWNED_COINS_KEY = 'g-no-heya-shooting:owned-coins';
 const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
+const STAR_DUST_FRAGMENTS_KEY = 'g-no-heya-shooting:star-dust-fragments';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
 const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
 const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-id';
@@ -32,6 +33,19 @@ export function saveOwnedCoins(coins: number) {
 
 export function resetOwnedCoins() {
   saveOwnedCoins(0);
+}
+
+export function loadStarDustFragments(): number {
+  if (typeof window === 'undefined') return 0;
+
+  const rawValue = window.localStorage.getItem(STAR_DUST_FRAGMENTS_KEY);
+  const parsed = rawValue ? Number.parseInt(rawValue, 10) : 0;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export function saveStarDustFragments(fragments: number) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(STAR_DUST_FRAGMENTS_KEY, String(Math.max(0, Math.floor(fragments))));
 }
 
 export function loadOwnedWeapons(): OwnedWeapon[] {

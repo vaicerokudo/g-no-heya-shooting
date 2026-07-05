@@ -1364,6 +1364,19 @@ button {
   width: min(560px, 100%);
 }
 
+.star-dust-panel {
+  border-color: rgba(190, 160, 255, 0.34);
+  background:
+    radial-gradient(circle at 88% 18%, rgba(190, 160, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(35, 29, 45, 0.84), rgba(12, 18, 28, 0.86));
+}
+
+.star-dust-panel strong,
+.star-dust-reward {
+  color: #d9c8ff !important;
+  text-shadow: 0 0 12px rgba(190, 160, 255, 0.38);
+}
+
 .support-inventory {
   width: min(560px, 100%);
   display: grid;
