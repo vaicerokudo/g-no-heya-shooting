@@ -117,26 +117,27 @@ export function updateSupportEffects(
   auraSupportLevel = 1,
 ): GameState {
   let next = updateSupportBullets(state, dt);
-  next = applySupportAbilityEffects(next, dt, supportId, supportLevel);
-  if (auraSupportId && auraSupportId !== supportId) {
-    next = applySupportAbilityEffects(next, dt, auraSupportId, auraSupportLevel);
-  }
+  const supportSources = createSupportAbilitySources(supportId, supportLevel, auraSupportId, auraSupportLevel);
+  const hibikiLevel = getSupportAbilityLevel(supportSources, 1, 'hibiki');
+  const myououLevel = getSupportAbilityLevel(supportSources, 1, 'myouou');
+  const ushimaruLevel = getSupportAbilityLevel(supportSources, 1, 'ushimaru');
+  const deliLevel = getSupportAbilityLevel(supportSources, 1, 'deli');
+  const rockelLevel = getSupportAbilityLevel(supportSources, 1, 'rockel');
+  const rokudoLevel = getSupportAbilityLevel(supportSources, 1, 'rokudo');
+  const tsutsuLevel = getSupportAbilityLevel(supportSources, 1, 'tsutsu');
+  const sochoLevel = getSupportAbilityLevel(supportSources, 1, 'socho');
+  const playerLevel = getSupportAbilityLevel(supportSources, 1, 'player');
 
-  return next;
-}
+  next = updateHibikiShield(next, dt, hibikiLevel > 0 ? 'hibiki' : null, Math.max(1, hibikiLevel));
+  next = updateMyououGaruda(next, dt, myououLevel > 0 ? 'myouou' : null, Math.max(1, myououLevel));
+  next = updateUshimaruCounter(next, dt, ushimaruLevel > 0 ? 'ushimaru' : null, Math.max(1, ushimaruLevel));
+  next = updateDeliSupportTurrets(next, dt, deliLevel > 0 ? 'deli' : null, Math.max(1, deliLevel));
+  next = updateRockelMountainBreak(next, dt, rockelLevel > 0 ? 'rockel' : null, Math.max(1, rockelLevel));
+  next = updateRokudoPoisonSmoke(next, dt, rokudoLevel > 0 ? 'rokudo' : null, Math.max(1, rokudoLevel));
+  next = updateTsutsuArrowSupport(next, dt, tsutsuLevel > 0 ? 'tsutsu' : null, Math.max(1, tsutsuLevel));
+  next = updateSochoSlashSupport(next, dt, sochoLevel > 0 ? 'socho' : null, Math.max(1, sochoLevel));
 
-function applySupportAbilityEffects(state: GameState, dt: number, supportId: SupportId | null, supportLevel = 1): GameState {
-  let next = state;
-  next = updateHibikiShield(next, dt, supportId, supportLevel);
-  next = updateMyououGaruda(next, dt, supportId, supportLevel);
-  next = updateUshimaruCounter(next, dt, supportId, supportLevel);
-  next = updateDeliSupportTurrets(next, dt, supportId, supportLevel);
-  next = updateRockelMountainBreak(next, dt, supportId, supportLevel);
-  next = updateRokudoPoisonSmoke(next, dt, supportId, supportLevel);
-  next = updateTsutsuArrowSupport(next, dt, supportId, supportLevel);
-  next = updateSochoSlashSupport(next, dt, supportId, supportLevel);
-
-  if (supportId !== 'player') {
+  if (playerLevel <= 0) {
     return next;
   }
 
@@ -151,10 +152,22 @@ function applySupportAbilityEffects(state: GameState, dt: number, supportId: Sup
     };
   }
 
-  return spawnPlayerGunfire(next, cooldown, supportLevel);
+  return spawnPlayerGunfire(next, cooldown, playerLevel);
 }
 
 type SupportAbilityTarget = SupportId | null | SupportAbilitySource[];
+
+function createSupportAbilitySources(
+  supportId: SupportId | null,
+  supportLevel: number,
+  auraSupportId: SupportId | null,
+  auraSupportLevel: number,
+): SupportAbilitySource[] {
+  const sources: SupportAbilitySource[] = [];
+  if (supportId) sources.push({ id: supportId, level: supportLevel });
+  if (auraSupportId && auraSupportId !== supportId) sources.push({ id: auraSupportId, level: auraSupportLevel });
+  return sources;
+}
 
 function getSupportAbilityLevel(supportId: SupportAbilityTarget, supportLevel: number, targetId: SupportId): number {
   if (Array.isArray(supportId)) {
@@ -1427,3 +1440,4 @@ function getLevelBonus(level: number): number {
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
+
