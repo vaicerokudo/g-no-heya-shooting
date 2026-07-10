@@ -236,6 +236,7 @@ export function updateGame(
   weaponLevel = 1,
   mainCharacterId: MainCharacterId = 'socho',
   isGWeapon = false,
+  supportDamageUpgrades: SupportId[] = [],
 ): GameState {
   if (state.status !== 'playing') return state;
 
@@ -256,7 +257,7 @@ export function updateGame(
   next = updateEnemyAttacks(next, dt);
   next = updateBoss(next, dt);
   next = updateBullets(next, dt);
-  next = updateSupportEffects(next, dt, supportId, supportLevel, auraSupportId, auraSupportLevel);
+  next = updateSupportEffects(next, dt, supportId, supportLevel, auraSupportId, auraSupportLevel, supportDamageUpgrades);
   if (mainCharacterId === 'tsutsu') {
     next = runAutoBow(next, weaponId, weaponLevel);
   } else if (mainCharacterId === 'rokudo') {

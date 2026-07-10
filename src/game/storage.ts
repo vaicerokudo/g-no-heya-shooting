@@ -18,6 +18,7 @@ const STAR_DUST_FRAGMENTS_KEY = 'g-no-heya-shooting:star-dust-fragments';
 const STAR_VEIN_STEEL_KEY = 'g-no-heya-shooting:star-vein-steel';
 const G_WEAPONS_KEY = 'g-no-heya-shooting:g-weapons';
 const G_WEAPON_EFFECTS_KEY = 'g-no-heya-shooting:g-weapon-effects';
+const SUPPORT_DAMAGE_UPGRADES_KEY = 'g-no-heya-shooting:support-damage-upgrades';
 const OWNED_AURAS_KEY = 'g-no-heya-shooting:owned-auras';
 const SELECTED_AURA_KEY = 'g-no-heya-shooting:selected-aura';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
@@ -114,6 +115,23 @@ export function saveGWeaponEffects(weaponIds: string[]) {
 export function resetGWeaponEffects() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(G_WEAPON_EFFECTS_KEY);
+}
+
+export function loadSupportDamageUpgrades(): SupportId[] {
+  if (typeof window === 'undefined') return [];
+  const rawValue = window.localStorage.getItem(SUPPORT_DAMAGE_UPGRADES_KEY);
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed) ? Array.from(new Set(parsed.filter(isSupportId))) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSupportDamageUpgrades(supportIds: SupportId[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(SUPPORT_DAMAGE_UPGRADES_KEY, JSON.stringify(Array.from(new Set(supportIds))));
 }
 
 export function loadOwnedAuras(): AuraId[] {

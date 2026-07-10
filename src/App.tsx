@@ -36,6 +36,7 @@ import type { AuraId } from './game/auras';
 import { getMainCharacter, isMainCharacterAvailable, mainCharacterList, resolveActiveMainCharacterId } from './game/characters';
 import type { MainCharacterDefinition, MainCharacterId } from './game/characters';
 import { createInitialGameState, startGame, updateGame } from './game/logic';
+import { preloadStageAssets } from './game/preload';
 import { calculateCoinReward } from './game/rewards';
 import { DEFAULT_STAGE_ID, STAGE_AREAS, getStageById } from './game/stages';
 import type { StageId } from './game/stages';
@@ -54,6 +55,7 @@ import {
   loadSelectedSkinsByCharacter,
   loadStarDustFragments,
   loadStarVeinSteel,
+  loadSupportDamageUpgrades,
   resetOwnedCoins,
   resetGWeapons,
   resetGWeaponEffects,
@@ -72,6 +74,7 @@ import {
   saveSelectedSkinsByCharacter,
   saveStarDustFragments,
   saveStarVeinSteel,
+  saveSupportDamageUpgrades,
 } from './game/storage';
 import {
   addOwnedSupport,
@@ -132,6 +135,7 @@ const JOYSTICK_DEAD_ZONE_RATIO = 0.14;
 const JOYSTICK_MAX_DISTANCE_RATIO = 0.36;
 const JOYSTICK_MAX_SPEED_RATIO = 0.82;
 const JOYSTICK_RESPONSE_CURVE = 1.35;
+const SUPPORT_DAMAGE_UPGRADE_COST = 10;
 
 type ForgeResult = {
   weapon: WeaponDefinition;
@@ -250,6 +254,7 @@ function App() {
   const [starVeinSteel, setStarVeinSteel] = useState(() => loadStarVeinSteel());
   const [gWeaponIds, setGWeaponIds] = useState<string[]>(() => loadGWeapons());
   const [gWeaponEffectIds, setGWeaponEffectIds] = useState<string[]>(() => loadGWeaponEffects());
+  const [supportDamageUpgradeIds, setSupportDamageUpgradeIds] = useState<SupportId[]>(() => loadSupportDamageUpgrades());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [ownedAuras, setOwnedAuras] = useState<AuraId[]>(() => loadOwnedAuras());
@@ -277,6 +282,7 @@ function App() {
   const equippedWeaponId = useRef('iron-tachi');
   const equippedWeaponLevel = useRef(1);
   const equippedWeaponIsG = useRef(false);
+  const supportDamageUpgradeIdsRef = useRef<SupportId[]>([]);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const joystickVector = useRef<Vector | null>(null);
@@ -357,6 +363,7 @@ function App() {
           equippedWeaponLevel.current,
           mainCharacterId.current,
           equippedWeaponIsG.current,
+          supportDamageUpgradeIdsRef.current,
         ),
       );
       frameId = requestAnimationFrame(tick);
@@ -499,6 +506,10 @@ function App() {
   }, [selectedSupportLevel]);
 
   useEffect(() => {
+    supportDamageUpgradeIdsRef.current = supportDamageUpgradeIds;
+  }, [supportDamageUpgradeIds]);
+
+  useEffect(() => {
     mainCharacterId.current = runtimeMainCharacterId;
   }, [runtimeMainCharacterId]);
 
@@ -510,6 +521,7 @@ function App() {
     resetJoystick();
     rewardedResultKey.current = null;
     lastFrame.current = null;
+    preloadStageAssets(selectedStageId);
     setGame(startGame(selectedStageId));
   };
 
@@ -527,6 +539,7 @@ function App() {
     resetJoystick();
     rewardedResultKey.current = null;
     lastFrame.current = null;
+    preloadStageAssets(DEFAULT_STAGE_ID);
     setGame(startGame(DEFAULT_STAGE_ID, { isTraining: true }));
   };
 
@@ -911,6 +924,17 @@ function App() {
     setStarVeinSteel(nextStarVeinSteel);
     saveStarVeinSteel(nextStarVeinSteel);
     setWeaponExcessConvertMessage(`${weapon.name} の武器演出を強化しました`);
+  };
+
+  const upgradeSupportDamage = (supportIdToUpgrade: SupportId) => {
+    if (supportDamageUpgradeIds.includes(supportIdToUpgrade) || starVeinSteel < SUPPORT_DAMAGE_UPGRADE_COST) return;
+    const nextUpgrades = [...supportDamageUpgradeIds, supportIdToUpgrade];
+    setSupportDamageUpgradeIds(nextUpgrades);
+    saveSupportDamageUpgrades(nextUpgrades);
+    const nextSteel = starVeinSteel - SUPPORT_DAMAGE_UPGRADE_COST;
+    setStarVeinSteel(nextSteel);
+    saveStarVeinSteel(nextSteel);
+    setWeaponExcessConvertMessage(`${getSupportById(supportIdToUpgrade).name} の援護火力を強化しました`);
   };
 
   const equipMainWeapon = (weaponId: string) => {
@@ -1556,6 +1580,25 @@ function App() {
             <button className="secondary-button" onClick={goToForgeWeapons}>{'\u6240\u6301\u6b66\u5668\u3092\u898b\u308b'}</button>
             <button className="secondary-button" onClick={goToAstoriaMap}>MAPへ戻る</button>
           </div>
+          <section className="support-upgrade-panel">
+            <div>
+              <h2>援護火力強化</h2>
+              <p>星脈鋼 {SUPPORT_DAMAGE_UPGRADE_COST} 個で、対応サポートのダメージ系効果を +1。</p>
+            </div>
+            <div className="support-upgrade-list">
+              {supportCandidates.filter((support) => !['7171', 'yabuko', 'hibiki'].includes(support.id)).map((support) => {
+                const isUpgraded = supportDamageUpgradeIds.includes(support.id);
+                const canUpgrade = !isUpgraded && starVeinSteel >= SUPPORT_DAMAGE_UPGRADE_COST;
+                return (
+                  <article className={`support-upgrade-card ${isUpgraded ? 'is-upgraded' : ''}`} key={support.id}>
+                    <img src={support.image} alt={support.name} />
+                    <div><strong>{support.name}</strong><span>{isUpgraded ? '火力 +1 強化済み' : 'ダメージ系能力 +1'}</span></div>
+                    {!isUpgraded && <button className="secondary-button compact-action" disabled={!canUpgrade} onClick={() => upgradeSupportDamage(support.id)}>強化 {SUPPORT_DAMAGE_UPGRADE_COST}</button>}
+                  </article>
+                );
+              })}
+            </div>
+          </section>
         </section>
       )}
 

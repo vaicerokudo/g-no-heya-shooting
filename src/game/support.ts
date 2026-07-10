@@ -115,6 +115,7 @@ export function updateSupportEffects(
   supportLevel = 1,
   auraSupportId: SupportId | null = null,
   auraSupportLevel = 1,
+  supportDamageUpgrades: SupportId[] = [],
 ): GameState {
   let next = updateSupportBullets(state, dt);
   const supportSources = createSupportAbilitySources(supportId, supportLevel, auraSupportId, auraSupportLevel);
@@ -129,13 +130,13 @@ export function updateSupportEffects(
   const playerLevel = getSupportAbilityLevel(supportSources, 1, 'player');
 
   next = updateHibikiShield(next, dt, hibikiLevel > 0 ? 'hibiki' : null, Math.max(1, hibikiLevel));
-  next = updateMyououGaruda(next, dt, myououLevel > 0 ? 'myouou' : null, Math.max(1, myououLevel));
-  next = updateUshimaruCounter(next, dt, ushimaruLevel > 0 ? 'ushimaru' : null, Math.max(1, ushimaruLevel));
-  next = updateDeliSupportTurrets(next, dt, deliLevel > 0 ? 'deli' : null, Math.max(1, deliLevel));
-  next = updateRockelMountainBreak(next, dt, rockelLevel > 0 ? 'rockel' : null, Math.max(1, rockelLevel));
-  next = updateRokudoPoisonSmoke(next, dt, rokudoLevel > 0 ? 'rokudo' : null, Math.max(1, rokudoLevel));
-  next = updateTsutsuArrowSupport(next, dt, tsutsuLevel > 0 ? 'tsutsu' : null, Math.max(1, tsutsuLevel));
-  next = updateSochoSlashSupport(next, dt, sochoLevel > 0 ? 'socho' : null, Math.max(1, sochoLevel));
+  next = updateMyououGaruda(next, dt, myououLevel > 0 ? 'myouou' : null, Math.max(1, myououLevel), getSupportDamageBonus(supportDamageUpgrades, 'myouou'));
+  next = updateUshimaruCounter(next, dt, ushimaruLevel > 0 ? 'ushimaru' : null, Math.max(1, ushimaruLevel), getSupportDamageBonus(supportDamageUpgrades, 'ushimaru'));
+  next = updateDeliSupportTurrets(next, dt, deliLevel > 0 ? 'deli' : null, Math.max(1, deliLevel), getSupportDamageBonus(supportDamageUpgrades, 'deli'));
+  next = updateRockelMountainBreak(next, dt, rockelLevel > 0 ? 'rockel' : null, Math.max(1, rockelLevel), getSupportDamageBonus(supportDamageUpgrades, 'rockel'));
+  next = updateRokudoPoisonSmoke(next, dt, rokudoLevel > 0 ? 'rokudo' : null, Math.max(1, rokudoLevel), getSupportDamageBonus(supportDamageUpgrades, 'rokudo'));
+  next = updateTsutsuArrowSupport(next, dt, tsutsuLevel > 0 ? 'tsutsu' : null, Math.max(1, tsutsuLevel), getSupportDamageBonus(supportDamageUpgrades, 'tsutsu'));
+  next = updateSochoSlashSupport(next, dt, sochoLevel > 0 ? 'socho' : null, Math.max(1, sochoLevel), getSupportDamageBonus(supportDamageUpgrades, 'socho'));
 
   if (playerLevel <= 0) {
     return next;
@@ -152,7 +153,11 @@ export function updateSupportEffects(
     };
   }
 
-  return spawnPlayerGunfire(next, cooldown, playerLevel);
+  return spawnPlayerGunfire(next, cooldown, playerLevel, getSupportDamageBonus(supportDamageUpgrades, 'player'));
+}
+
+function getSupportDamageBonus(upgradedSupportIds: SupportId[], supportId: SupportId): number {
+  return upgradedSupportIds.includes(supportId) ? 1 : 0;
 }
 
 type SupportAbilityTarget = SupportId | null | SupportAbilitySource[];
@@ -338,7 +343,7 @@ export function getMyououGarudaView(state: GameState) {
   };
 }
 
-function updateUshimaruCounter(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateUshimaruCounter(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = Math.max(0, state.supportCooldowns.ushimaruCounter - dt);
   const baseState: GameState = {
     ...state,
@@ -363,7 +368,8 @@ function updateUshimaruCounter(state: GameState, dt: number, supportId: SupportI
 
   if (targetIndex >= 0) {
     const enemy = enemies[targetIndex];
-    const hp = enemy.hp - USHIMARU_SUPPORT_COUNTER_DAMAGE;
+    const damage = USHIMARU_SUPPORT_COUNTER_DAMAGE + damageBonus;
+    const hp = enemy.hp - damage;
     effects.push({
       id: nextId++,
       kind: 'support',
@@ -387,7 +393,7 @@ function updateUshimaruCounter(state: GameState, dt: number, supportId: SupportI
   } else if (boss) {
     boss = {
       ...boss,
-      hp: boss.hp - USHIMARU_SUPPORT_COUNTER_DAMAGE,
+      hp: boss.hp - USHIMARU_SUPPORT_COUNTER_DAMAGE - damageBonus,
       hitTimer: 0.16,
     };
     effects.push({
@@ -450,7 +456,7 @@ function getUshimaruCounterCooldown(supportLevel: number): number {
   return Math.max(USHIMARU_SUPPORT_COUNTER_MIN_COOLDOWN, USHIMARU_SUPPORT_COUNTER_COOLDOWN - getLevelBonus(supportLevel) * 0.5);
 }
 
-function updateDeliSupportTurrets(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateDeliSupportTurrets(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = Math.max(0, state.supportCooldowns.deliTurret - dt);
   let nextId = state.nextId;
   const effects = [...state.effects];
@@ -508,7 +514,7 @@ function updateDeliSupportTurrets(state: GameState, dt: number, supportId: Suppo
       vx: direction.x * DELI_SUPPORT_TURRET_BULLET_SPEED,
       vy: direction.y * DELI_SUPPORT_TURRET_BULLET_SPEED,
       radius: DELI_SUPPORT_TURRET_BULLET_RADIUS,
-      damage: DELI_SUPPORT_TURRET_BULLET_DAMAGE,
+      damage: DELI_SUPPORT_TURRET_BULLET_DAMAGE + damageBonus,
       life: DELI_SUPPORT_TURRET_BULLET_LIFE,
     });
     return { ...turret, fireCooldown: tuning.fireInterval };
@@ -557,7 +563,7 @@ function findDeliSupportTurretTarget(state: GameState, turret: DeliTurret): Vect
   return target ?? { x: turret.x, y: turret.y - 112 };
 }
 
-function updateRockelMountainBreak(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateRockelMountainBreak(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = Math.max(0, state.supportCooldowns.rockelBreak - dt);
   const breakState = {
     timer: Math.max(0, state.supportRockelBreak.timer - dt),
@@ -590,13 +596,14 @@ function updateRockelMountainBreak(state: GameState, dt: number, supportId: Supp
       continue;
     }
 
-    const hp = enemy.hp - ROCKEL_SUPPORT_BREAK_DAMAGE;
+    const damage = ROCKEL_SUPPORT_BREAK_DAMAGE + damageBonus;
+    const hp = enemy.hp - damage;
     effects.push({
       id: nextId++,
       kind: 'support',
       x: enemy.x,
       y: enemy.y - 8,
-      text: `-${ROCKEL_SUPPORT_BREAK_DAMAGE}`,
+      text: `-${damage}`,
       timer: 0.34,
     });
 
@@ -614,7 +621,7 @@ function updateRockelMountainBreak(state: GameState, dt: number, supportId: Supp
   if (boss && isInRockelSupportBreak(baseState, boss.x, boss.y + boss.radius * 0.54, boss.radius * 0.58)) {
     boss = {
       ...boss,
-      hp: boss.hp - ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE,
+      hp: boss.hp - ROCKEL_SUPPORT_BREAK_BOSS_DAMAGE - damageBonus,
       hitTimer: 0.18,
     };
     effects.push({
@@ -668,7 +675,7 @@ function getRockelBreakCooldown(supportLevel: number): number {
   return Math.max(ROCKEL_SUPPORT_BREAK_MIN_COOLDOWN, ROCKEL_SUPPORT_BREAK_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
 }
 
-function updateRokudoPoisonSmoke(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateRokudoPoisonSmoke(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = Math.max(0, state.supportCooldowns.rokudoPoison - dt);
   let smokes = state.supportPoisonSmokes
     .map((smoke) => ({
@@ -744,13 +751,14 @@ function updateRokudoPoisonSmoke(state: GameState, dt: number, supportId: Suppor
       continue;
     }
 
-    const hp = slowedEnemy.hp - ROKUDO_SUPPORT_POISON_DAMAGE;
+    const damage = ROKUDO_SUPPORT_POISON_DAMAGE + damageBonus;
+    const hp = slowedEnemy.hp - damage;
     nextEffects.push({
       id: nextId++,
       kind: 'support',
       x: slowedEnemy.x,
       y: slowedEnemy.y - 8,
-      text: `-${ROKUDO_SUPPORT_POISON_DAMAGE}`,
+      text: `-${damage}`,
       timer: 0.32,
     });
 
@@ -768,7 +776,7 @@ function updateRokudoPoisonSmoke(state: GameState, dt: number, supportId: Suppor
   if (boss && shouldDamage && isInAnyPoisonSmoke(smokes, boss.x, boss.y + boss.radius * 0.36, boss.radius * 0.54)) {
     boss = {
       ...boss,
-      hp: boss.hp - ROKUDO_SUPPORT_POISON_BOSS_DAMAGE,
+      hp: boss.hp - ROKUDO_SUPPORT_POISON_BOSS_DAMAGE - damageBonus,
       hitTimer: 0.16,
       phaseTimer: boss.phaseTimer * 0.98,
       shotTimer: boss.shotTimer + 0.08,
@@ -833,7 +841,7 @@ function getRokudoPoisonDuration(supportLevel: number): number {
   return Math.min(ROKUDO_SUPPORT_POISON_MAX_DURATION, ROKUDO_SUPPORT_POISON_DURATION + getLevelBonus(supportLevel) * 0.375);
 }
 
-function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const garuda: MyououGarudaState = {
     ...state.supportGaruda,
     cooldown: Math.max(0, state.supportGaruda.cooldown - dt),
@@ -853,7 +861,7 @@ function updateMyououGaruda(state: GameState, dt: number, supportId: SupportId |
   }
 
   if (isGarudaActive(next.supportGaruda)) {
-    next = damageWithGaruda(next, supportLevel);
+    next = damageWithGaruda(next, supportLevel, damageBonus);
   }
 
   return next;
@@ -885,7 +893,7 @@ function activateMyououGaruda(state: GameState): GameState {
   };
 }
 
-function damageWithGaruda(state: GameState, supportLevel: number): GameState {
+function damageWithGaruda(state: GameState, supportLevel: number, damageBonus = 0): GameState {
   let nextId = state.nextId;
   let defeatedEnemies = state.defeatedEnemies;
   let boss = state.boss;
@@ -894,8 +902,8 @@ function damageWithGaruda(state: GameState, supportLevel: number): GameState {
   const effects = [...state.effects];
   const { x, y } = getGarudaPosition(garuda);
   const enemies: GameState['enemies'] = [];
-  const garudaDamage = MYOUOU_GARUDA_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 3);
-  const garudaBossDamage = MYOUOU_GARUDA_BOSS_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4);
+  const garudaDamage = MYOUOU_GARUDA_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 3) + damageBonus;
+  const garudaBossDamage = MYOUOU_GARUDA_BOSS_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4) + damageBonus;
 
   for (const enemy of state.enemies) {
     if (garuda.hitEnemyIds.includes(enemy.id) || !isPointInGarudaPath(x, y, enemy.x, enemy.y, enemy.radius)) {
@@ -1043,7 +1051,7 @@ function activateHibikiShield(state: GameState, supportLevel: number): GameState
   };
 }
 
-function updateTsutsuArrowSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateTsutsuArrowSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = state.supportCooldowns.tsutsuArrow - dt;
   if (!isTsutsuSupport(supportId)) {
     return {
@@ -1065,10 +1073,10 @@ function updateTsutsuArrowSupport(state: GameState, dt: number, supportId: Suppo
     };
   }
 
-  return spawnTsutsuArrowVolley(state, cooldown, supportLevel);
+  return spawnTsutsuArrowVolley(state, cooldown, supportLevel, damageBonus);
 }
 
-function spawnTsutsuArrowVolley(state: GameState, cooldownRemainder: number, supportLevel: number): GameState {
+function spawnTsutsuArrowVolley(state: GameState, cooldownRemainder: number, supportLevel: number, damageBonus = 0): GameState {
   let nextId = state.nextId;
   const bullets: SupportBullet[] = TSUTSU_SUPPORT_DIRECTIONS.map((direction, index) => {
     const normalized = normalize(direction);
@@ -1080,7 +1088,7 @@ function spawnTsutsuArrowVolley(state: GameState, cooldownRemainder: number, sup
       vx: normalized.x * TSUTSU_SUPPORT_ARROW_SPEED,
       vy: normalized.y * TSUTSU_SUPPORT_ARROW_SPEED,
       radius: TSUTSU_SUPPORT_ARROW_RADIUS,
-      damage: TSUTSU_SUPPORT_ARROW_DAMAGE,
+      damage: TSUTSU_SUPPORT_ARROW_DAMAGE + damageBonus,
       life: TSUTSU_SUPPORT_ARROW_LIFE,
     };
   });
@@ -1111,7 +1119,7 @@ function getTsutsuArrowCooldown(supportLevel: number): number {
   return Math.max(TSUTSU_SUPPORT_ARROW_MIN_COOLDOWN, TSUTSU_SUPPORT_ARROW_COOLDOWN - getLevelBonus(supportLevel) * 0.3);
 }
 
-function updateSochoSlashSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateSochoSlashSupport(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   const cooldown = Math.max(0, state.supportCooldowns.sochoSlash - dt);
   const slashState = {
     timer: Math.max(0, state.supportSochoSlash.timer - dt),
@@ -1130,10 +1138,10 @@ function updateSochoSlashSupport(state: GameState, dt: number, supportId: Suppor
   }
 
   if (cooldown > 0) return baseState;
-  return activateSochoSupportSlash(baseState, supportId, supportLevel);
+  return activateSochoSupportSlash(baseState, supportId, supportLevel, damageBonus);
 }
 
-function activateSochoSupportSlash(state: GameState, supportId: SupportId | null, supportLevel: number): GameState {
+function activateSochoSupportSlash(state: GameState, supportId: SupportId | null, supportLevel: number, damageBonus = 0): GameState {
   let nextId = state.nextId;
   let defeatedEnemies = state.defeatedEnemies;
   let boss = state.boss;
@@ -1147,13 +1155,14 @@ function activateSochoSupportSlash(state: GameState, supportId: SupportId | null
       continue;
     }
 
-    const hp = enemy.hp - SOCHO_SUPPORT_SLASH_DAMAGE;
+    const damage = SOCHO_SUPPORT_SLASH_DAMAGE + damageBonus;
+    const hp = enemy.hp - damage;
     effects.push({
       id: nextId++,
       kind: 'support',
       x: enemy.x,
       y: enemy.y - 8,
-      text: `-${SOCHO_SUPPORT_SLASH_DAMAGE}`,
+      text: `-${damage}`,
       timer: 0.32,
     });
 
@@ -1171,7 +1180,7 @@ function activateSochoSupportSlash(state: GameState, supportId: SupportId | null
   if (boss && isInSochoSupportSlash(state, boss.x, boss.y + boss.radius * 0.52, boss.radius * 0.56)) {
     boss = {
       ...boss,
-      hp: boss.hp - SOCHO_SUPPORT_SLASH_BOSS_DAMAGE,
+      hp: boss.hp - SOCHO_SUPPORT_SLASH_BOSS_DAMAGE - damageBonus,
       hitTimer: 0.16,
     };
     effects.push({
@@ -1280,7 +1289,7 @@ function isPointInHibikiShield(state: GameState, x: number, y: number, radius: n
   return normalizedX * normalizedX + normalizedY * normalizedY < 1.15;
 }
 
-function spawnPlayerGunfire(state: GameState, cooldownRemainder: number, supportLevel: number): GameState {
+function spawnPlayerGunfire(state: GameState, cooldownRemainder: number, supportLevel: number, damageBonus = 0): GameState {
   let nextId = state.nextId;
   const bullets: SupportBullet[] = [];
 
@@ -1294,7 +1303,7 @@ function spawnPlayerGunfire(state: GameState, cooldownRemainder: number, support
       vx: direction.x * PLAYER_SUPPORT_BULLET_SPEED,
       vy: direction.y * PLAYER_SUPPORT_BULLET_SPEED,
       radius: PLAYER_SUPPORT_BULLET_RADIUS,
-        damage: PLAYER_SUPPORT_BULLET_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4),
+        damage: PLAYER_SUPPORT_BULLET_DAMAGE + Math.floor(getLevelBonus(supportLevel) / 4) + damageBonus,
       life: PLAYER_SUPPORT_BULLET_LIFE,
     });
   }
