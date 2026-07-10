@@ -2,19 +2,25 @@ export type StageId =
   | 'astoria-grassland-1' | 'astoria-grassland-2' | 'astoria-grassland-3'
   | 'sandstorm-wilderness-1' | 'sandstorm-wilderness-2' | 'sandstorm-wilderness-3'
   | 'delta-facility-1' | 'delta-facility-2' | 'delta-facility-3'
-  | 'black-noise-bay-1' | 'black-noise-bay-2' | 'black-noise-bay-3';
+  | 'black-noise-bay-1' | 'black-noise-bay-2' | 'black-noise-bay-3'
+  | 'isolation-zone-1' | 'isolation-zone-2' | 'isolation-zone-3' | 'isolation-zone-4' | 'isolation-zone-5';
 
 export type BossType =
   | 'boar' | 'goblin' | 'bear' | 'giant-scorpion' | 'wyvern' | 'rock-golem'
   | 'security-drone-chief' | 'rampant-experiment' | 'black-noise-roku'
-  | 'bay-guardian' | 'mist-leviathan' | 'leviathan';
+  | 'bay-guardian' | 'mist-leviathan' | 'leviathan'
+  | 'dark-rockel' | 'dark-player' | 'dark-deli' | 'dark-yabuko' | 'dark-ushimaru' | 'dark-hibiki'
+  | 'dark-nanaichi' | 'dark-rokudo' | 'dark-myoo' | 'author-rokudo';
 
 export type StageDifficulty = 'low' | 'medium' | 'high';
-export type StageAreaId = 'astoria-grassland' | 'sandstorm-wilderness' | 'delta-facility' | 'black-noise-bay';
+export type StageAreaId = 'astoria-grassland' | 'sandstorm-wilderness' | 'delta-facility' | 'black-noise-bay' | 'isolation-zone';
+
+export type RushBossDefinition = Pick<StageDefinition, 'bossName' | 'bossType' | 'bossImage' | 'bossHp' | 'bossRadius'>;
 
 export type StageDefinition = {
   id: StageId; areaId: StageAreaId; name: string; bossName: string; bossType: BossType; bossImage: string;
   difficulty: StageDifficulty; difficultyLabel: string; clearBonus: number; bossHp: number; bossRadius: number;
+  bossRush?: RushBossDefinition[];
 };
 
 export type StageAreaDefinition = { id: StageAreaId; name: string; description: string; stages: StageDefinition[] };
@@ -43,11 +49,37 @@ export const BLACK_NOISE_BAY_STAGES: StageDefinition[] = [
   { id: 'black-noise-bay-3', areaId: 'black-noise-bay', name: 'ブラックノイズ湾 3', bossName: 'リヴァイアサン', bossType: 'leviathan', bossImage: '/assets/tcg/boss-leviathan.png', difficulty: 'high', difficultyLabel: '極高', clearBonus: 125, bossHp: 126, bossRadius: 64 },
 ];
 
+export const ISOLATION_ZONE_STAGES: StageDefinition[] = [
+  { id: 'isolation-zone-1', areaId: 'isolation-zone', name: '隔離地域 1', bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/rockel-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 150, bossHp: 86, bossRadius: 42,
+    bossRush: [
+      { bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/rockel-player.png', bossHp: 86, bossRadius: 42 },
+      { bossName: '闇Player', bossType: 'dark-player', bossImage: '/assets/tcg/player-player.png', bossHp: 76, bossRadius: 40 },
+    ] },
+  { id: 'isolation-zone-2', areaId: 'isolation-zone', name: '隔離地域 2', bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/deli-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 175, bossHp: 90, bossRadius: 42,
+    bossRush: [
+      { bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/deli-player.png', bossHp: 90, bossRadius: 42 },
+      { bossName: '闇やぶこ', bossType: 'dark-yabuko', bossImage: '/assets/tcg/yabuko-fm-player.png', bossHp: 96, bossRadius: 44 },
+    ] },
+  { id: 'isolation-zone-3', areaId: 'isolation-zone', name: '隔離地域 3', bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/ushimaru-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 200, bossHp: 100, bossRadius: 42,
+    bossRush: [
+      { bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/ushimaru-player.png', bossHp: 100, bossRadius: 42 },
+      { bossName: '闇hibiki', bossType: 'dark-hibiki', bossImage: '/assets/tcg/hibiki-player.png', bossHp: 118, bossRadius: 44 },
+    ] },
+  { id: 'isolation-zone-4', areaId: 'isolation-zone', name: '隔離地域 4', bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/nanaichi-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 240, bossHp: 96, bossRadius: 42,
+    bossRush: [
+      { bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/nanaichi-player.png', bossHp: 96, bossRadius: 42 },
+      { bossName: '闇ROKUDO', bossType: 'dark-rokudo', bossImage: '/assets/tcg/rokudo-player.png', bossHp: 108, bossRadius: 42 },
+      { bossName: '闇明王', bossType: 'dark-myoo', bossImage: '/assets/tcg/myoo-player.png', bossHp: 122, bossRadius: 44 },
+    ] },
+  { id: 'isolation-zone-5', areaId: 'isolation-zone', name: '隔離地域 5', bossName: '作者ロクド', bossType: 'author-rokudo', bossImage: '/assets/tcg/rokudo-player.png', difficulty: 'high', difficultyLabel: '最終', clearBonus: 300, bossHp: 210, bossRadius: 50 },
+];
+
 export const STAGE_AREAS: StageAreaDefinition[] = [
   { id: 'astoria-grassland', name: 'アストリア草原', description: '冒険の起点になる緑の草原エリア。', stages: ASTORIA_GRASSLAND_STAGES },
   { id: 'sandstorm-wilderness', name: '砂塵の荒野', description: '草原の先に広がる砂塵と岩場の第2エリア。', stages: SANDSTORM_WILDERNESS_STAGES },
   { id: 'delta-facility', name: '研究施設デルタ', description: '機械と実験体が徘徊する危険な研究施設エリア。', stages: DELTA_FACILITY_STAGES },
   { id: 'black-noise-bay', name: 'ブラックノイズ湾', description: '黒い海とノイズに侵食された夜の湾。', stages: BLACK_NOISE_BAY_STAGES },
+  { id: 'isolation-zone', name: '隔離地域', description: '闇に侵食されたメンバーが待つ、雑魚なしのBOSSラッシュ。', stages: ISOLATION_ZONE_STAGES },
 ];
 
 export const ALL_STAGES: StageDefinition[] = STAGE_AREAS.flatMap((area) => area.stages);

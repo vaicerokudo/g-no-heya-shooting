@@ -157,6 +157,7 @@ export const createInitialGameState = (): GameState => ({
   effects: [],
   boss: null,
   bossClones: [],
+  bossRushIndex: 0,
   bossIntroTimer: 0,
   elapsed: 0,
   coinsCollected: 0,
@@ -298,6 +299,19 @@ export function updateGame(
   }
 
   if (next.boss && next.boss.hp <= 0) {
+    const stage = getStageById(next.stageId);
+    const nextRushIndex = next.bossRushIndex + 1;
+    if (stage.bossRush && nextRushIndex < stage.bossRush.length) {
+      return {
+        ...next,
+        boss: null,
+        bossClones: [],
+        bossRushIndex: nextRushIndex,
+        bossIntroTimer: 1.05,
+        bullets: [],
+        message: 'NEXT BOSS APPEARS!',
+      };
+    }
     const supportBonusCoins = get7171BossClearCoinBonus(supportSources, supportLevel);
     const stageCoins = next.coinsCollected + supportBonusCoins;
     return {
@@ -339,6 +353,7 @@ function maybeSpawnEnemy(state: GameState): GameState {
   if (state.boss || state.bossIntroTimer > 0 || state.elapsed > BOSS_APPEAR_TIME + 6 || state.spawnTimer > 0) return state;
 
   const stage = getStageById(state.stageId);
+  if (stage.areaId === 'isolation-zone') return state;
   const kind = chooseEnemyKind(state.elapsed, state.defeatedEnemies, stage.areaId);
   const enemy = createEnemy(state.nextId, kind, state.elapsed);
   const spawnRate =
@@ -358,7 +373,8 @@ function maybeSpawnEnemy(state: GameState): GameState {
 
 function maybeSpawnBoss(state: GameState): GameState {
   if (state.boss || state.bossIntroTimer > 0) return state;
-  if (state.elapsed < BOSS_APPEAR_TIME && state.defeatedEnemies < BOSS_APPEAR_KILLS) return state;
+  const stage = getStageById(state.stageId);
+  if (stage.areaId !== 'isolation-zone' && state.elapsed < BOSS_APPEAR_TIME && state.defeatedEnemies < BOSS_APPEAR_KILLS) return state;
 
   return {
     ...state,
@@ -378,24 +394,26 @@ function updateBossIntro(state: GameState, dt: number): GameState {
   }
 
   const stage = getStageById(state.stageId);
+  const rushBoss = stage.bossRush?.[state.bossRushIndex];
+  const bossDefinition = rushBoss ?? stage;
   return {
     ...state,
     enemies: [],
     bossIntroTimer: 0,
     boss: {
-      type: stage.bossType,
-      name: stage.bossName,
-      image: stage.bossImage,
+      type: bossDefinition.bossType,
+      name: bossDefinition.bossName,
+      image: bossDefinition.bossImage,
       x: FIELD_WIDTH / 2,
       y: BOSS_Y,
-      radius: stage.bossRadius,
-      hp: stage.bossHp,
-      maxHp: stage.bossHp,
+      radius: bossDefinition.bossRadius,
+      hp: bossDefinition.bossHp,
+      maxHp: bossDefinition.bossHp,
       phaseTimer: 0,
       shotTimer: 1.1,
       slamTimer: 3.2,
     },
-    message: `${stage.bossName} BOSS`,
+    message: `${bossDefinition.bossName} BOSS`,
   };
 }
 
@@ -647,6 +665,75 @@ function updateBoss(state: GameState, dt: number): GameState {
     nextId += wave.length;
     bullets = [...bullets, ...wave];
     boss = { ...boss, shotTimer: 1.16 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-rockel') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 88, 174, 8);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.22 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-player') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, -0.35, 0.35, 0.7], 108, 202, 6);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 0.86 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-deli') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.55, 0, 0.55], 74, 166, 7);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.05 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-yabuko') {
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.6, vx: direction.x * 84, vy: Math.max(150, direction.y * 184), radius: 15 }];
+    boss = { ...boss, shotTimer: 1.5 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-ushimaru') {
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: direction.x * 142, vy: Math.max(218, direction.y * 258), radius: 10 }];
+    boss = { ...boss, shotTimer: 1.45 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-hibiki') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, 0, 0.7], 68, 154, 10);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.38 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-nanaichi') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 72, 172, 6);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.12 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-rokudo') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.82, -0.4, 0.4, 0.82], 92, 186, 6);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 0.98 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-myoo') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1.15, -0.75, -0.38, 0, 0.38, 0.75, 1.15], 80, 178, 7);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.08 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'author-rokudo') {
+    const ring = createBossSpreadBullets(boss, nextId, [-1.4, -1.05, -0.7, -0.35, 0, 0.35, 0.7, 1.05, 1.4], 80, 192, 6);
+    nextId += ring.length;
+    const aimed = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, ...ring, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: aimed.x * 104, vy: Math.max(198, aimed.y * 236), radius: 14 }];
+    boss = { ...boss, shotTimer: boss.hp < boss.maxHp * 0.48 ? 0.82 : 1.08 };
   }
 
   if (boss.slamTimer <= 0 && boss.type === 'boar') {

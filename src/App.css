@@ -552,6 +552,15 @@ body.game-touch-lock .app-shell {
   border-color: rgba(132, 126, 255, 0.46);
 }
 
+.stage-card.area-isolation-zone,
+.stage-select-card.area-isolation-zone {
+  background:
+    linear-gradient(135deg, rgba(211, 55, 80, 0.18), rgba(20, 4, 39, 0.94)),
+    repeating-linear-gradient(135deg, transparent 0 18px, rgba(154, 78, 255, 0.1) 18px 20px);
+  border-color: rgba(245, 86, 132, 0.56);
+  box-shadow: 0 0 22px rgba(165, 57, 127, 0.28), inset 0 0 26px rgba(56, 8, 79, 0.45);
+}
+
 .stage-select-card.is-selected,
 .stage-select-card:hover,
 .stage-select-card:focus-visible {
@@ -2940,6 +2949,13 @@ body.game-touch-lock .field {
     #09051e;
 }
 
+.field.area-isolation-zone {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(151, 56, 200, 0.23), transparent 35%),
+    linear-gradient(180deg, rgba(104, 10, 45, 0.25), rgba(3, 1, 13, 0.82)),
+    #08020f;
+}
+
 .field::before {
   content: "";
   position: absolute;
@@ -2967,6 +2983,11 @@ body.game-touch-lock .field {
 .field.area-black-noise-bay::before {
   opacity: 0.38;
   filter: hue-rotate(215deg) saturate(1.4) drop-shadow(0 0 27px rgba(126, 109, 255, 0.7));
+}
+
+.field.area-isolation-zone::before {
+  opacity: 0.28;
+  filter: hue-rotate(278deg) saturate(1.6) drop-shadow(0 0 28px rgba(248, 63, 129, 0.8));
 }
 
 .field::after {
@@ -2997,6 +3018,13 @@ body.game-touch-lock .field {
     linear-gradient(180deg, rgba(91, 115, 255, 0.16), transparent 37%, rgba(7, 3, 26, 0.52)),
     repeating-linear-gradient(0deg, transparent 0 31px, rgba(134, 139, 255, 0.1) 32px 34px),
     linear-gradient(90deg, rgba(6, 4, 22, 0.7), transparent 20%, transparent 80%, rgba(6, 4, 22, 0.7));
+}
+
+.field.area-isolation-zone::after {
+  background:
+    repeating-linear-gradient(135deg, rgba(200, 66, 188, 0.09) 0 1px, transparent 1px 34px),
+    linear-gradient(180deg, rgba(235, 61, 117, 0.12), transparent 28%, rgba(2, 0, 8, 0.7)),
+    linear-gradient(90deg, rgba(9, 1, 17, 0.8), transparent 20%, transparent 80%, rgba(9, 1, 17, 0.8));
 }
 
 .field.is-paused .scroll-band,
@@ -3192,6 +3220,31 @@ body.game-touch-lock .field {
 
 .boss-leviathan {
   filter: saturate(0.98) hue-rotate(188deg) contrast(1.32) drop-shadow(0 0 23px rgba(139, 133, 255, 0.98));
+}
+
+.boss-dark-rockel,
+.boss-dark-player,
+.boss-dark-deli,
+.boss-dark-yabuko,
+.boss-dark-ushimaru,
+.boss-dark-hibiki,
+.boss-dark-nanaichi,
+.boss-dark-rokudo,
+.boss-dark-myoo,
+.boss-author-rokudo {
+  filter: grayscale(0.5) saturate(1.55) hue-rotate(245deg) contrast(1.35) brightness(0.72) drop-shadow(0 0 17px rgba(183, 63, 255, 0.9));
+  outline: 1px solid rgba(216, 107, 255, 0.72);
+  outline-offset: 3px;
+}
+
+.boss-dark-myoo,
+.boss-author-rokudo {
+  filter: grayscale(0.42) saturate(1.8) hue-rotate(298deg) contrast(1.45) brightness(0.76) drop-shadow(0 0 20px rgba(255, 68, 122, 0.92));
+}
+
+.boss-author-rokudo {
+  outline: 2px solid rgba(255, 223, 165, 0.95);
+  box-shadow: 0 0 0 4px rgba(158, 28, 104, 0.42), 0 0 28px rgba(255, 59, 138, 0.68);
 }
 
 .boss-black-noise-roku {

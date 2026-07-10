@@ -238,6 +238,7 @@ export type GameState = {
   effects: FloatingEffect[];
   boss: Boss | null;
   bossClones: BossClone[];
+  bossRushIndex: number;
   bossIntroTimer: number;
   elapsed: number;
   coinsCollected: number;

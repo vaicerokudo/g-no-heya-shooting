@@ -2016,7 +2016,7 @@ function App() {
           {game.bossIntroTimer > 0 && (
             <div className="boss-cutin" role="status" aria-live="polite">
               <strong>BOSS APPEARS!</strong>
-              <span>{getStageById(game.stageId).bossName}</span>
+              <span>{activeStage.bossRush?.[game.bossRushIndex]?.bossName ?? activeStage.bossName}</span>
             </div>
           )}
 
