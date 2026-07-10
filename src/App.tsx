@@ -1760,18 +1760,6 @@ function App() {
             <div className="hud-number">コイン {game.coinsCollected}</div>
             <div className="hud-number">時間 {Math.floor(game.elapsed)}s</div>
             <div className="hud-stage">{game.stageName}</div>
-            {mainCharacter.image && (
-              <div className="hud-main-portrait">
-                <img src={mainCharacter.image} alt={mainCharacter.name} />
-              </div>
-            )}
-            <div className="hud-main">メイン：{mainCharacter.name}</div>
-            <div className="hud-support">サポート：{selectedSupport?.name ?? '未召喚'}{selectedSupport ? ` Lv ${selectedSupportLevel}` : ''}</div>
-            <div className="hud-aura">オーラ：{selectedAura ? `${selectedAura.colorName} / ${getSupportById(selectedAura.supportId).name} Lv ${selectedAuraSupportLevel}` : 'なし'}</div>
-            <div className="hud-weapon">{'\u6b66\u5668'}：{mainWeaponLabel}</div>
-            <div className={`hud-no-damage ${game.hasTakenDamage ? 'is-failed' : ''}`}>
-              {game.hasTakenDamage ? 'ノーダメ失敗' : 'ノーダメ継続中'}
-            </div>
             <button className="pause-button" onClick={pauseGame} disabled={game.status === 'paused'}>
               一時停止
             </button>
@@ -2241,7 +2229,45 @@ function App() {
                 style={{ transform: `translate(${joystick.x}px, ${joystick.y}px)` }}
               />
             </div>
-            <span className="mobile-control-label">スマホ移動</span>
+            <div className="combat-loadout-strip" aria-label="現在の編成">
+              <div className="combat-loadout-icon">
+                <span>MAIN</span>
+                {mainCharacter.image && <img src={mainCharacter.image} alt={mainCharacter.name} />}
+              </div>
+              <div className={`combat-loadout-icon ${selectedSupport ? '' : 'is-empty'}`}>
+                <span>SUP</span>
+                {selectedSupport ? (
+                  <>
+                    <img src={selectedSupport.image} alt={selectedSupport.name} />
+                    <em>Lv{selectedSupportLevel}</em>
+                  </>
+                ) : (
+                  <strong>なし</strong>
+                )}
+              </div>
+              <div className={`combat-loadout-icon aura-icon ${selectedAura ? selectedAura.cssClass : 'is-empty'}`}>
+                <span>AURA</span>
+                {selectedAura ? (
+                  <>
+                    <i aria-hidden="true" />
+                    <em>Lv{selectedAuraSupportLevel}</em>
+                  </>
+                ) : (
+                  <strong>なし</strong>
+                )}
+              </div>
+              <div className={`combat-loadout-icon ${equippedMainWeapon.imagePath ? '' : 'is-empty'}`}>
+                <span>WPN</span>
+                {equippedMainWeapon.imagePath ? (
+                  <>
+                    <img src={equippedMainWeapon.imagePath} alt={equippedMainWeapon.name} />
+                    <em>Lv{equippedMainWeaponLevel}</em>
+                  </>
+                ) : (
+                  <strong>Lv{equippedMainWeaponLevel}</strong>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}
