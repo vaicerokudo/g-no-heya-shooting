@@ -206,6 +206,7 @@ export type Player = {
   axeBreakTimer: number;
   shieldShockCooldown: number;
   shieldShockTimer: number;
+  mainWeaponDamageBonus: number;
 };
 
 export type Vector = {

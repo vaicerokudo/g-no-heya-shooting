@@ -208,6 +208,7 @@ function createPlayer(): Player {
     axeBreakTimer: 0,
     shieldShockCooldown: 0,
     shieldShockTimer: 0,
+    mainWeaponDamageBonus: 0,
   };
 }
 
@@ -234,13 +235,14 @@ export function updateGame(
   weaponId: string | undefined = undefined,
   weaponLevel = 1,
   mainCharacterId: MainCharacterId = 'socho',
+  isGWeapon = false,
 ): GameState {
   if (state.status !== 'playing') return state;
 
   let next: GameState = {
     ...state,
     elapsed: state.elapsed + dt,
-    player: updatePlayer(state.player, dt, move, Boolean(state.boss)),
+    player: { ...updatePlayer(state.player, dt, move, Boolean(state.boss)), mainWeaponDamageBonus: isGWeapon ? 1 : 0 },
     spawnTimer: state.spawnTimer - dt,
   };
   const supportSources = createSupportAbilitySources(supportId, supportLevel, auraSupportId, auraSupportLevel);
@@ -796,8 +798,8 @@ function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel:
     y: state.player.y - 24,
     vy: -TSUTSU_ARROW_SPEED,
     radius: TSUTSU_ARROW_RADIUS,
-    damage: TSUTSU_ARROW_DAMAGE,
-    bossDamage: TSUTSU_ARROW_BOSS_DAMAGE,
+    damage: TSUTSU_ARROW_DAMAGE + state.player.mainWeaponDamageBonus,
+    bossDamage: TSUTSU_ARROW_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
     life: TSUTSU_ARROW_LIFE,
   };
 
@@ -838,8 +840,8 @@ function runAutoIceSword(state: GameState, weaponId: string | undefined, weaponL
       vx: direction.x * NANAICHI_ICE_SHARD_SPEED,
       vy: direction.y * NANAICHI_ICE_SHARD_SPEED,
       radius: NANAICHI_ICE_SHARD_RADIUS,
-      damage: NANAICHI_ICE_SHARD_DAMAGE,
-      bossDamage: NANAICHI_ICE_SHARD_BOSS_DAMAGE,
+      damage: NANAICHI_ICE_SHARD_DAMAGE + state.player.mainWeaponDamageBonus,
+      bossDamage: NANAICHI_ICE_SHARD_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
       life: NANAICHI_ICE_SHARD_LIFE,
       kind: 'ice',
     };
@@ -882,8 +884,8 @@ function runAutoFlameSword(state: GameState, weaponId: string | undefined, weapo
       vx: direction.x * MYOO_FLAME_BULLET_SPEED,
       vy: direction.y * MYOO_FLAME_BULLET_SPEED,
       radius: MYOO_FLAME_BULLET_RADIUS,
-      damage: MYOO_FLAME_BULLET_DAMAGE,
-      bossDamage: MYOO_FLAME_BULLET_BOSS_DAMAGE,
+      damage: MYOO_FLAME_BULLET_DAMAGE + state.player.mainWeaponDamageBonus,
+      bossDamage: MYOO_FLAME_BULLET_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
       life: MYOO_FLAME_BULLET_LIFE,
       kind: 'flame',
     };
@@ -925,8 +927,8 @@ function runAutoGunfire(state: GameState, weaponId: string | undefined, weaponLe
     vx: isLeftShot ? -PLAYER_MAIN_GUN_SPREAD_X : PLAYER_MAIN_GUN_SPREAD_X,
     vy: -PLAYER_MAIN_GUN_SPEED,
     radius: PLAYER_MAIN_GUN_RADIUS,
-    damage: PLAYER_MAIN_GUN_DAMAGE,
-    bossDamage: PLAYER_MAIN_GUN_BOSS_DAMAGE,
+    damage: PLAYER_MAIN_GUN_DAMAGE + state.player.mainWeaponDamageBonus,
+    bossDamage: PLAYER_MAIN_GUN_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
     life: PLAYER_MAIN_GUN_LIFE,
     kind: 'gun',
   };
@@ -966,8 +968,8 @@ function runAutoToolGun(state: GameState, weaponId: string | undefined, weaponLe
     vx: 0,
     vy: -DELI_TOOL_GUN_SPEED,
     radius: DELI_TOOL_GUN_RADIUS,
-    damage: DELI_TOOL_GUN_DAMAGE,
-    bossDamage: DELI_TOOL_GUN_BOSS_DAMAGE,
+    damage: DELI_TOOL_GUN_DAMAGE + state.player.mainWeaponDamageBonus,
+    bossDamage: DELI_TOOL_GUN_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
     life: DELI_TOOL_GUN_LIFE,
     kind: 'gun',
   };
@@ -1030,8 +1032,8 @@ function runAutoSpearThrust(
           vx: 0,
           vy: -weaponTuning.thrownSpearSpeed,
           radius: weaponTuning.thrownSpearRadius,
-          damage: 1,
-          bossDamage: 1,
+          damage: 1 + state.player.mainWeaponDamageBonus,
+          bossDamage: 1 + state.player.mainWeaponDamageBonus,
           life: USHIMARU_THROWN_SPEAR_LIFE,
           kind: 'spear',
           piercing: true,
@@ -1342,8 +1344,8 @@ function updateDeliTurrets(
       vx: direction.x * DELI_TURRET_BULLET_SPEED,
       vy: direction.y * DELI_TURRET_BULLET_SPEED,
       radius: DELI_TURRET_BULLET_RADIUS,
-      damage: 1,
-      bossDamage: 1,
+      damage: 1 + state.player.mainWeaponDamageBonus,
+      bossDamage: 1 + state.player.mainWeaponDamageBonus,
       life: DELI_TURRET_BULLET_LIFE,
       kind: 'turret',
     });
@@ -1510,7 +1512,7 @@ function damageEnemiesWithSlash(
       continue;
     }
 
-    const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveDamage : 0);
+    const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveDamage : 0) + player.mainWeaponDamageBonus;
     const hp = enemy.hp - damage;
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
     if (hp <= 0) {
@@ -1542,7 +1544,7 @@ function damageBossWithSlash(
   const slashHit = isInBossSlash(player, boss);
   const waveHit = hasSlashWave && isInBossStarSlashWave(player, boss, weaponTuning);
   if (!slashHit && !waveHit) return { boss, nextId };
-  const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveBossDamage : 0);
+  const damage = (slashHit ? SLASH_DAMAGE : 0) + (waveHit ? weaponTuning.starWaveBossDamage : 0) + player.mainWeaponDamageBonus;
   return {
     boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
     effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${damage}`),
@@ -1572,8 +1574,9 @@ function damageEnemiesWithShadowSlash(
       continue;
     }
 
-    const hp = enemy.hp - ROKUDO_SHADOW_SLASH_DAMAGE;
-    nextEffects.push(createShadowHitEffect(nextId++, enemy.x, enemy.y, `-${ROKUDO_SHADOW_SLASH_DAMAGE}`));
+    const damage = ROKUDO_SHADOW_SLASH_DAMAGE + player.mainWeaponDamageBonus;
+    const hp = enemy.hp - damage;
+    nextEffects.push(createShadowHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
     if (hp <= 0) {
       defeated += 1;
       const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
@@ -1595,8 +1598,8 @@ function damageEnemiesWithShadowSlash(
 function damageBossWithShadowSlash(boss: Boss | null, player: Player, nextId: number) {
   if (!boss || !isInBossShadowSlash(player, boss)) return { boss, nextId };
   return {
-    boss: { ...boss, hp: boss.hp - ROKUDO_SHADOW_SLASH_BOSS_DAMAGE, hitTimer: 0.16 },
-    effect: createShadowHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${ROKUDO_SHADOW_SLASH_BOSS_DAMAGE}`),
+    boss: { ...boss, hp: boss.hp - ROKUDO_SHADOW_SLASH_BOSS_DAMAGE - player.mainWeaponDamageBonus, hitTimer: 0.16 },
+    effect: createShadowHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${ROKUDO_SHADOW_SLASH_BOSS_DAMAGE + player.mainWeaponDamageBonus}`),
     nextId,
   };
 }
@@ -1624,8 +1627,9 @@ function damageEnemiesWithSpearThrust(
       continue;
     }
 
-    const hp = enemy.hp - USHIMARU_SPEAR_DAMAGE;
-    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${USHIMARU_SPEAR_DAMAGE}`));
+    const damage = USHIMARU_SPEAR_DAMAGE + player.mainWeaponDamageBonus;
+    const hp = enemy.hp - damage;
+    nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
     if (hp <= 0) {
       defeated += 1;
       const drops = createEnemyCoinDrops(enemy, nextId, supportId, supportLevel);
@@ -1652,8 +1656,8 @@ function damageBossWithSpearThrust(
 ) {
   if (!boss || !isInBossSpearThrust(player, boss, weaponTuning)) return { boss, nextId };
   return {
-    boss: { ...boss, hp: boss.hp - USHIMARU_SPEAR_BOSS_DAMAGE, hitTimer: 0.16 },
-    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${USHIMARU_SPEAR_BOSS_DAMAGE}`),
+    boss: { ...boss, hp: boss.hp - USHIMARU_SPEAR_BOSS_DAMAGE - player.mainWeaponDamageBonus, hitTimer: 0.16 },
+    effect: createHitEffect(nextId++, boss.x, boss.y + boss.radius * 0.2, `-${USHIMARU_SPEAR_BOSS_DAMAGE + player.mainWeaponDamageBonus}`),
     nextId,
   };
 }
@@ -1684,7 +1688,7 @@ function damageEnemiesWithHammerBreaker(
       continue;
     }
 
-    const damage = (hammerHit ? YABUKO_FM_HAMMER_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_DAMAGE : 0);
+    const damage = (hammerHit ? YABUKO_FM_HAMMER_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_DAMAGE : 0) + player.mainWeaponDamageBonus;
     const hp = enemy.hp - damage;
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
 
@@ -1717,7 +1721,7 @@ function damageBossWithHammerBreaker(
   const hammerHit = isInBossHammerBreaker(player, boss, weaponTuning);
   const starBreakHit = shouldStarBreak && isInBossStarbreakerShockwave(player, boss, weaponTuning);
   if (!hammerHit && !starBreakHit) return { boss, nextId };
-  const damage = (hammerHit ? YABUKO_FM_HAMMER_BOSS_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_BOSS_DAMAGE : 0);
+  const damage = (hammerHit ? YABUKO_FM_HAMMER_BOSS_DAMAGE : 0) + (starBreakHit ? STARBREAKER_SHOCKWAVE_BOSS_DAMAGE : 0) + player.mainWeaponDamageBonus;
 
   return {
     boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
@@ -1752,7 +1756,7 @@ function damageEnemiesWithAxeBerserker(
       continue;
     }
 
-    const damage = mountainBreakHit ? MOUNTAIN_BREAKER_DAMAGE : ROCKEL_AXE_DAMAGE;
+    const damage = (mountainBreakHit ? MOUNTAIN_BREAKER_DAMAGE : ROCKEL_AXE_DAMAGE) + player.mainWeaponDamageBonus;
     const hp = enemy.hp - damage;
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
 
@@ -1785,7 +1789,7 @@ function damageBossWithAxeBerserker(
   const axeHit = isInBossAxeBerserker(player, boss, weaponTuning);
   const mountainBreakHit = shouldMountainBreak && isInBossMountainBreaker(player, boss, weaponTuning);
   if (!axeHit && !mountainBreakHit) return { boss, nextId };
-  const damage = (axeHit ? ROCKEL_AXE_BOSS_DAMAGE : 0) + (mountainBreakHit ? MOUNTAIN_BREAKER_BOSS_DAMAGE : 0);
+  const damage = (axeHit ? ROCKEL_AXE_BOSS_DAMAGE : 0) + (mountainBreakHit ? MOUNTAIN_BREAKER_BOSS_DAMAGE : 0) + player.mainWeaponDamageBonus;
 
   return {
     boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },
@@ -1820,7 +1824,7 @@ function damageEnemiesWithShieldGuardian(
       continue;
     }
 
-    const damage = (bashHit ? HIBIKI_SHIELD_BASH_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_DAMAGE : 0);
+    const damage = (bashHit ? HIBIKI_SHIELD_BASH_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_DAMAGE : 0) + player.mainWeaponDamageBonus;
     const hp = enemy.hp - damage;
     nextEffects.push(createHitEffect(nextId++, enemy.x, enemy.y, `-${damage}`));
 
@@ -1859,7 +1863,7 @@ function damageBossWithShieldGuardian(
   const bashHit = isInBossShieldBash(player, boss, weaponTuning);
   const shockwaveHit = shouldIronwall && isInBossIronwallShockwave(player, boss, weaponTuning);
   if (!bashHit && !shockwaveHit) return { boss, nextId };
-  const damage = (bashHit ? HIBIKI_SHIELD_BASH_BOSS_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_BOSS_DAMAGE : 0);
+  const damage = (bashHit ? HIBIKI_SHIELD_BASH_BOSS_DAMAGE : 0) + (shockwaveHit ? IRONWALL_SHOCKWAVE_BOSS_DAMAGE : 0) + player.mainWeaponDamageBonus;
 
   return {
     boss: { ...boss, hp: boss.hp - damage, hitTimer: 0.18 },

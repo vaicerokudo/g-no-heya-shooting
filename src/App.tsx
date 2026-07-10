@@ -272,6 +272,7 @@ function App() {
   const mainCharacterId = useRef<MainCharacterId>('socho');
   const equippedWeaponId = useRef('iron-tachi');
   const equippedWeaponLevel = useRef(1);
+  const equippedWeaponIsG = useRef(false);
   const pressedKeys = useRef(new Set<string>());
   const dragTarget = useRef<Vector | null>(null);
   const joystickVector = useRef<Vector | null>(null);
@@ -351,6 +352,7 @@ function App() {
           equippedWeaponId.current,
           equippedWeaponLevel.current,
           mainCharacterId.current,
+          equippedWeaponIsG.current,
         ),
       );
       frameId = requestAnimationFrame(tick);
@@ -484,7 +486,8 @@ function App() {
   useEffect(() => {
     equippedWeaponId.current = equippedMainWeapon.id;
     equippedWeaponLevel.current = equippedMainWeaponLevel;
-  }, [equippedMainWeapon.id, equippedMainWeaponLevel]);
+    equippedWeaponIsG.current = gWeaponIds.includes(equippedMainWeapon.id);
+  }, [equippedMainWeapon.id, equippedMainWeaponLevel, gWeaponIds]);
 
   useEffect(() => {
     supportLevel.current = selectedSupportLevel;
@@ -513,6 +516,7 @@ function App() {
     mainCharacterId.current = trainingSelectedCharacterId;
     equippedWeaponId.current = trainingWeapon.id;
     equippedWeaponLevel.current = trainingWeaponLevel;
+    equippedWeaponIsG.current = gWeaponIds.includes(trainingWeapon.id);
     pressedKeys.current.clear();
     dragTarget.current = null;
     resetJoystick();
@@ -2287,6 +2291,7 @@ function App() {
                 }}
               >
                 {game.boss.name}
+                {game.boss.type === 'black-noise-roku' && <span className="boss-core-marker">CORE</span>}
               </div>
             )}
 
@@ -2299,7 +2304,9 @@ function App() {
                   backgroundImage: 'url(/assets/tcg/boss-black-noise-roku-clone.png)',
                 }}
                 aria-label="Black Noise Roku clone"
-              />
+              >
+                <span className="boss-clone-label">CLONE</span>
+              </div>
             ))}
 
             {game.effects.map((effect) => (
