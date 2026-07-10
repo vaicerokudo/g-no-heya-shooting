@@ -3243,9 +3243,26 @@ body.game-touch-lock .field {
   outline: 2px solid rgba(255, 223, 165, 0.95);
   outline-offset: 4px;
   box-shadow: 0 0 0 5px rgba(158, 28, 104, 0.42), 0 0 34px rgba(255, 59, 138, 0.78), 0 0 52px rgba(104, 126, 255, 0.48);
+  background-position: 9999px 9999px;
+  background-repeat: no-repeat;
 }
 
 .boss-author-rokudo::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  width: 142px;
+  height: 130px;
+  transform: translateX(-50%);
+  background-image: inherit;
+  background-position: 58% 50%;
+  background-size: 235%;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.boss-author-rokudo::after {
   content: "";
   position: absolute;
   inset: -24%;
@@ -3253,6 +3270,7 @@ body.game-touch-lock .field {
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 240, 172, 0.42) 0 12%, rgba(136, 67, 255, 0.32) 36%, rgba(255, 53, 120, 0.18) 56%, transparent 74%);
   animation: authorRokudoAura 1.8s ease-in-out infinite alternate;
+  pointer-events: none;
 }
 
 .boss-black-noise-roku {
