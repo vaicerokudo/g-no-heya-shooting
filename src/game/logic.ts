@@ -699,6 +699,13 @@ function updateBoss(state: GameState, dt: number): GameState {
     boss = { ...boss, shotTimer: 1.58 };
   }
 
+  if (boss.shotTimer <= 0 && boss.type === 'dark-tsutsu') {
+    const arrows = createBossSpreadBullets(boss, nextId, [-0.52, 0, 0.52], 108, 198, 6);
+    nextId += arrows.length;
+    bullets = [...bullets, ...arrows];
+    boss = { ...boss, shotTimer: 1.06 };
+  }
+
   if (boss.shotTimer <= 0 && boss.type === 'dark-ushimaru') {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
     bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: direction.x * 158, vy: Math.max(240, direction.y * 278), radius: 8 }, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.66, vx: direction.x * 96 - 42, vy: Math.max(194, direction.y * 230), radius: 5 }, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.66, vx: direction.x * 96 + 42, vy: Math.max(194, direction.y * 230), radius: 5 }];
@@ -710,6 +717,13 @@ function updateBoss(state: GameState, dt: number): GameState {
     nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
     boss = { ...boss, shotTimer: 1.5 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'dark-socho') {
+    const slashWaves = createBossSpreadBullets(boss, nextId, [-0.7, -0.35, 0, 0.35, 0.7], 76, 170, 8);
+    nextId += slashWaves.length;
+    bullets = [...bullets, ...slashWaves];
+    boss = { ...boss, shotTimer: 1.24 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-nanaichi') {
@@ -861,6 +875,9 @@ function getBossPosition(boss: Boss, player: Player, elapsed: number): Vector {
   if (boss.type === 'dark-yabuko') {
     return { x: centerX + Math.sin(phase * 0.68) * 64, y: upperY + 28 + Math.sin(phase * 1.25) * 32 };
   }
+  if (boss.type === 'dark-tsutsu') {
+    return { x: centerX + Math.sin(phase * 0.88) * 88, y: upperY + 6 + Math.cos(phase * 1.12) * 14 };
+  }
   if (boss.type === 'dark-ushimaru') {
     const targetX = clamp(player.x, 88, FIELD_WIDTH - 88);
     const lunge = Math.max(0, Math.sin(phase * 0.95));
@@ -868,6 +885,9 @@ function getBossPosition(boss: Boss, player: Player, elapsed: number): Vector {
   }
   if (boss.type === 'dark-hibiki') {
     return { x: centerX + Math.sin(phase * 0.42) * 32, y: upperY + Math.max(0, Math.sin(phase * 0.7)) * 22 };
+  }
+  if (boss.type === 'dark-socho') {
+    return { x: centerX + Math.sin(phase * 0.58) * 52, y: upperY + 14 + Math.sin(phase * 1.16) * 16 };
   }
   if (boss.type === 'dark-nanaichi') {
     return { x: centerX + Math.sin(phase * 0.72) * 76, y: upperY + 18 + Math.cos(phase * 0.72) * 28 };
