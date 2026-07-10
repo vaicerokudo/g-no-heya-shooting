@@ -129,7 +129,13 @@ export function updateSupportEffects(
   const sochoLevel = getSupportAbilityLevel(supportSources, 1, 'socho');
   const playerLevel = getSupportAbilityLevel(supportSources, 1, 'player');
 
-  next = updateHibikiShield(next, dt, hibikiLevel > 0 ? 'hibiki' : null, Math.max(1, hibikiLevel));
+  next = updateHibikiShield(
+    next,
+    dt,
+    hibikiLevel > 0 ? 'hibiki' : null,
+    Math.max(1, hibikiLevel),
+    supportDamageUpgrades.includes('hibiki'),
+  );
   next = updateMyououGaruda(next, dt, myououLevel > 0 ? 'myouou' : null, Math.max(1, myououLevel), getSupportDamageBonus(supportDamageUpgrades, 'myouou'));
   next = updateUshimaruCounter(next, dt, ushimaruLevel > 0 ? 'ushimaru' : null, Math.max(1, ushimaruLevel), getSupportDamageBonus(supportDamageUpgrades, 'ushimaru'));
   next = updateDeliSupportTurrets(next, dt, deliLevel > 0 ? 'deli' : null, Math.max(1, deliLevel), getSupportDamageBonus(supportDamageUpgrades, 'deli'));
@@ -221,16 +227,26 @@ export function isSochoSupport(supportId: SupportId | null): boolean {
   return supportId === 'socho';
 }
 
-export function getCoinMagnetRadius(supportId: SupportAbilityTarget, supportLevel = 1): number {
+export function getCoinMagnetRadius(
+  supportId: SupportAbilityTarget,
+  supportLevel = 1,
+  is7171Enhanced = false,
+): number {
   const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
   if (nanaLevel <= 0) return COIN_MAGNET_RADIUS;
-  return COIN_MAGNET_RADIUS * (NANA_SUPPORT_MAGNET_MULTIPLIER + getLevelBonus(nanaLevel) * 0.06);
+  const radius = COIN_MAGNET_RADIUS * (NANA_SUPPORT_MAGNET_MULTIPLIER + getLevelBonus(nanaLevel) * 0.06);
+  return radius * (is7171Enhanced ? 1.35 : 1);
 }
 
-export function getCoinPickupRadius(supportId: SupportAbilityTarget, supportLevel = 1): number {
+export function getCoinPickupRadius(
+  supportId: SupportAbilityTarget,
+  supportLevel = 1,
+  is7171Enhanced = false,
+): number {
   const nanaLevel = getSupportAbilityLevel(supportId, supportLevel, '7171');
   if (nanaLevel <= 0) return COIN_PICKUP_RADIUS;
-  return COIN_PICKUP_RADIUS * (NANA_SUPPORT_PICKUP_MULTIPLIER + getLevelBonus(nanaLevel) * 0.025);
+  const radius = COIN_PICKUP_RADIUS * (NANA_SUPPORT_PICKUP_MULTIPLIER + getLevelBonus(nanaLevel) * 0.025);
+  return radius * (is7171Enhanced ? 1.3 : 1);
 }
 
 export function get7171BossClearCoinBonus(supportId: SupportAbilityTarget, supportLevel = 1): number {
@@ -999,7 +1015,13 @@ function isPointInGarudaPath(garudaX: number, garudaY: number, x: number, y: num
   return dx < MYOUOU_GARUDA_HIT_RANGE_X + radius && dy < MYOUOU_GARUDA_HIT_RANGE_Y + radius;
 }
 
-function updateHibikiShield(state: GameState, dt: number, supportId: SupportId | null, supportLevel: number): GameState {
+function updateHibikiShield(
+  state: GameState,
+  dt: number,
+  supportId: SupportId | null,
+  supportLevel: number,
+  isEnhanced = false,
+): GameState {
   const shield: HibikiShieldState = {
     cooldown: Math.max(0, state.supportShield.cooldown - dt),
     timer: Math.max(0, state.supportShield.timer - dt),
@@ -1016,7 +1038,7 @@ function updateHibikiShield(state: GameState, dt: number, supportId: SupportId |
 
   let next: GameState = { ...state, supportShield: shield };
   if (shield.timer <= 0 && shield.cooldown <= 0) {
-    next = activateHibikiShield(next, supportLevel);
+    next = activateHibikiShield(next, supportLevel, isEnhanced);
   }
 
   if (isShieldActive(next.supportShield)) {
@@ -1026,14 +1048,14 @@ function updateHibikiShield(state: GameState, dt: number, supportId: SupportId |
   return next;
 }
 
-function activateHibikiShield(state: GameState, supportLevel: number): GameState {
+function activateHibikiShield(state: GameState, supportLevel: number, isEnhanced = false): GameState {
   let nextId = state.nextId;
   return {
     ...state,
     supportShield: {
       cooldown: Math.max(5.8, HIBIKI_SHIELD_INTERVAL - getLevelBonus(supportLevel) * 0.08),
-      timer: HIBIKI_SHIELD_DURATION + getLevelBonus(supportLevel) * 0.08,
-      blocksRemaining: HIBIKI_SHIELD_BLOCKS + Math.floor(getLevelBonus(supportLevel) / 5),
+      timer: HIBIKI_SHIELD_DURATION + getLevelBonus(supportLevel) * 0.08 + (isEnhanced ? 0.45 : 0),
+      blocksRemaining: HIBIKI_SHIELD_BLOCKS + Math.floor(getLevelBonus(supportLevel) / 5) + (isEnhanced ? 1 : 0),
       flashTimer: HIBIKI_SHIELD_FLASH_TIME,
     },
     effects: [

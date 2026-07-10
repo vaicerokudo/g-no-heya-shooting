@@ -1586,12 +1586,17 @@ function App() {
               <p>星脈鋼 {SUPPORT_DAMAGE_UPGRADE_COST} 個で、対応サポートのダメージ系効果を +1。</p>
             </div>
             <div className="support-upgrade-list">
-              {supportCandidates.filter((support) => !['7171', 'yabuko', 'hibiki'].includes(support.id)).map((support) => {
+              {supportCandidates.filter((support) => support.id !== 'yabuko').map((support) => {
                 const isUpgraded = supportDamageUpgradeIds.includes(support.id);
                 const canUpgrade = !isUpgraded && starVeinSteel >= SUPPORT_DAMAGE_UPGRADE_COST;
                 return (
                   <article className={`support-upgrade-card ${isUpgraded ? 'is-upgraded' : ''}`} key={support.id}>
                     <img src={support.image} alt={support.name} />
+                    {(support.id === 'hibiki' || support.id === '7171') && (
+                      <small className="support-upgrade-detail">
+                        {support.id === 'hibiki' ? 'Shield durability +1' : 'Coin pickup range up'}
+                      </small>
+                    )}
                     <div><strong>{support.name}</strong><span>{isUpgraded ? '火力 +1 強化済み' : 'ダメージ系能力 +1'}</span></div>
                     {!isUpgraded && <button className="secondary-button compact-action" disabled={!canUpgrade} onClick={() => upgradeSupportDamage(support.id)}>強化 {SUPPORT_DAMAGE_UPGRADE_COST}</button>}
                   </article>

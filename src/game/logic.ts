@@ -283,8 +283,8 @@ export function updateGame(
   }
   next = updateDeliTurrets(next, dt, mainCharacterId, weaponId, weaponLevel);
   next = updatePlayerArrows(next, dt, supportSources, supportLevel);
-  next = updateCoins(next, dt, supportSources, supportLevel);
-  next = collectCoins(next, supportSources, supportLevel);
+  next = updateCoins(next, dt, supportSources, supportLevel, supportDamageUpgrades);
+  next = collectCoins(next, supportSources, supportLevel, supportDamageUpgrades);
   next = collectHearts(next);
   next = resolvePlayerDamage(next);
   next = updateEffects(next, dt);
@@ -793,20 +793,26 @@ function runAutoBow(state: GameState, weaponId: string | undefined, weaponLevel:
   if (state.player.attackCooldown > 0) return state;
   const weaponTuning = getTsutsuWeaponTuning(weaponId, weaponLevel);
   let nextId = state.nextId;
-  const arrow: PlayerArrow = {
+  const directions = [
+    { x: 0, y: -1 },
+    { x: -0.34, y: -0.94 },
+    { x: 0.34, y: -0.94 },
+  ];
+  const arrows: PlayerArrow[] = directions.map((direction, index) => ({
     id: nextId++,
-    x: state.player.x,
+    x: state.player.x + (index - 1) * 6,
     y: state.player.y - 24,
-    vy: -TSUTSU_ARROW_SPEED,
+    vx: direction.x * TSUTSU_ARROW_SPEED,
+    vy: direction.y * TSUTSU_ARROW_SPEED,
     radius: TSUTSU_ARROW_RADIUS,
     damage: TSUTSU_ARROW_DAMAGE + state.player.mainWeaponDamageBonus,
     bossDamage: TSUTSU_ARROW_BOSS_DAMAGE + state.player.mainWeaponDamageBonus,
     life: TSUTSU_ARROW_LIFE,
-  };
+  }));
 
   return {
     ...state,
-    playerArrows: [...state.playerArrows, arrow],
+    playerArrows: [...state.playerArrows, ...arrows],
     effects: [
       ...state.effects,
       {
@@ -1873,8 +1879,14 @@ function damageBossWithShieldGuardian(
   };
 }
 
-function updateCoins(state: GameState, dt: number, supportId: SupportAbilityTarget, supportLevel: number): GameState {
-  const magnetRadius = getCoinMagnetRadius(supportId, supportLevel);
+function updateCoins(
+  state: GameState,
+  dt: number,
+  supportId: SupportAbilityTarget,
+  supportLevel: number,
+  supportUpgrades: SupportId[] = [],
+): GameState {
+  const magnetRadius = getCoinMagnetRadius(supportId, supportLevel, supportUpgrades.includes('7171'));
   const coins = state.coins.map((coin) => {
     const dx = state.player.x - coin.x;
     const dy = state.player.y - coin.y;
@@ -1892,11 +1904,16 @@ function updateCoins(state: GameState, dt: number, supportId: SupportAbilityTarg
   return { ...state, coins };
 }
 
-function collectCoins(state: GameState, supportId: SupportAbilityTarget, supportLevel: number): GameState {
+function collectCoins(
+  state: GameState,
+  supportId: SupportAbilityTarget,
+  supportLevel: number,
+  supportUpgrades: SupportId[] = [],
+): GameState {
   let collected = 0;
   let nextId = state.nextId;
   const effects = [...state.effects];
-  const pickupRadius = getCoinPickupRadius(supportId, supportLevel);
+  const pickupRadius = getCoinPickupRadius(supportId, supportLevel, supportUpgrades.includes('7171'));
   const coins = state.coins.filter((coin) => {
     const pickup = Math.hypot(state.player.x - coin.x, state.player.y - coin.y) < pickupRadius;
     if (pickup) {
