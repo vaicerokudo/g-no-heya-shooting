@@ -1449,6 +1449,47 @@ body.game-touch-lock .app-shell {
   text-shadow: 0 0 12px rgba(137, 216, 255, 0.42);
 }
 
+.weapon-excess-converter {
+  width: min(760px, 100%);
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(137, 216, 255, 0.3);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(137, 216, 255, 0.16), transparent 30%),
+    rgba(11, 18, 25, 0.78);
+}
+
+.weapon-excess-converter strong,
+.weapon-excess-converter p {
+  margin: 0;
+}
+
+.weapon-excess-converter p {
+  color: rgba(247, 251, 255, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.weapon-excess-badge {
+  width: fit-content;
+  padding: 4px 8px;
+  border: 1px solid rgba(137, 216, 255, 0.34);
+  border-radius: 999px;
+  color: #b9ecff;
+  background: rgba(31, 62, 82, 0.54);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.compact-action {
+  width: fit-content;
+  min-height: 34px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
+
 .g-support-result {
   color: #ffe08a !important;
   text-shadow:

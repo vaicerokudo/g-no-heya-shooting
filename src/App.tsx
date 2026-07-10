@@ -92,11 +92,14 @@ import {
 import type { CharacterSkinId, SelectedSkinsByCharacter } from './game/skins';
 import {
   addOwnedWeapon,
+  convertWeaponExcessToStarVeinSteel,
   forgeRandomWeapon,
   FORGE_RESULT_LINES,
   getEquippedWeaponForCharacter,
   getHibikiWeaponTuning,
   getEquippedSochoWeapon,
+  getTotalWeaponExcessCount,
+  getWeaponExcessCount,
   getOwnedWeaponLevel,
   getRockelWeaponTuning,
   getSochoWeaponTuning,
@@ -250,6 +253,7 @@ function App() {
   const [freeSupportSummonUsed, setFreeSupportSummonUsed] = useState(() => loadFreeSupportSummonUsed());
   const [forgeResult, setForgeResult] = useState<ForgeResult | null>(null);
   const [isForging, setIsForging] = useState(false);
+  const [weaponExcessConvertMessage, setWeaponExcessConvertMessage] = useState('');
   const [summonContext, setSummonContext] = useState<SummonContext>('shopPaid');
   const [shopSummonResult, setShopSummonResult] = useState<SupportCharacter | null>(null);
   const [shopSummonStarDustGained, setShopSummonStarDustGained] = useState(false);
@@ -389,6 +393,7 @@ function App() {
     () => getWeaponOptionsForCharacter(activeWeaponCharacterId, ownedWeapons),
     [activeWeaponCharacterId, ownedWeapons],
   );
+  const totalWeaponExcessCount = useMemo(() => getTotalWeaponExcessCount(ownedWeapons), [ownedWeapons]);
   const selectedSupportLevel = useMemo(
     () => getOwnedSupportLevel(ownedSupports, selectedSupport?.id ?? null),
     [ownedSupports, selectedSupport?.id],
@@ -846,6 +851,22 @@ function App() {
     resetOwnedWeapons();
     setOwnedWeapons([]);
     setForgeResult(null);
+    setWeaponExcessConvertMessage('');
+  };
+
+  const convertWeaponExcess = (weaponId?: string) => {
+    const { weapons: nextWeapons, gained } = convertWeaponExcessToStarVeinSteel(ownedWeapons, weaponId);
+    if (gained <= 0) {
+      setWeaponExcessConvertMessage('変換できる余剰武器はありません');
+      return;
+    }
+
+    const nextStarVeinSteel = starVeinSteel + gained;
+    setOwnedWeapons(nextWeapons);
+    saveOwnedWeapons(nextWeapons);
+    setStarVeinSteel(nextStarVeinSteel);
+    saveStarVeinSteel(nextStarVeinSteel);
+    setWeaponExcessConvertMessage(`星脈鋼 +${gained} に変換しました`);
   };
 
   const equipMainWeapon = (weaponId: string) => {
@@ -1393,23 +1414,46 @@ function App() {
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
+          <div className="owned-coins-panel compact star-vein-steel-panel">
+            <span>星脈鋼</span>
+            <strong>{starVeinSteel}</strong>
+          </div>
+          <div className="weapon-excess-converter">
+            <div>
+              <strong>余剰武器変換</strong>
+              <p>Lv5到達済み武器の所持数 x6 以降を、1枚につき星脈鋼1個へ変換します。</p>
+            </div>
+            <button className="secondary-button" onClick={() => convertWeaponExcess()} disabled={totalWeaponExcessCount <= 0}>
+              余剰をまとめて変換（+{totalWeaponExcessCount}）
+            </button>
+            {weaponExcessConvertMessage && <p className="star-vein-steel-reward">{weaponExcessConvertMessage}</p>}
+          </div>
           <div className="weapon-inventory">
             {ownedWeapons.length === 0 ? (
               <p className="empty-inventory">{'\u307e\u3060\u6b66\u5668\u3092\u6240\u6301\u3057\u3066\u3044\u307e\u305b\u3093\u3002\u30b5\u30c3\u30b0\u306e\u935b\u51b6\u5c4b\u3067\u935b\u9020\u3067\u304d\u307e\u3059\u3002'}</p>
             ) : (
-              ownedWeapons.map((weapon) => (
-                <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
-                  {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
-                  <div>
-                    <h3>{weapon.name}</h3>
-                    <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
-                    {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
-                  </div>
-                  <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
-                  <p>{weapon.description}</p>
-                  <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
-                </article>
-              ))
+              ownedWeapons.map((weapon) => {
+                const excessCount = getWeaponExcessCount(weapon);
+                return (
+                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
+                    {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
+                    <div>
+                      <h3>{weapon.name}</h3>
+                      <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                      {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
+                    </div>
+                    <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
+                    {excessCount > 0 && <span className="weapon-excess-badge">余剰 +{excessCount}</span>}
+                    <p>{weapon.description}</p>
+                    <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
+                    {excessCount > 0 && (
+                      <button className="secondary-button compact-action" onClick={() => convertWeaponExcess(weapon.id)}>
+                        この武器の余剰を変換
+                      </button>
+                    )}
+                  </article>
+                );
+              })
             )}
           </div>
           <button className="secondary-button" onClick={goToGuildLobby}>{'\u30ed\u30d3\u30fc\u3078\u623b\u308b'}</button>
@@ -1537,23 +1581,42 @@ function App() {
             <h2>{'\u6240\u6301\u6b66\u5668\u4e00\u89a7'}</h2>
             <button className="reset-coins-button" onClick={resetSavedWeapons}>{'\u6240\u6301\u6b66\u5668\u30ea\u30bb\u30c3\u30c8'}</button>
           </div>
+          <div className="weapon-excess-converter">
+            <div>
+              <strong>余剰武器変換</strong>
+              <p>Lv5到達済み武器の所持数 x6 以降を、1枚につき星脈鋼1個へ変換します。</p>
+            </div>
+            <button className="secondary-button" onClick={() => convertWeaponExcess()} disabled={totalWeaponExcessCount <= 0}>
+              余剰をまとめて変換（+{totalWeaponExcessCount}）
+            </button>
+            {weaponExcessConvertMessage && <p className="star-vein-steel-reward">{weaponExcessConvertMessage}</p>}
+          </div>
           <div className="weapon-inventory">
             {ownedWeapons.length === 0 ? (
               <p className="empty-inventory">{'\u307e\u3060\u6b66\u5668\u3092\u6240\u6301\u3057\u3066\u3044\u307e\u305b\u3093'}</p>
             ) : (
-              ownedWeapons.map((weapon) => (
-                <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
-                  {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
-                  <div>
-                    <h3>{weapon.name}</h3>
-                    <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
-                    {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
-                  </div>
-                  <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
-                  <p>{weapon.description}</p>
-                  <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
-                </article>
-              ))
+              ownedWeapons.map((weapon) => {
+                const excessCount = getWeaponExcessCount(weapon);
+                return (
+                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity}`}> 
+                    {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
+                    <div>
+                      <h3>{weapon.name}</h3>
+                      <strong>{weapon.owner} / {weapon.type} / {weapon.rarity}</strong>
+                      {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
+                    </div>
+                    <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
+                    {excessCount > 0 && <span className="weapon-excess-badge">余剰 +{excessCount}</span>}
+                    <p>{weapon.description}</p>
+                    <p className="weapon-effect-line">{'\u52b9\u679c'}：{weapon.effectDescription}</p>
+                    {excessCount > 0 && (
+                      <button className="secondary-button compact-action" onClick={() => convertWeaponExcess(weapon.id)}>
+                        この武器の余剰を変換
+                      </button>
+                    )}
+                  </article>
+                );
+              })
             )}
           </div>
           <div className="forge-menu-actions">

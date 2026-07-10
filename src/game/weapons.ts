@@ -402,6 +402,37 @@ export function addOwnedWeapon(ownedWeapons: OwnedWeapon[], weapon: WeaponDefini
   return [...ownedWeapons, { ...weapon, count: 1, level: 1 }];
 }
 
+export function getWeaponExcessCount(weapon: OwnedWeapon): number {
+  if ((weapon.level ?? 1) < WEAPON_MAX_LEVEL) return 0;
+  return Math.max(0, Math.floor(weapon.count) - WEAPON_MAX_LEVEL);
+}
+
+export function getTotalWeaponExcessCount(ownedWeapons: OwnedWeapon[]): number {
+  return ownedWeapons.reduce((total, weapon) => total + getWeaponExcessCount(weapon), 0);
+}
+
+export function convertWeaponExcessToStarVeinSteel(
+  ownedWeapons: OwnedWeapon[],
+  weaponId?: string,
+): { weapons: OwnedWeapon[]; gained: number } {
+  let gained = 0;
+  const weapons = ownedWeapons.map((weapon) => {
+    if (weaponId && weapon.id !== weaponId) return weapon;
+
+    const excess = getWeaponExcessCount(weapon);
+    if (excess <= 0) return weapon;
+
+    gained += excess;
+    return {
+      ...weapon,
+      count: WEAPON_MAX_LEVEL,
+      level: normalizeWeaponLevel(weapon.level ?? WEAPON_MAX_LEVEL),
+    };
+  });
+
+  return { weapons, gained };
+}
+
 export function getWeaponById(weaponId: string): WeaponDefinition | undefined {
   return [...defaultWeaponDefinitions, ...weaponCandidates].find((weapon) => weapon.id === weaponId);
 }
