@@ -13,10 +13,30 @@
   box-sizing: border-box;
 }
 
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: #142019;
+  overscroll-behavior: none;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+body.game-touch-lock {
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  touch-action: none;
 }
 
 button {
@@ -25,6 +45,7 @@ button {
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 20px;
@@ -32,6 +53,14 @@ button {
     linear-gradient(180deg, rgba(8, 10, 16, 0.2), rgba(8, 10, 16, 0.62)),
     url("/assets/tcg/astoria-hub-map.png") center / cover fixed,
     #142019;
+}
+
+body.game-touch-lock .app-shell {
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding: 8px;
+  touch-action: none;
 }
 
 .menu-screen {
@@ -2510,6 +2539,14 @@ h1 {
   gap: 10px;
 }
 
+body.game-touch-lock .game-layout {
+  width: min(420px, 100%);
+  max-height: calc(100dvh - 16px);
+  gap: 6px;
+  overflow: hidden;
+  touch-action: none;
+}
+
 .hud,
 .boss-hud,
 .instructions {
@@ -2732,6 +2769,10 @@ h1 {
     url("/assets/tcg/scenario-forest.png") center / cover,
     #1b352c;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+body.game-touch-lock .field {
+  touch-action: none;
 }
 
 .field.area-sandstorm-wilderness {
@@ -5037,7 +5078,13 @@ h1 {
   }
 
   .astoria-map-screen {
-    min-height: calc(100vh - 20px);
+    min-height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    overflow: hidden;
+  }
+
+  .astoria-map-board {
+    width: min(100%, 42dvh);
   }
 
   .map-topbar {
@@ -5242,6 +5289,61 @@ h1 {
     grid-template-columns: 1fr 1fr;
   }
 
+  body.game-touch-lock .hud {
+    gap: 4px;
+    padding: 6px;
+  }
+
+  body.game-touch-lock .hud span {
+    margin-bottom: 2px;
+    font-size: 0.62rem;
+  }
+
+  body.game-touch-lock .hud-number,
+  body.game-touch-lock .hud-stage,
+  body.game-touch-lock .hud-main,
+  body.game-touch-lock .hud-support,
+  body.game-touch-lock .hud-aura,
+  body.game-touch-lock .hud-weapon,
+  body.game-touch-lock .hud-no-damage {
+    min-height: 26px;
+    padding: 0 6px;
+    font-size: 0.68rem;
+  }
+
+  body.game-touch-lock .hud-main-portrait {
+    width: 34px;
+    height: 34px;
+  }
+
+  body.game-touch-lock .hud-main-portrait img {
+    width: 30px;
+    height: 30px;
+  }
+
+  body.game-touch-lock .pause-button {
+    min-height: 28px;
+    padding: 0 8px;
+    font-size: 0.68rem;
+  }
+
+  body.game-touch-lock .boss-hud {
+    padding: 6px;
+  }
+
+  body.game-touch-lock .boss-portrait-frame {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  body.game-touch-lock .field {
+    align-self: center;
+    flex: 0 1 auto;
+    width: min(100%, 40dvh);
+    max-height: calc(100dvh - 206px);
+  }
+
   .formation-grid {
     grid-template-columns: 1fr;
   }
@@ -5319,6 +5421,10 @@ h1 {
     flex-direction: column;
   }
 
+  body.game-touch-lock .instructions {
+    display: none;
+  }
+
   .owned-coins-panel.compact,
   .result-grid,
   .reward-breakdown {
@@ -5328,6 +5434,23 @@ h1 {
   .in-game-controls {
     display: flex;
     justify-content: flex-start;
+  }
+
+  body.game-touch-lock .in-game-controls {
+    min-height: 74px;
+    padding: 6px 8px;
+  }
+
+  body.game-touch-lock .joystick-base {
+    width: 70px;
+    height: 70px;
+    flex-basis: 70px;
+  }
+
+  body.game-touch-lock .joystick-knob {
+    width: 28px;
+    height: 28px;
+    margin: -14px 0 0 -14px;
   }
 }
 

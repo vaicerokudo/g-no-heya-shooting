@@ -115,6 +115,11 @@ type JoystickState = {
   active: boolean;
 };
 
+const JOYSTICK_DEAD_ZONE_RATIO = 0.14;
+const JOYSTICK_MAX_DISTANCE_RATIO = 0.36;
+const JOYSTICK_MAX_SPEED_RATIO = 0.82;
+const JOYSTICK_RESPONSE_CURVE = 1.35;
+
 type ForgeResult = {
   weapon: WeaponDefinition;
   isNew: boolean;
@@ -301,6 +306,14 @@ function App() {
       window.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
+
+  useEffect(() => {
+    const shouldLockTouch = game.status === 'playing' || game.status === 'paused';
+    document.body.classList.toggle('game-touch-lock', shouldLockTouch);
+    return () => {
+      document.body.classList.remove('game-touch-lock');
+    };
+  }, [game.status]);
 
   useEffect(() => {
     let frameId = 0;
@@ -750,19 +763,24 @@ function App() {
     const rect = joystickBaseRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const maxDistance = rect.width * 0.34;
+    const maxDistance = rect.width * JOYSTICK_MAX_DISTANCE_RATIO;
+    const deadZone = rect.width * JOYSTICK_DEAD_ZONE_RATIO;
     const dx = event.clientX - centerX;
     const dy = event.clientY - centerY;
     const distance = Math.hypot(dx, dy);
     const limitedDistance = Math.min(distance, maxDistance);
     const normalized = distance > 0 ? { x: dx / distance, y: dy / distance } : { x: 0, y: 0 };
+    const activeDistance = Math.max(0, limitedDistance - deadZone);
+    const activeRange = Math.max(1, maxDistance - deadZone);
+    const strength = Math.pow(activeDistance / activeRange, JOYSTICK_RESPONSE_CURVE) * JOYSTICK_MAX_SPEED_RATIO;
+    const isActive = strength > 0;
 
-    joystickVector.current = distance < 6 ? null : normalized;
+    joystickVector.current = isActive ? { x: normalized.x * strength, y: normalized.y * strength } : null;
     dragTarget.current = null;
     setJoystick({
-      x: normalized.x * limitedDistance,
-      y: normalized.y * limitedDistance,
-      active: distance >= 6,
+      x: isActive ? normalized.x * limitedDistance : 0,
+      y: isActive ? normalized.y * limitedDistance : 0,
+      active: isActive,
     });
   };
 
@@ -1788,7 +1806,12 @@ function App() {
           <div
             className={`field area-${activeStage.areaId} ${game.status === 'paused' ? 'is-paused' : ''}`}
             ref={fieldRef}
-            onPointerDown={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}
+            onPointerDown={(event) => {
+              if (game.status === 'playing' && event.pointerType !== 'mouse') {
+                event.currentTarget.setPointerCapture(event.pointerId);
+              }
+              updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing');
+            }}
             onPointerMove={(event) => updateDragTarget(event, fieldRef.current, dragTarget, Boolean(game.boss), game.status === 'playing')}
             onPointerUp={() => {
               dragTarget.current = null;
@@ -2211,6 +2234,7 @@ function App() {
               onPointerMove={updateJoystick}
               onPointerUp={resetJoystick}
               onPointerCancel={resetJoystick}
+              onLostPointerCapture={resetJoystick}
             >
               <span
                 className="joystick-knob"
@@ -2445,6 +2469,8 @@ function updateDragTarget(
   isEnabled: boolean,
 ) {
   if (!isEnabled || !field || event.pointerType === 'mouse') return;
+  event.preventDefault();
+  event.stopPropagation();
   const rect = field.getBoundingClientRect();
   const scaleX = FIELD_WIDTH / rect.width;
   const scaleY = FIELD_HEIGHT / rect.height;
