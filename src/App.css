@@ -1436,6 +1436,19 @@ body.game-touch-lock .app-shell {
   text-shadow: 0 0 12px rgba(190, 160, 255, 0.38);
 }
 
+.star-vein-steel-panel {
+  border-color: rgba(137, 216, 255, 0.36);
+  background:
+    radial-gradient(circle at 86% 16%, rgba(137, 216, 255, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(24, 36, 46, 0.86), rgba(13, 19, 25, 0.88));
+}
+
+.star-vein-steel-panel strong,
+.star-vein-steel-reward {
+  color: #b9ecff !important;
+  text-shadow: 0 0 12px rgba(137, 216, 255, 0.42);
+}
+
 .g-support-result {
   color: #ffe08a !important;
   text-shadow:

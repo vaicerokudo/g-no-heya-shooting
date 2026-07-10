@@ -51,6 +51,7 @@ import {
   loadSelectedAura,
   loadSelectedSkinsByCharacter,
   loadStarDustFragments,
+  loadStarVeinSteel,
   resetOwnedCoins,
   resetOwnedWeapons,
   saveOwnedCoins,
@@ -64,6 +65,7 @@ import {
   saveOwnedWeapons,
   saveSelectedSkinsByCharacter,
   saveStarDustFragments,
+  saveStarVeinSteel,
 } from './game/storage';
 import {
   addOwnedSupport,
@@ -102,6 +104,7 @@ import {
   getWeaponOptionsForCharacter,
   getYabukoFmWeaponTuning,
   hasSochoSlashWave,
+  WEAPON_MAX_LEVEL,
   WEAPON_RARITY_WEIGHTS,
 } from './game/weapons';
 import type { CharacterId, EquippedWeaponsByCharacter, OwnedWeapon, WeaponDefinition } from './game/weapons';
@@ -126,6 +129,7 @@ type ForgeResult = {
   count: number;
   level: number;
   sagLine: string;
+  starVeinSteelGained: boolean;
 };
 
 type MapFacilityId = 'guildHouse' | 'forge' | 'shop' | 'gate' | 'plaza';
@@ -231,6 +235,7 @@ function App() {
   const [joystick, setJoystick] = useState<JoystickState>({ x: 0, y: 0, active: false });
   const [ownedCoins, setOwnedCoins] = useState(() => loadOwnedCoins());
   const [starDustFragments, setStarDustFragments] = useState(() => loadStarDustFragments());
+  const [starVeinSteel, setStarVeinSteel] = useState(() => loadStarVeinSteel());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [ownedAuras, setOwnedAuras] = useState<AuraId[]>(() => loadOwnedAuras());
@@ -813,17 +818,24 @@ function App() {
     window.setTimeout(() => {
       const weapon = forgeRandomWeapon();
       const isNew = !ownedWeapons.some((ownedWeapon) => ownedWeapon.id === weapon.id);
+      const isMaxedDuplicate = getOwnedWeaponLevel(ownedWeapons, weapon.id) >= WEAPON_MAX_LEVEL;
       const nextWeapons = addOwnedWeapon(ownedWeapons, weapon);
       const forgedWeapon = nextWeapons.find((ownedWeapon) => ownedWeapon.id === weapon.id);
 
       setOwnedWeapons(nextWeapons);
       saveOwnedWeapons(nextWeapons);
+      if (isMaxedDuplicate) {
+        const nextStarVeinSteel = starVeinSteel + 1;
+        setStarVeinSteel(nextStarVeinSteel);
+        saveStarVeinSteel(nextStarVeinSteel);
+      }
       setForgeResult({
         weapon,
         isNew,
         count: forgedWeapon?.count ?? 1,
         level: forgedWeapon?.level ?? 1,
         sagLine: FORGE_RESULT_LINES[weapon.rarity],
+        starVeinSteelGained: isMaxedDuplicate,
       });
       setIsForging(false);
     }, FORGE_ANIMATION_DURATION);
@@ -1412,6 +1424,10 @@ function App() {
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
           </div>
+          <div className="owned-coins-panel compact star-vein-steel-panel">
+            <span>星脈鋼</span>
+            <strong>{starVeinSteel}</strong>
+          </div>
           <div className="forge-dialogue-stage">
             <div className="forge-character">
               <img src={assetPaths.sag} alt="Sag" />
@@ -1438,6 +1454,10 @@ function App() {
           <div className="owned-coins-panel compact">
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
+          </div>
+          <div className="owned-coins-panel compact star-vein-steel-panel">
+            <span>星脈鋼</span>
+            <strong>{starVeinSteel}</strong>
           </div>
           <div className="forge-mini-dialogue">
             <img src={assetPaths.sag} alt="Sag" />
@@ -1480,6 +1500,7 @@ function App() {
               <h2>{forgeResult.weapon.name}</h2>
               <strong>{forgeResult.weapon.owner} / {forgeResult.weapon.type} / {forgeResult.weapon.rarity}</strong>
               <p className="summon-success">Lv {forgeResult.level} / 所持数 x{forgeResult.count}</p>
+              {forgeResult.starVeinSteelGained && <p className="summon-success star-vein-steel-reward">星脈鋼 +1</p>}
               <p>{forgeResult.weapon.description}</p>
               <p className="weapon-effect-line">{'\u52b9\u679c'}：{forgeResult.weapon.effectDescription}</p>
               <p className="sag-result-line">サッグ「{forgeResult.sagLine}」</p>
@@ -1500,6 +1521,10 @@ function App() {
           <div className="owned-coins-panel compact">
             <span>{'\u6240\u6301\u30b3\u30a4\u30f3'}</span>
             <strong>{ownedCoins}</strong>
+          </div>
+          <div className="owned-coins-panel compact star-vein-steel-panel">
+            <span>星脈鋼</span>
+            <strong>{starVeinSteel}</strong>
           </div>
           <div className="forge-mini-dialogue">
             <img src={assetPaths.sag} alt="Sag" />

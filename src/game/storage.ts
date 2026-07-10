@@ -15,6 +15,7 @@ const OWNED_WEAPONS_KEY = 'g-no-heya-shooting:owned-weapons';
 const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 const STAR_DUST_FRAGMENTS_KEY = 'g-no-heya-shooting:star-dust-fragments';
+const STAR_VEIN_STEEL_KEY = 'g-no-heya-shooting:star-vein-steel';
 const OWNED_AURAS_KEY = 'g-no-heya-shooting:owned-auras';
 const SELECTED_AURA_KEY = 'g-no-heya-shooting:selected-aura';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
@@ -50,6 +51,19 @@ export function loadStarDustFragments(): number {
 export function saveStarDustFragments(fragments: number) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STAR_DUST_FRAGMENTS_KEY, String(Math.max(0, Math.floor(fragments))));
+}
+
+export function loadStarVeinSteel(): number {
+  if (typeof window === 'undefined') return 0;
+
+  const rawValue = window.localStorage.getItem(STAR_VEIN_STEEL_KEY);
+  const parsed = rawValue ? Number.parseInt(rawValue, 10) : 0;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export function saveStarVeinSteel(steel: number) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(STAR_VEIN_STEEL_KEY, String(Math.max(0, Math.floor(steel))));
 }
 
 export function loadOwnedAuras(): AuraId[] {

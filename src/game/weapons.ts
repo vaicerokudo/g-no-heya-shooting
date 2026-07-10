@@ -59,6 +59,8 @@ export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' 
 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
+export const WEAPON_MAX_LEVEL = 5;
+
 export type SochoWeaponEffect = 'standardSlash' | 'starSlashWave';
 
 export type SochoWeaponTuning = {
@@ -769,7 +771,7 @@ function getDefaultOwnedWeapon(weaponId: string): OwnedWeapon {
 }
 
 function normalizeWeaponLevel(level: number | undefined): number {
-  return Math.max(1, Math.floor(level ?? 1));
+  return Math.min(WEAPON_MAX_LEVEL, Math.max(1, Math.floor(level ?? 1)));
 }
 
 function pickWeightedRarity(): WeaponRarity {
