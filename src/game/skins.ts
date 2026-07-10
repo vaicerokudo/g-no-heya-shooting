@@ -2,78 +2,167 @@ import { getMainCharacter } from './characters';
 import type { MainCharacterId, MainCharacterDefinition } from './characters';
 import { getOwnedSupportLevel, SUPPORT_SKIN_UNLOCK_LEVEL } from './supports';
 import type { OwnedSupport } from './supports';
+import type { StageId } from './stages';
 import type { SupportId } from './types';
 
-export type CharacterSkinId = 'default' | 'sound-comic';
+export type CharacterSkinId = 'default' | 'sound-comic' | 'dark';
 export type SelectedSkinsByCharacter = Partial<Record<MainCharacterId, CharacterSkinId>>;
+export type UnlockedDarkSkins = MainCharacterId[];
 
-export const SOUND_COMIC_SKIN_CHARACTER_IDS = [
+export const SKIN_CHARACTER_IDS = [
   'socho',
   'tsutsu',
   'rokudo',
-  'nanaichi',
-  'myoo',
+  'player',
   'ushimaru',
   'deli',
+  'yabuko-fm',
   'rockel',
+  'nanaichi',
+  'myoo',
+  'hibiki',
 ] as const satisfies readonly MainCharacterId[];
 
-export const SOUND_COMIC_SKIN_SUPPORTS: Record<(typeof SOUND_COMIC_SKIN_CHARACTER_IDS)[number], SupportId> = {
+export const SOUND_COMIC_SKIN_CHARACTER_IDS = SKIN_CHARACTER_IDS;
+
+export const SOUND_COMIC_SKIN_SUPPORTS: Record<MainCharacterId, SupportId> = {
   socho: 'socho',
   tsutsu: 'tsutsu',
   rokudo: 'rokudo',
-  nanaichi: '7171',
-  myoo: 'myouou',
+  player: 'player',
   ushimaru: 'ushimaru',
   deli: 'deli',
+  'yabuko-fm': 'yabuko',
   rockel: 'rockel',
+  nanaichi: '7171',
+  myoo: 'myouou',
+  hibiki: 'hibiki',
 };
 
-const SOUND_COMIC_SKIN_IMAGES: Partial<Record<MainCharacterId, string>> = {
+const SUPPORT_CHARACTER_IDS: Record<SupportId, MainCharacterId> = {
+  socho: 'socho',
+  tsutsu: 'tsutsu',
+  rokudo: 'rokudo',
+  player: 'player',
+  ushimaru: 'ushimaru',
+  deli: 'deli',
+  yabuko: 'yabuko-fm',
+  rockel: 'rockel',
+  '7171': 'nanaichi',
+  myouou: 'myoo',
+  hibiki: 'hibiki',
+};
+
+const SOUND_COMIC_SKIN_IMAGES: Record<MainCharacterId, string> = {
   socho: '/assets/tcg/skin-sound-comic-socho.png',
   tsutsu: '/assets/tcg/skin-sound-comic-tsutsu.png',
   rokudo: '/assets/tcg/skin-sound-comic-rokudo.png',
-  nanaichi: '/assets/tcg/skin-sound-comic-nanaichi.png',
-  myoo: '/assets/tcg/skin-sound-comic-myoo.png',
+  player: '/assets/tcg/skin-sound-comic-player.png',
   ushimaru: '/assets/tcg/skin-sound-comic-ushimaru.png',
   deli: '/assets/tcg/skin-sound-comic-deli.png',
+  'yabuko-fm': '/assets/tcg/skin-sound-comic-yabuko-fm.png',
   rockel: '/assets/tcg/skin-sound-comic-rockel.png',
+  nanaichi: '/assets/tcg/skin-sound-comic-nanaichi.png',
+  myoo: '/assets/tcg/skin-sound-comic-myoo.png',
+  hibiki: '/assets/tcg/skin-sound-comic-hibiki.png',
+};
+
+const DARK_SKIN_IMAGES: Record<MainCharacterId, string> = {
+  socho: '/assets/tcg/skin-dark-socho.png',
+  tsutsu: '/assets/tcg/skin-dark-tsutsu.png',
+  rokudo: '/assets/tcg/skin-dark-rokudo.png',
+  player: '/assets/tcg/skin-dark-player.png',
+  ushimaru: '/assets/tcg/skin-dark-ushimaru.png',
+  deli: '/assets/tcg/skin-dark-deli.png',
+  'yabuko-fm': '/assets/tcg/skin-dark-yabuko-fm.png',
+  rockel: '/assets/tcg/skin-dark-rockel.png',
+  nanaichi: '/assets/tcg/skin-dark-nanaichi.png',
+  myoo: '/assets/tcg/skin-dark-myoo.png',
+  hibiki: '/assets/tcg/skin-dark-hibiki.png',
+};
+
+const SOUND_COMIC_SUPPORT_IMAGES: Record<SupportId, string> = {
+  socho: '/assets/tcg/support-card-travel-socho.webp',
+  tsutsu: '/assets/tcg/support-card-travel-tsutsu.webp',
+  rokudo: '/assets/tcg/support-card-travel-rokudo.webp',
+  player: '/assets/tcg/support-card-travel-player.webp',
+  ushimaru: '/assets/tcg/support-card-travel-ushimaru.webp',
+  deli: '/assets/tcg/support-card-travel-deli.webp',
+  yabuko: '/assets/tcg/support-card-travel-yabuko.webp',
+  rockel: '/assets/tcg/support-card-travel-rockel.webp',
+  '7171': '/assets/tcg/support-card-travel-7171.webp',
+  myouou: '/assets/tcg/support-card-travel-myouou.webp',
+  hibiki: '/assets/tcg/support-card-travel-hibiki.webp',
+};
+
+const DARK_SUPPORT_IMAGES: Record<SupportId, string> = {
+  socho: '/assets/tcg/support-card-dark-socho.webp',
+  tsutsu: '/assets/tcg/support-card-dark-tsutsu.webp',
+  rokudo: '/assets/tcg/support-card-dark-rokudo.webp',
+  player: '/assets/tcg/support-card-dark-player.webp',
+  ushimaru: '/assets/tcg/support-card-dark-ushimaru.webp',
+  deli: '/assets/tcg/support-card-dark-deli.webp',
+  yabuko: '/assets/tcg/support-card-dark-yabuko.webp',
+  rockel: '/assets/tcg/support-card-dark-rockel.webp',
+  '7171': '/assets/tcg/support-card-dark-7171.webp',
+  myouou: '/assets/tcg/support-card-dark-myouou.webp',
+  hibiki: '/assets/tcg/support-card-dark-hibiki.webp',
+};
+
+const DARK_SKIN_STAGE_UNLOCKS: Partial<Record<StageId, readonly MainCharacterId[]>> = {
+  'isolation-zone-1': ['rockel', 'player'],
+  'isolation-zone-2': ['deli', 'yabuko-fm', 'tsutsu'],
+  'isolation-zone-3': ['ushimaru', 'hibiki', 'socho'],
+  'isolation-zone-4': ['nanaichi', 'rokudo', 'myoo'],
+  'isolation-zone-5': SKIN_CHARACTER_IDS,
 };
 
 export function normalizeCharacterSkinId(value: unknown): CharacterSkinId {
-  return value === 'sound-comic' ? 'sound-comic' : 'default';
+  if (value === 'sound-comic' || value === 'dark') return value;
+  return 'default';
 }
 
-export function isSoundComicSkinSupported(characterId: MainCharacterId): characterId is (typeof SOUND_COMIC_SKIN_CHARACTER_IDS)[number] {
-  return (SOUND_COMIC_SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(characterId);
-}
-
-export function getSoundComicSkinSupportId(characterId: MainCharacterId): SupportId | null {
-  return isSoundComicSkinSupported(characterId) ? SOUND_COMIC_SKIN_SUPPORTS[characterId] : null;
+export function getSoundComicSkinSupportId(characterId: MainCharacterId): SupportId {
+  return SOUND_COMIC_SKIN_SUPPORTS[characterId];
 }
 
 export function isSoundComicSkinUnlocked(characterId: MainCharacterId, ownedSupports: OwnedSupport[]): boolean {
-  const supportId = getSoundComicSkinSupportId(characterId);
-  return supportId ? getOwnedSupportLevel(ownedSupports, supportId) >= SUPPORT_SKIN_UNLOCK_LEVEL : false;
+  return getOwnedSupportLevel(ownedSupports, getSoundComicSkinSupportId(characterId)) >= SUPPORT_SKIN_UNLOCK_LEVEL;
+}
+
+export function isDarkSkinUnlocked(characterId: MainCharacterId, unlockedDarkSkins: readonly MainCharacterId[]): boolean {
+  return unlockedDarkSkins.includes(characterId);
+}
+
+export function getDarkSkinUnlocksForStage(stageId: StageId): readonly MainCharacterId[] {
+  return DARK_SKIN_STAGE_UNLOCKS[stageId] ?? [];
+}
+
+export function mergeUnlockedDarkSkins(
+  current: readonly MainCharacterId[],
+  additions: readonly MainCharacterId[],
+): UnlockedDarkSkins {
+  return Array.from(new Set([...current, ...additions])).filter((characterId): characterId is MainCharacterId =>
+    (SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(characterId),
+  );
 }
 
 export function getEffectiveCharacterSkinId(
   characterId: MainCharacterId,
   selectedSkins: SelectedSkinsByCharacter,
   ownedSupports: OwnedSupport[],
+  unlockedDarkSkins: readonly MainCharacterId[] = [],
 ): CharacterSkinId {
   const selectedSkin = normalizeCharacterSkinId(selectedSkins[characterId]);
-  if (selectedSkin === 'sound-comic' && isSoundComicSkinUnlocked(characterId, ownedSupports)) {
-    return 'sound-comic';
-  }
+  if (selectedSkin === 'sound-comic' && isSoundComicSkinUnlocked(characterId, ownedSupports)) return 'sound-comic';
+  if (selectedSkin === 'dark' && isDarkSkinUnlocked(characterId, unlockedDarkSkins)) return 'dark';
   return 'default';
 }
 
 export function getCharacterSkinImage(characterId: MainCharacterId, skinId: CharacterSkinId): string | undefined {
   const character = getMainCharacter(characterId);
-  if (skinId === 'sound-comic') {
-    return SOUND_COMIC_SKIN_IMAGES[characterId] ?? character.image;
-  }
+  if (skinId === 'sound-comic') return SOUND_COMIC_SKIN_IMAGES[characterId] ?? character.image;
+  if (skinId === 'dark') return DARK_SKIN_IMAGES[characterId] ?? character.image;
   return character.image;
 }
 
@@ -81,15 +170,29 @@ export function getCharacterWithSkin(
   characterId: MainCharacterId,
   selectedSkins: SelectedSkinsByCharacter,
   ownedSupports: OwnedSupport[],
+  unlockedDarkSkins: readonly MainCharacterId[] = [],
 ): MainCharacterDefinition {
   const character = getMainCharacter(characterId);
-  const skinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports);
-  return {
-    ...character,
-    image: getCharacterSkinImage(characterId, skinId),
-  };
+  const skinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins);
+  return { ...character, image: getCharacterSkinImage(characterId, skinId) };
+}
+
+export function getSupportCardImage(
+  supportId: SupportId,
+  defaultImage: string,
+  selectedSkins: SelectedSkinsByCharacter,
+  ownedSupports: OwnedSupport[],
+  unlockedDarkSkins: readonly MainCharacterId[],
+): string {
+  const characterId = SUPPORT_CHARACTER_IDS[supportId];
+  const skinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins);
+  if (skinId === 'sound-comic') return SOUND_COMIC_SUPPORT_IMAGES[supportId] ?? defaultImage;
+  if (skinId === 'dark') return DARK_SUPPORT_IMAGES[supportId] ?? defaultImage;
+  return defaultImage;
 }
 
 export function getCharacterSkinLabel(skinId: CharacterSkinId): string {
-  return skinId === 'sound-comic' ? 'サウンドコミック' : '通常';
+  if (skinId === 'sound-comic') return 'サウンドコミック';
+  if (skinId === 'dark') return '闇落ち';
+  return '通常';
 }

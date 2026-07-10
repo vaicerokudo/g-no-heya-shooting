@@ -2229,7 +2229,7 @@ h1 {
 
 .skin-options {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -2288,6 +2288,18 @@ h1 {
     rgba(17, 16, 13, 0.78);
 }
 
+.skin-option.dark {
+  border-color: rgba(194, 91, 255, 0.44);
+  background:
+    radial-gradient(circle at 85% 25%, rgba(194, 68, 255, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(45, 8, 65, 0.9), rgba(11, 5, 18, 0.9));
+}
+
+.skin-option.dark.is-selected {
+  border-color: rgba(224, 142, 255, 0.92);
+  box-shadow: 0 0 20px rgba(172, 58, 255, 0.34);
+}
+
 .skin-option:disabled {
   cursor: not-allowed;
   filter: grayscale(0.7);
@@ -2300,6 +2312,11 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: rgba(0, 0, 0, 0.2);
+}
+
+.skin-unlock-note.dark-note {
+  border-color: rgba(194, 91, 255, 0.32);
+  color: rgba(231, 196, 255, 0.82);
 }
 
 .sortie-card {
@@ -5018,6 +5035,23 @@ body.game-touch-lock .field {
 
 .reward-breakdown .no-damage-reward.achieved strong {
   color: #c8ffdf;
+}
+
+.dark-skin-unlock-result {
+  width: min(460px, 100%);
+  display: grid;
+  gap: 5px;
+  padding: 12px 14px;
+  border: 1px solid rgba(211, 111, 255, 0.62);
+  border-radius: 9px;
+  color: #f3d7ff;
+  background: linear-gradient(135deg, rgba(73, 12, 100, 0.84), rgba(18, 5, 30, 0.9));
+  box-shadow: 0 0 22px rgba(166, 54, 255, 0.22);
+}
+
+.dark-skin-unlock-result span {
+  color: rgba(247, 224, 255, 0.82);
+  font-size: 0.82rem;
 }
 
 .result-grid {

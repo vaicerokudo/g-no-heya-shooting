@@ -4,8 +4,8 @@ import { resolveActiveMainCharacterId } from './characters';
 import type { MainCharacterId } from './characters';
 import { isAuraId } from './auras';
 import type { AuraId } from './auras';
-import { normalizeCharacterSkinId } from './skins';
-import type { SelectedSkinsByCharacter } from './skins';
+import { normalizeCharacterSkinId, SKIN_CHARACTER_IDS } from './skins';
+import type { SelectedSkinsByCharacter, UnlockedDarkSkins } from './skins';
 import type { OwnedSupport } from './supports';
 import type { SupportId } from './types';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
@@ -25,6 +25,7 @@ const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-use
 const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
 const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-id';
 const SELECTED_SKINS_BY_CHARACTER_KEY = 'g-no-heya-shooting:selected-skins-by-character';
+const UNLOCKED_DARK_SKINS_KEY = 'g-no-heya-shooting:unlocked-dark-skins';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -299,11 +300,14 @@ export function loadSelectedSkinsByCharacter(): SelectedSkinsByCharacter {
       ...(typeof skins.socho === 'string' ? { socho: normalizeCharacterSkinId(skins.socho) } : {}),
       ...(typeof skins.tsutsu === 'string' ? { tsutsu: normalizeCharacterSkinId(skins.tsutsu) } : {}),
       ...(typeof skins.rokudo === 'string' ? { rokudo: normalizeCharacterSkinId(skins.rokudo) } : {}),
+      ...(typeof skins.player === 'string' ? { player: normalizeCharacterSkinId(skins.player) } : {}),
       ...(typeof skins.nanaichi === 'string' ? { nanaichi: normalizeCharacterSkinId(skins.nanaichi) } : {}),
       ...(typeof skins.myoo === 'string' ? { myoo: normalizeCharacterSkinId(skins.myoo) } : {}),
       ...(typeof skins.ushimaru === 'string' ? { ushimaru: normalizeCharacterSkinId(skins.ushimaru) } : {}),
       ...(typeof skins.deli === 'string' ? { deli: normalizeCharacterSkinId(skins.deli) } : {}),
+      ...(typeof skins['yabuko-fm'] === 'string' ? { 'yabuko-fm': normalizeCharacterSkinId(skins['yabuko-fm']) } : {}),
       ...(typeof skins.rockel === 'string' ? { rockel: normalizeCharacterSkinId(skins.rockel) } : {}),
+      ...(typeof skins.hibiki === 'string' ? { hibiki: normalizeCharacterSkinId(skins.hibiki) } : {}),
     };
   } catch {
     return {};
@@ -313,6 +317,29 @@ export function loadSelectedSkinsByCharacter(): SelectedSkinsByCharacter {
 export function saveSelectedSkinsByCharacter(selectedSkins: SelectedSkinsByCharacter) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(SELECTED_SKINS_BY_CHARACTER_KEY, JSON.stringify(selectedSkins));
+}
+
+export function loadUnlockedDarkSkins(): UnlockedDarkSkins {
+  if (typeof window === 'undefined') return [];
+  const rawValue = window.localStorage.getItem(UNLOCKED_DARK_SKINS_KEY);
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(new Set(parsed.filter((value): value is MainCharacterId =>
+      typeof value === 'string' && (SKIN_CHARACTER_IDS as readonly string[]).includes(value),
+    )));
+  } catch {
+    return [];
+  }
+}
+
+export function saveUnlockedDarkSkins(characterIds: readonly MainCharacterId[]) {
+  if (typeof window === 'undefined') return;
+  const validIds = Array.from(new Set(characterIds.filter((value) =>
+    (SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(value),
+  )));
+  window.localStorage.setItem(UNLOCKED_DARK_SKINS_KEY, JSON.stringify(validIds));
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {

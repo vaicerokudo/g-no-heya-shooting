@@ -53,6 +53,7 @@ import {
   loadOwnedSupports,
   loadSelectedAura,
   loadSelectedSkinsByCharacter,
+  loadUnlockedDarkSkins,
   loadStarDustFragments,
   loadStarVeinSteel,
   loadSupportDamageUpgrades,
@@ -72,6 +73,7 @@ import {
   saveSelectedAura,
   saveOwnedWeapons,
   saveSelectedSkinsByCharacter,
+  saveUnlockedDarkSkins,
   saveStarDustFragments,
   saveStarVeinSteel,
   saveSupportDamageUpgrades,
@@ -93,9 +95,13 @@ import {
   getCharacterSkinImage,
   getCharacterSkinLabel,
   getCharacterWithSkin,
+  getDarkSkinUnlocksForStage,
   getEffectiveCharacterSkinId,
+  getSupportCardImage,
   getSoundComicSkinSupportId,
+  isDarkSkinUnlocked,
   isSoundComicSkinUnlocked,
+  mergeUnlockedDarkSkins,
   SOUND_COMIC_SKIN_CHARACTER_IDS,
 } from './game/skins';
 import type { CharacterSkinId, SelectedSkinsByCharacter } from './game/skins';
@@ -265,6 +271,7 @@ function App() {
   const [equippedWeapons, setEquippedWeapons] = useState<EquippedWeaponsByCharacter>(() => loadEquippedWeapons());
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
   const [selectedSkins, setSelectedSkins] = useState<SelectedSkinsByCharacter>(() => loadSelectedSkinsByCharacter());
+  const [unlockedDarkSkins, setUnlockedDarkSkins] = useState<MainCharacterId[]>(() => loadUnlockedDarkSkins());
   const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
   const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
@@ -387,12 +394,12 @@ function App() {
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const runtimeMainCharacterId = game.isTraining && trainingRunCharacterId ? trainingRunCharacterId : activeMainCharacterId;
   const mainCharacterSkinId = useMemo(
-    () => getEffectiveCharacterSkinId(runtimeMainCharacterId, selectedSkins, ownedSupports),
-    [ownedSupports, runtimeMainCharacterId, selectedSkins],
+    () => getEffectiveCharacterSkinId(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins],
   );
   const mainCharacter = useMemo(
-    () => getCharacterWithSkin(runtimeMainCharacterId, selectedSkins, ownedSupports),
-    [ownedSupports, runtimeMainCharacterId, selectedSkins],
+    () => getCharacterWithSkin(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins],
   );
   const selectedStage = useMemo(() => getStageById(selectedStageId), [selectedStageId]);
   const activeWeaponCharacterId: CharacterId =
@@ -476,6 +483,10 @@ function App() {
     () => (game.isTraining ? null : calculateCoinReward(game.status, game.coinsCollected, game.hasTakenDamage, getStageById(game.stageId).clearBonus)),
     [game.isTraining, game.status, game.coinsCollected, game.hasTakenDamage, game.stageId],
   );
+  const darkSkinUnlocksForResult = useMemo(
+    () => (game.status === 'clear' ? getDarkSkinUnlocksForStage(game.stageId) : []),
+    [game.stageId, game.status],
+  );
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
     (summonPhase === 'idle' || summonPhase === 'done') && (shopSummonCost === 0 || ownedCoins >= shopSummonCost);
@@ -491,12 +502,23 @@ function App() {
     if (rewardedResultKey.current === resultKey) return;
     rewardedResultKey.current = resultKey;
 
+    if (rewardSummary.status === 'clear') {
+      const stageUnlocks = getDarkSkinUnlocksForStage(game.stageId);
+      if (stageUnlocks.length > 0) {
+        setUnlockedDarkSkins((current) => {
+          const next = mergeUnlockedDarkSkins(current, stageUnlocks);
+          saveUnlockedDarkSkins(next);
+          return next;
+        });
+      }
+    }
+
     setOwnedCoins((current) => {
       const nextCoins = current + rewardSummary.addedCoins;
       saveOwnedCoins(nextCoins);
       return nextCoins;
     });
-  }, [game.defeatedEnemies, game.elapsed, rewardSummary]);
+  }, [game.defeatedEnemies, game.elapsed, game.stageId, rewardSummary]);
 
   useEffect(() => {
     equippedWeaponId.current = equippedMainWeapon.id;
@@ -793,10 +815,14 @@ function App() {
 
   const chooseCharacterSkin = (characterId: MainCharacterId, skinId: CharacterSkinId) => {
     if (skinId === 'sound-comic' && !isSoundComicSkinUnlocked(characterId, ownedSupports)) return;
+    if (skinId === 'dark' && !isDarkSkinUnlocked(characterId, unlockedDarkSkins)) return;
     const nextSkins = { ...selectedSkins, [characterId]: skinId };
     setSelectedSkins(nextSkins);
     saveSelectedSkinsByCharacter(nextSkins);
   };
+
+  const resolveSupportImage = (support: SupportCharacter) =>
+    getSupportCardImage(support.id, support.image, selectedSkins, ownedSupports, unlockedDarkSkins);
 
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
     if (game.status !== 'playing' || !joystickBaseRef.current) return;
@@ -1066,7 +1092,7 @@ function App() {
 
           <div className="training-character-grid">
             {trainingCharacters.map((character) => {
-              const definition = getCharacterWithSkin(character.id, selectedSkins, ownedSupports);
+              const definition = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins);
               const isSelected = trainingSelectedCharacterId === character.id;
               return (
                 <button
@@ -1165,13 +1191,15 @@ function App() {
               const supportId = getSoundComicSkinSupportId(characterId);
               const support = supportId ? getSupportById(supportId) : null;
               const supportLevel = getOwnedSupportLevel(ownedSupports, supportId);
-              const isUnlocked = isSoundComicSkinUnlocked(characterId, ownedSupports);
-              const currentSkinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports);
+              const isSoundComicUnlocked = isSoundComicSkinUnlocked(characterId, ownedSupports);
+              const isDarkUnlocked = isDarkSkinUnlocked(characterId, unlockedDarkSkins);
+              const currentSkinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins);
               const defaultImage = getCharacterSkinImage(characterId, 'default');
               const soundComicImage = getCharacterSkinImage(characterId, 'sound-comic');
+              const darkImage = getCharacterSkinImage(characterId, 'dark');
 
               return (
-                <article className={`skin-card ${isUnlocked ? 'is-unlocked' : 'is-locked'}`} key={characterId}>
+                <article className={`skin-card ${isSoundComicUnlocked || isDarkUnlocked ? 'is-unlocked' : 'is-locked'}`} key={characterId}>
                   <div className="skin-card-header">
                     {defaultImage && <img src={defaultImage} alt={character.name} />}
                     <div>
@@ -1193,14 +1221,25 @@ function App() {
                       className={`skin-option sound-comic ${currentSkinId === 'sound-comic' ? 'is-selected' : ''}`}
                       type="button"
                       onClick={() => chooseCharacterSkin(characterId, 'sound-comic')}
-                      disabled={!isUnlocked}
+                      disabled={!isSoundComicUnlocked}
                     >
                       {soundComicImage && <img src={soundComicImage} alt="" />}
                       <span>{'\u30b5\u30a6\u30f3\u30c9\u30b3\u30df\u30c3\u30af'}</span>
-                      <em>{isUnlocked ? (currentSkinId === 'sound-comic' ? '\u9078\u629e\u4e2d' : '\u9078\u629e') : '\u30ed\u30c3\u30af\u4e2d'}</em>
+                      <em>{isSoundComicUnlocked ? (currentSkinId === 'sound-comic' ? '\u9078\u629e\u4e2d' : '\u9078\u629e') : '\u30ed\u30c3\u30af\u4e2d'}</em>
+                    </button>
+                    <button
+                      className={`skin-option dark ${currentSkinId === 'dark' ? 'is-selected' : ''}`}
+                      type="button"
+                      onClick={() => chooseCharacterSkin(characterId, 'dark')}
+                      disabled={!isDarkUnlocked}
+                    >
+                      {darkImage && <img src={darkImage} alt="" />}
+                      <span>闇落ち</span>
+                      <em>{isDarkUnlocked ? (currentSkinId === 'dark' ? '選択中' : '選択') : 'ロック中'}</em>
                     </button>
                   </div>
-                  {!isUnlocked && <p className="skin-unlock-note">{'\u5bfe\u5fdc\u30b5\u30dd\u30fc\u30c8Lv5\u3067\u89e3\u653e'}</p>}
+                  {!isSoundComicUnlocked && <p className="skin-unlock-note">サウンドコミック：対応サポートLv5で解放</p>}
+                  {!isDarkUnlocked && <p className="skin-unlock-note dark-note">闇落ち：対応する隔離地域クリアで解放</p>}
                 </article>
               );
             })}
@@ -1287,7 +1326,7 @@ function App() {
             </div>
             <div className="main-character-list">
               {mainCharacterList.map((character) => {
-                const characterView = getCharacterWithSkin(character.id, selectedSkins, ownedSupports);
+                const characterView = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins);
                 const isActive = activeMainCharacterId === character.id;
                 const isAvailable = character.status === 'available';
                 return (
@@ -1338,7 +1377,7 @@ function App() {
               <span className="slot-label">同行サポート</span>
               {selectedSupport ? (
                 <>
-                  <img src={selectedSupport.image} alt={selectedSupport.name} />
+                  <img src={resolveSupportImage(selectedSupport)} alt={selectedSupport.name} />
                   <div>
                     <h2>{selectedSupport.name} / Lv {selectedSupportLevel}</h2>
                     <strong>{selectedSupport.role}</strong>
@@ -1386,7 +1425,7 @@ function App() {
             <span className="slot-label">{'\u73fe\u5728\u540c\u884c'}</span>
             {selectedSupport ? (
               <>
-                <img src={selectedSupport.image} alt={selectedSupport.name} />
+                <img src={resolveSupportImage(selectedSupport)} alt={selectedSupport.name} />
                 <div>
                   <h2>{selectedSupport.name}</h2>
                   <strong>{selectedSupport.role}</strong>
@@ -1409,7 +1448,7 @@ function App() {
                 const isActive = selectedSupport?.id === support.id;
                 return (
                   <article key={support.id} className={`support-list-card ${isActive ? 'is-active' : ''}`}>
-                    <img src={support.image} alt={support.name} />
+                    <img src={resolveSupportImage(support)} alt={support.name} />
                     <div>
                       <h2>{support.name}</h2>
                       <strong>Lv {ownedSupport.level} / x{ownedSupport.count}</strong>
@@ -1594,7 +1633,7 @@ function App() {
                 const canUpgrade = !isUpgraded && starVeinSteel >= SUPPORT_DAMAGE_UPGRADE_COST;
                 return (
                   <article className={`support-upgrade-card ${isUpgraded ? 'is-upgraded' : ''}`} key={support.id}>
-                    <img src={support.image} alt={support.name} />
+                    <img src={resolveSupportImage(support)} alt={support.name} />
                     <div>
                       <strong>{support.name}</strong>
                       <span>
@@ -1825,7 +1864,7 @@ function App() {
             <span className="slot-label">{'\u30b5\u30dd\u30fc\u30c8\u53ec\u559a\u30ab\u30fc\u30c9'}</span>
             {shopSummonResult && summonPhase === 'done' ? (
               <>
-                <img src={shopSummonResult.image} alt={shopSummonResult.name} />
+                <img src={resolveSupportImage(shopSummonResult)} alt={shopSummonResult.name} />
                 <div>
                   <h2>{shopSummonResult.name}</h2>
                   <strong>{shopSummonResult.role}</strong>
@@ -1885,7 +1924,7 @@ function App() {
                 const isActive = selectedSupport?.id === support.id;
                 return (
                   <article key={support.id} className={`support-list-card ${isActive ? 'is-active' : ''}`}>
-                    <img src={support.image} alt={support.name} />
+                    <img src={resolveSupportImage(support)} alt={support.name} />
                     <div>
                       <h2>{support.name}</h2>
                       <strong>{support.role}</strong>
@@ -2483,7 +2522,7 @@ function App() {
                 <span>SUP</span>
                 {selectedSupport ? (
                   <>
-                    <img src={selectedSupport.image} alt={selectedSupport.name} />
+                    <img src={resolveSupportImage(selectedSupport)} alt={selectedSupport.name} />
                     <em>Lv{selectedSupportLevel}</em>
                   </>
                 ) : (
@@ -2603,6 +2642,12 @@ function App() {
                 <span>所持コイン</span>
                 <strong>{ownedCoins}</strong>
               </div>
+            </div>
+          )}
+          {darkSkinUnlocksForResult.length > 0 && (
+            <div className="dark-skin-unlock-result">
+              <strong>闇落ちスキン解放</strong>
+              <span>{darkSkinUnlocksForResult.map((characterId) => getMainCharacter(characterId).name).join(' / ')}</span>
             </div>
           )}
           <div className="result-actions">
