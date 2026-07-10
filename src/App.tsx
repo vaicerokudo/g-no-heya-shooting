@@ -236,6 +236,9 @@ const assetPaths = {
     rockGolem: '/assets/tcg/enemy-rock-golem.png',
     securityDrone: '',
     experiment: '',
+    killerFish: '/assets/tcg/enemy-killer-fish.png',
+    noiseShade: '/assets/tcg/enemy-mist-leviathan.png',
+    bayShell: '/assets/tcg/enemy-mist-leviathan.png',
   },
 };
 

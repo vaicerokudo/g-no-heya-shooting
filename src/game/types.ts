@@ -24,7 +24,9 @@ export type GameStatus =
   | 'clear'
   | 'gameOver';
 
-export type EnemyKind = 'small' | 'flying' | 'charger' | 'scorpion' | 'rockGolem' | 'securityDrone' | 'experiment';
+export type EnemyKind =
+  | 'small' | 'flying' | 'charger' | 'scorpion' | 'rockGolem' | 'securityDrone' | 'experiment'
+  | 'killerFish' | 'noiseShade' | 'bayShell';
 
 export type SupportId =
   | '7171'

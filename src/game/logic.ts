@@ -344,6 +344,8 @@ function maybeSpawnEnemy(state: GameState): GameState {
   const spawnRate =
     stage.areaId === 'sandstorm-wilderness'
       ? Math.max(0.62, 1.45 - state.elapsed * 0.01)
+      : stage.areaId === 'black-noise-bay'
+        ? Math.max(0.64, 1.38 - state.elapsed * 0.009)
       : Math.max(0.55, 1.35 - state.elapsed * 0.012);
 
   return {
@@ -456,6 +458,29 @@ function moveEnemy(enemy: Enemy, player: Player, elapsed: number, dt: number): E
     };
   }
 
+  if (enemy.kind === 'killerFish') {
+    return {
+      ...enemy,
+      x: clamp(enemy.x + Math.sin((elapsed - enemy.spawnTime) * 3.5) * 36 * dt, 26, FIELD_WIDTH - 26),
+      y: enemy.y + enemy.speed * speedMultiplier * dt,
+    };
+  }
+
+  if (enemy.kind === 'noiseShade') {
+    const distance = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+    if (!enemy.isCharging && distance < 190) {
+      const direction = normalize({ x: player.x - enemy.x, y: player.y - enemy.y });
+      return { ...enemy, isCharging: true, chargeTarget: { x: direction.x * 170, y: direction.y * 170 } };
+    }
+    if (enemy.isCharging && enemy.chargeTarget) {
+      return { ...enemy, x: enemy.x + enemy.chargeTarget.x * speedMultiplier * dt, y: enemy.y + enemy.chargeTarget.y * speedMultiplier * dt };
+    }
+  }
+
+  if (enemy.kind === 'bayShell') {
+    return { ...enemy, y: enemy.y + enemy.speed * speedMultiplier * dt };
+  }
+
   return {
     ...enemy,
     y: enemy.y + enemy.speed * speedMultiplier * dt,
@@ -466,7 +491,7 @@ function updateEnemyAttacks(state: GameState, dt: number): GameState {
   let nextId = state.nextId;
   const bullets = [...state.bullets];
   const enemies = state.enemies.map((enemy) => {
-    if (enemy.kind !== 'scorpion' && enemy.kind !== 'securityDrone') return enemy;
+    if (enemy.kind !== 'scorpion' && enemy.kind !== 'securityDrone' && enemy.kind !== 'killerFish' && enemy.kind !== 'bayShell') return enemy;
 
     const shotCooldown = Math.max(0, (enemy.shotCooldown ?? 1.4) - dt);
     if (shotCooldown > 0 || enemy.y < 16 || enemy.y > FIELD_HEIGHT - 84) {
@@ -474,16 +499,17 @@ function updateEnemyAttacks(state: GameState, dt: number): GameState {
     }
 
     const direction = normalize({ x: state.player.x - enemy.x, y: state.player.y - enemy.y });
+    const curve = enemy.kind === 'killerFish' ? Math.sign(Math.sin(enemy.id * 2.7)) * 34 : 0;
     bullets.push({
       id: nextId++,
       x: enemy.x,
       y: enemy.y + enemy.radius * 0.8,
-      vx: direction.x * 74,
+      vx: direction.x * (enemy.kind === 'bayShell' ? 86 : 74) + curve,
       vy: Math.max(92, direction.y * 122),
-      radius: 5,
+      radius: enemy.kind === 'bayShell' ? 9 : 5,
     });
 
-    return { ...enemy, shotCooldown: enemy.kind === 'securityDrone' ? 1.8 : 2.25 };
+    return { ...enemy, shotCooldown: enemy.kind === 'securityDrone' ? 1.8 : enemy.kind === 'bayShell' ? 3.0 : enemy.kind === 'killerFish' ? 2.0 : 2.25 };
   });
 
   return { ...state, enemies, bullets, nextId };
@@ -601,6 +627,28 @@ function updateBoss(state: GameState, dt: number): GameState {
     boss = { ...boss, shotTimer: 1.15 };
   }
 
+  if (boss.shotTimer <= 0 && boss.type === 'bay-guardian') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, 0, 0.7], 82, 170, 7);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.18 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'mist-leviathan') {
+    const fan = createBossSpreadBullets(boss, nextId, [-0.8, -0.4, 0, 0.4, 0.8], 78, 162, 7);
+    nextId += fan.length;
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, ...fan, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.65, vx: direction.x * 82, vy: Math.max(142, direction.y * 180), radius: 15 }];
+    boss = { ...boss, shotTimer: 1.38 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'leviathan') {
+    const wave = createBossSpreadBullets(boss, nextId, [-1.15, -0.72, -0.36, 0, 0.36, 0.72, 1.15], 88, 178, 7);
+    nextId += wave.length;
+    bullets = [...bullets, ...wave];
+    boss = { ...boss, shotTimer: 1.16 };
+  }
+
   if (boss.slamTimer <= 0 && boss.type === 'boar') {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
     bullets = [
@@ -663,6 +711,11 @@ function updateBoss(state: GameState, dt: number): GameState {
       },
     ];
     boss = { ...boss, slamTimer: 3.6 };
+  }
+
+  if (boss.slamTimer <= 0 && boss.type === 'leviathan') {
+    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius, vx: Math.sin(state.elapsed * 1.7) * 64, vy: 212, radius: 18 }];
+    boss = { ...boss, slamTimer: 2.9 };
   }
 
   if (boss.shotTimer <= 0 && (boss.type === 'boar' || boss.type === 'giant-scorpion')) {

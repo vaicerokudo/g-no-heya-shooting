@@ -10,6 +10,9 @@ const enemyStats: Record<EnemyKind, Pick<Enemy, 'radius' | 'hp' | 'maxHp' | 'spe
   rockGolem: { radius: 24, hp: 5, maxHp: 5, speed: 34 },
   securityDrone: { radius: 16, hp: 2, maxHp: 2, speed: 78 },
   experiment: { radius: 21, hp: 4, maxHp: 4, speed: 48 },
+  killerFish: { radius: 16, hp: 2, maxHp: 2, speed: 70 },
+  noiseShade: { radius: 18, hp: 3, maxHp: 3, speed: 56 },
+  bayShell: { radius: 24, hp: 5, maxHp: 5, speed: 34 },
 };
 
 export function chooseEnemyKind(elapsed: number, defeatedEnemies: number, areaId: StageAreaId = 'astoria-grassland'): EnemyKind {
@@ -23,6 +26,13 @@ export function chooseEnemyKind(elapsed: number, defeatedEnemies: number, areaId
     if (elapsed < 8) return 'securityDrone';
     if (defeatedEnemies % 5 === 3) return 'experiment';
     return 'securityDrone';
+  }
+
+  if (areaId === 'black-noise-bay') {
+    if (elapsed < 7) return 'killerFish';
+    if (defeatedEnemies % 7 === 4) return 'bayShell';
+    if (defeatedEnemies % 4 === 1) return 'noiseShade';
+    return 'killerFish';
   }
 
   if (elapsed < 10) return 'small';
@@ -44,6 +54,8 @@ export function createEnemy(id: number, kind: EnemyKind, elapsed: number): Enemy
     spawnTime: elapsed,
     ...(kind === 'scorpion' ? { shotCooldown: 1.1 + (id % 3) * 0.32 } : {}),
     ...(kind === 'securityDrone' ? { shotCooldown: 0.9 + (id % 3) * 0.28 } : {}),
+    ...(kind === 'killerFish' ? { shotCooldown: 1.2 + (id % 3) * 0.3 } : {}),
+    ...(kind === 'bayShell' ? { shotCooldown: 1.8 + (id % 3) * 0.35 } : {}),
     ...stats,
   };
 }
