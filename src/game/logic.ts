@@ -509,12 +509,12 @@ function updateBoss(state: GameState, dt: number): GameState {
       boss = { ...boss, hasSummonedClones: true };
       bossClones = [-1, 1].map((side, index) => ({
         id: nextId + index,
-        x: boss.x + side * 104,
+        x: boss.x + side * 128,
         y: boss.y + 12,
         radius: Math.round(boss.radius * 0.78),
         timer: 6.4,
         shotTimer: 0.7 + index * 0.38,
-        offsetX: side * 104,
+        offsetX: side * 128,
       }));
       nextId += bossClones.length;
     }
@@ -522,7 +522,7 @@ function updateBoss(state: GameState, dt: number): GameState {
     const updatedClones = bossClones
       .map((clone) => ({
         ...clone,
-        x: boss.x + clone.offsetX + Math.sin((boss.phaseTimer + clone.id) * 2.2) * 12,
+        x: boss.x + clone.offsetX + Math.sin((boss.phaseTimer + clone.id) * 2.2) * 5,
         y: boss.y + 10 + Math.sin((boss.phaseTimer + clone.id) * 1.7) * 8,
         timer: clone.timer - dt,
         shotTimer: clone.shotTimer - dt,

@@ -1757,6 +1757,36 @@ body.game-touch-lock .app-shell {
   box-shadow: 0 0 16px rgba(255, 209, 102, 0.3);
 }
 
+.g-weapon-effect-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  border: 1px solid rgba(154, 241, 255, 0.82);
+  border-radius: 999px;
+  color: #063342;
+  background: linear-gradient(135deg, #e5ffff, #7ce8ff 56%, #c4a1ff);
+  box-shadow: 0 0 14px rgba(109, 232, 255, 0.34);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.weapon-card.has-g-weapon-effect {
+  box-shadow:
+    inset 0 0 0 1px rgba(219, 253, 255, 0.26),
+    0 0 28px rgba(109, 232, 255, 0.22),
+    0 0 22px rgba(255, 209, 102, 0.18);
+}
+
+.g-effect-upgrade-action {
+  border-color: rgba(115, 235, 255, 0.72);
+  color: #07303a;
+  background: linear-gradient(135deg, #e5ffff, #82eaff 58%, #c9a7ff);
+}
+
 .weapon-g-lock {
   border: 1px solid rgba(255, 255, 255, 0.14);
   color: rgba(247, 251, 255, 0.66);
@@ -3183,6 +3213,19 @@ body.game-touch-lock .field {
   opacity: 0.72;
   pointer-events: none;
   animation: gWeaponGlowPulse 1.7s ease-in-out infinite alternate;
+}
+
+.player.has-enhanced-g-weapon .player-g-weapon-glow {
+  width: 64px;
+  height: 76px;
+  opacity: 0.96;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255, 255, 222, 0.68), transparent 36%),
+    radial-gradient(circle at 50% 72%, rgba(95, 232, 255, 0.52), transparent 62%);
+  box-shadow:
+    0 0 26px rgba(255, 224, 128, 0.76),
+    0 0 42px rgba(95, 232, 255, 0.52),
+    0 0 58px rgba(201, 167, 255, 0.26);
 }
 
 .player img {
@@ -4690,6 +4733,31 @@ body.game-touch-lock .field {
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.08),
     0 0 18px rgba(255, 209, 102, 0.2);
+}
+
+.combat-loadout-icon.has-g-weapon-effect {
+  border-color: rgba(154, 241, 255, 0.88);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 0 20px rgba(109, 232, 255, 0.34),
+    0 0 16px rgba(255, 209, 102, 0.22);
+}
+
+.loadout-effect-badge {
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  border: 1px solid rgba(220, 253, 255, 0.88);
+  border-radius: 999px;
+  color: #0d3140;
+  background: #b9f8ff;
+  box-shadow: 0 0 10px rgba(109, 232, 255, 0.68);
+  font-size: 0.75rem;
+  line-height: 1;
 }
 
 .loadout-g-badge {

@@ -46,6 +46,7 @@ import {
   loadActiveSupportId,
   loadEquippedWeapons,
   loadFreeSupportSummonUsed,
+  loadGWeaponEffects,
   loadGWeapons,
   loadOwnedAuras,
   loadOwnedSupports,
@@ -55,6 +56,7 @@ import {
   loadStarVeinSteel,
   resetOwnedCoins,
   resetGWeapons,
+  resetGWeaponEffects,
   resetOwnedWeapons,
   saveOwnedCoins,
   saveActiveMainCharacterId,
@@ -62,6 +64,7 @@ import {
   saveEquippedWeapons,
   saveFreeSupportSummonUsed,
   saveGWeapons,
+  saveGWeaponEffects,
   saveOwnedAuras,
   saveOwnedSupports,
   saveSelectedAura,
@@ -246,6 +249,7 @@ function App() {
   const [starDustFragments, setStarDustFragments] = useState(() => loadStarDustFragments());
   const [starVeinSteel, setStarVeinSteel] = useState(() => loadStarVeinSteel());
   const [gWeaponIds, setGWeaponIds] = useState<string[]>(() => loadGWeapons());
+  const [gWeaponEffectIds, setGWeaponEffectIds] = useState<string[]>(() => loadGWeaponEffects());
   const [ownedWeapons, setOwnedWeapons] = useState<OwnedWeapon[]>(() => loadOwnedWeapons());
   const [ownedSupports, setOwnedSupports] = useState<OwnedSupport[]>(() => loadOwnedSupports());
   const [ownedAuras, setOwnedAuras] = useState<AuraId[]>(() => loadOwnedAuras());
@@ -429,6 +433,7 @@ function App() {
     [ownedWeapons, equippedMainWeapon.id],
   );
   const equippedMainWeaponIsG = gWeaponIds.includes(equippedMainWeapon.id);
+  const equippedMainWeaponHasEnhancedEffect = gWeaponEffectIds.includes(equippedMainWeapon.id);
   const mainWeaponLabel = `${equippedMainWeapon.name} / Lv ${equippedMainWeaponLevel}${equippedMainWeaponIsG ? ' / G' : ''}`;
   const mainWeaponEffect = equippedMainWeapon.effectDescription;
   const sochoWeaponTuning = useMemo(
@@ -862,8 +867,10 @@ function App() {
     if (!window.confirm('所持武器をリセットしますか？')) return;
     resetOwnedWeapons();
     resetGWeapons();
+    resetGWeaponEffects();
     setOwnedWeapons([]);
     setGWeaponIds([]);
+    setGWeaponEffectIds([]);
     setForgeResult(null);
     setWeaponExcessConvertMessage('');
   };
@@ -893,6 +900,17 @@ function App() {
     setStarVeinSteel(nextStarVeinSteel);
     saveStarVeinSteel(nextStarVeinSteel);
     setWeaponExcessConvertMessage(`${weapon.name} をG化しました`);
+  };
+
+  const enhanceGWeaponEffect = (weapon: OwnedWeapon) => {
+    if (!gWeaponIds.includes(weapon.id) || gWeaponEffectIds.includes(weapon.id) || starVeinSteel < 5) return;
+    const nextEffectIds = [...gWeaponEffectIds, weapon.id];
+    setGWeaponEffectIds(nextEffectIds);
+    saveGWeaponEffects(nextEffectIds);
+    const nextStarVeinSteel = starVeinSteel - 5;
+    setStarVeinSteel(nextStarVeinSteel);
+    saveStarVeinSteel(nextStarVeinSteel);
+    setWeaponExcessConvertMessage(`${weapon.name} の武器演出を強化しました`);
   };
 
   const equipMainWeapon = (weaponId: string) => {
@@ -1401,6 +1419,7 @@ function App() {
             <span>メインキャラ：{mainCharacter.name}</span>
             <h2>現在装備中の武器：{equippedMainWeapon.name} / Lv {equippedMainWeaponLevel}</h2>
             {equippedMainWeaponIsG && <em className="g-weapon-badge">G</em>}
+            {equippedMainWeaponHasEnhancedEffect && <em className="g-weapon-effect-badge">演出強化</em>}
             <p>{equippedMainWeapon.owner} / {equippedMainWeapon.type} / {equippedMainWeapon.rarity}</p>
             <p>{equippedMainWeapon.description}</p>
             <p className="weapon-effect-line">効果：{equippedMainWeapon.effectDescription}</p>
@@ -1413,8 +1432,9 @@ function App() {
               weaponOptions.map((weapon) => {
                 const isEquipped = equippedMainWeapon.id === weapon.id;
                 const isGWeapon = gWeaponIds.includes(weapon.id);
+                const hasEnhancedEffect = gWeaponEffectIds.includes(weapon.id);
                 return (
-                  <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''} ${isGWeapon ? 'is-g-weapon' : ''}`}>
+                  <article key={weapon.id} className={`weapon-card equipment-weapon-card rarity-${weapon.rarity} ${isEquipped ? 'is-equipped' : ''} ${isGWeapon ? 'is-g-weapon' : ''} ${hasEnhancedEffect ? 'has-g-weapon-effect' : ''}`}>
                     {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                     <div>
                       <h3>{weapon.name}</h3>
@@ -1464,10 +1484,12 @@ function App() {
               ownedWeapons.map((weapon) => {
                 const excessCount = getWeaponExcessCount(weapon);
                 const isGWeapon = gWeaponIds.includes(weapon.id);
+                const hasEnhancedEffect = gWeaponEffectIds.includes(weapon.id);
                 const canUpgradeToG = weapon.level >= WEAPON_MAX_LEVEL && !isGWeapon;
                 const hasEnoughSteelForG = starVeinSteel >= G_WEAPON_STAR_VEIN_STEEL_COST;
+                const canEnhanceEffect = isGWeapon && !hasEnhancedEffect && starVeinSteel >= 5;
                 return (
-                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity} ${isGWeapon ? 'is-g-weapon' : ''}`}> 
+                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity} ${isGWeapon ? 'is-g-weapon' : ''} ${hasEnhancedEffect ? 'has-g-weapon-effect' : ''}`}>
                     {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                     <div>
                       <h3>{weapon.name}</h3>
@@ -1475,7 +1497,9 @@ function App() {
                       {Object.values(equippedWeapons).includes(weapon.id) && <em className="equipped-badge">{'\u88c5\u5099\u4e2d'}</em>}
                     </div>
                     <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
+                    {hasEnhancedEffect && <span className="g-weapon-effect-badge">演出強化</span>}
                     {isGWeapon && <span className="g-weapon-badge">G化済み</span>}
+                    {hasEnhancedEffect && <span className="g-weapon-effect-badge">演出強化済み</span>}
                     {!isGWeapon && weapon.level < WEAPON_MAX_LEVEL && <span className="weapon-g-lock">Lv5でG化可能</span>}
                     {excessCount > 0 && <span className="weapon-excess-badge">余剰 +{excessCount}</span>}
                     <p>{weapon.description}</p>
@@ -1483,6 +1507,11 @@ function App() {
                     {canUpgradeToG && (
                       <button className="secondary-button compact-action g-upgrade-action" onClick={() => upgradeWeaponToG(weapon)} disabled={!hasEnoughSteelForG}>
                         G化（星脈鋼 {G_WEAPON_STAR_VEIN_STEEL_COST}）
+                      </button>
+                    )}
+                    {isGWeapon && !hasEnhancedEffect && (
+                      <button className="secondary-button compact-action g-effect-upgrade-action" onClick={() => enhanceGWeaponEffect(weapon)} disabled={!canEnhanceEffect}>
+                        演出強化（星脈鋼 5）
                       </button>
                     )}
                     {excessCount > 0 && (
@@ -1639,8 +1668,10 @@ function App() {
                 const isGWeapon = gWeaponIds.includes(weapon.id);
                 const canUpgradeToG = weapon.level >= WEAPON_MAX_LEVEL && !isGWeapon;
                 const hasEnoughSteelForG = starVeinSteel >= G_WEAPON_STAR_VEIN_STEEL_COST;
+                const hasEnhancedEffect = gWeaponEffectIds.includes(weapon.id);
+                const canEnhanceEffect = isGWeapon && !hasEnhancedEffect && starVeinSteel >= 5;
                 return (
-                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity} ${isGWeapon ? 'is-g-weapon' : ''}`}> 
+                  <article key={weapon.id} className={`weapon-card rarity-${weapon.rarity} ${isGWeapon ? 'is-g-weapon' : ''} ${hasEnhancedEffect ? 'has-g-weapon-effect' : ''}`}>
                     {weapon.imagePath && <img className="weapon-card-image" src={weapon.imagePath} alt={weapon.name} />}
                     <div>
                       <h3>{weapon.name}</h3>
@@ -1649,6 +1680,7 @@ function App() {
                     </div>
                     <span className="weapon-count">Lv {weapon.level} / x{weapon.count}</span>
                     {isGWeapon && <span className="g-weapon-badge">G化済み</span>}
+                    {hasEnhancedEffect && <span className="g-weapon-effect-badge">演出強化済み</span>}
                     {!isGWeapon && weapon.level < WEAPON_MAX_LEVEL && <span className="weapon-g-lock">Lv5でG化可能</span>}
                     {excessCount > 0 && <span className="weapon-excess-badge">余剰 +{excessCount}</span>}
                     <p>{weapon.description}</p>
@@ -1656,6 +1688,11 @@ function App() {
                     {canUpgradeToG && (
                       <button className="secondary-button compact-action g-upgrade-action" onClick={() => upgradeWeaponToG(weapon)} disabled={!hasEnoughSteelForG}>
                         G化（星脈鋼 {G_WEAPON_STAR_VEIN_STEEL_COST}）
+                      </button>
+                    )}
+                    {isGWeapon && !hasEnhancedEffect && (
+                      <button className="secondary-button compact-action g-effect-upgrade-action" onClick={() => enhanceGWeaponEffect(weapon)} disabled={!canEnhanceEffect}>
+                        演出強化（星脈鋼 5）
                       </button>
                     )}
                     {excessCount > 0 && (
@@ -2321,7 +2358,7 @@ function App() {
             ))}
 
             <div
-              className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''} ${selectedAura ? `has-aura ${selectedAura.cssClass}` : ''} ${equippedMainWeaponIsG ? 'has-g-weapon' : ''}`}
+              className={`player ${game.player.invincibleTimer > 0 ? 'is-hit' : ''} ${selectedAura ? `has-aura ${selectedAura.cssClass}` : ''} ${equippedMainWeaponIsG ? 'has-g-weapon' : ''} ${equippedMainWeaponHasEnhancedEffect ? 'has-enhanced-g-weapon' : ''}`}
               style={place(game.player.x, game.player.y, game.player.radius * 2)}
             >
               {selectedAura && <span className="player-aura-ring" aria-hidden="true" />}
@@ -2409,13 +2446,14 @@ function App() {
                   <strong>なし</strong>
                 )}
               </div>
-              <div className={`combat-loadout-icon ${equippedMainWeapon.imagePath ? '' : 'is-empty'} ${equippedMainWeaponIsG ? 'is-g-weapon' : ''}`}>
+              <div className={`combat-loadout-icon ${equippedMainWeapon.imagePath ? '' : 'is-empty'} ${equippedMainWeaponIsG ? 'is-g-weapon' : ''} ${equippedMainWeaponHasEnhancedEffect ? 'has-g-weapon-effect' : ''}`}>
                 <span>WPN</span>
                 {equippedMainWeapon.imagePath ? (
                   <>
                     <img src={equippedMainWeapon.imagePath} alt={equippedMainWeapon.name} />
                     <em>Lv{equippedMainWeaponLevel}</em>
                     {equippedMainWeaponIsG && <b className="loadout-g-badge">G</b>}
+                    {equippedMainWeaponHasEnhancedEffect && <b className="loadout-effect-badge">+</b>}
                   </>
                 ) : (
                   <strong>Lv{equippedMainWeaponLevel}</strong>
