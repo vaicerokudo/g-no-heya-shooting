@@ -24,7 +24,7 @@ export type GameStatus =
   | 'clear'
   | 'gameOver';
 
-export type EnemyKind = 'small' | 'flying' | 'charger' | 'scorpion' | 'rockGolem';
+export type EnemyKind = 'small' | 'flying' | 'charger' | 'scorpion' | 'rockGolem' | 'securityDrone' | 'experiment';
 
 export type SupportId =
   | '7171'
@@ -69,6 +69,17 @@ export type Boss = {
   shotTimer: number;
   slamTimer: number;
   hitTimer?: number;
+  hasSummonedClones?: boolean;
+};
+
+export type BossClone = {
+  id: number;
+  x: number;
+  y: number;
+  radius: number;
+  timer: number;
+  shotTimer: number;
+  offsetX: number;
 };
 
 export type Coin = {
@@ -223,6 +234,7 @@ export type GameState = {
   supportSochoSlash: SochoSupportSlashState;
   effects: FloatingEffect[];
   boss: Boss | null;
+  bossClones: BossClone[];
   bossIntroTimer: number;
   elapsed: number;
   coinsCollected: number;

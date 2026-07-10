@@ -156,6 +156,7 @@ export const createInitialGameState = (): GameState => ({
   },
   effects: [],
   boss: null,
+  bossClones: [],
   bossIntroTimer: 0,
   elapsed: 0,
   coinsCollected: 0,
@@ -299,6 +300,7 @@ export function updateGame(
     return {
       ...next,
       boss: null,
+      bossClones: [],
       status: 'clear',
       coinsCollected: stageCoins,
       message: `Stage clear. Stage coins: ${stageCoins}`,
@@ -356,6 +358,7 @@ function maybeSpawnBoss(state: GameState): GameState {
   return {
     ...state,
     enemies: [],
+    bossClones: [],
     bossIntroTimer: 1.25,
     message: 'BOSS APPEARS!',
   };
@@ -442,6 +445,14 @@ function moveEnemy(enemy: Enemy, player: Player, elapsed: number, dt: number): E
     };
   }
 
+  if (enemy.kind === 'securityDrone') {
+    return {
+      ...enemy,
+      x: clamp(enemy.x + Math.sin((elapsed - enemy.spawnTime) * 4.4) * 32 * dt, 26, FIELD_WIDTH - 26),
+      y: enemy.y + enemy.speed * speedMultiplier * dt,
+    };
+  }
+
   return {
     ...enemy,
     y: enemy.y + enemy.speed * speedMultiplier * dt,
@@ -452,7 +463,7 @@ function updateEnemyAttacks(state: GameState, dt: number): GameState {
   let nextId = state.nextId;
   const bullets = [...state.bullets];
   const enemies = state.enemies.map((enemy) => {
-    if (enemy.kind !== 'scorpion') return enemy;
+    if (enemy.kind !== 'scorpion' && enemy.kind !== 'securityDrone') return enemy;
 
     const shotCooldown = Math.max(0, (enemy.shotCooldown ?? 1.4) - dt);
     if (shotCooldown > 0 || enemy.y < 16 || enemy.y > FIELD_HEIGHT - 84) {
@@ -469,7 +480,7 @@ function updateEnemyAttacks(state: GameState, dt: number): GameState {
       radius: 5,
     });
 
-    return { ...enemy, shotCooldown: 2.25 };
+    return { ...enemy, shotCooldown: enemy.kind === 'securityDrone' ? 1.8 : 2.25 };
   });
 
   return { ...state, enemies, bullets, nextId };
@@ -489,6 +500,50 @@ function updateBoss(state: GameState, dt: number): GameState {
   };
   let bullets = state.bullets;
   let nextId = state.nextId;
+  let bossClones = state.bossClones;
+
+  if (boss.type === 'black-noise-roku') {
+    if (!boss.hasSummonedClones && boss.hp <= boss.maxHp * 0.68) {
+      boss = { ...boss, hasSummonedClones: true };
+      bossClones = [-1, 1].map((side, index) => ({
+        id: nextId + index,
+        x: boss.x + side * 104,
+        y: boss.y + 12,
+        radius: Math.round(boss.radius * 0.78),
+        timer: 6.4,
+        shotTimer: 0.7 + index * 0.38,
+        offsetX: side * 104,
+      }));
+      nextId += bossClones.length;
+    }
+
+    const updatedClones = bossClones
+      .map((clone) => ({
+        ...clone,
+        x: boss.x + clone.offsetX + Math.sin((boss.phaseTimer + clone.id) * 2.2) * 12,
+        y: boss.y + 10 + Math.sin((boss.phaseTimer + clone.id) * 1.7) * 8,
+        timer: clone.timer - dt,
+        shotTimer: clone.shotTimer - dt,
+      }))
+      .filter((clone) => clone.timer > 0);
+
+    bossClones = updatedClones.map((clone) => {
+      if (clone.shotTimer > 0) return clone;
+      const cloneBullets = createBossSpreadBullets(
+        { ...boss, x: clone.x, y: clone.y, radius: clone.radius },
+        nextId,
+        [-0.52, 0.52],
+        76,
+        168,
+        6,
+      );
+      nextId += cloneBullets.length;
+      bullets = [...bullets, ...cloneBullets];
+      return { ...clone, shotTimer: 1.35 };
+    });
+  } else {
+    bossClones = [];
+  }
 
   if (boss.shotTimer <= 0 && boss.type === 'goblin') {
     const newBullets = createBossSpreadBullets(boss, nextId, [-0.75, 0, 0.75], 70, 160, 7);
@@ -516,6 +571,31 @@ function updateBoss(state: GameState, dt: number): GameState {
     nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
     boss = { ...boss, shotTimer: 1.25 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'security-drone-chief') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.85, 0, 0.85], 92, 184, 6);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.05 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'rampant-experiment') {
+    const smallBullets = createBossSpreadBullets(boss, nextId, [-0.65, 0, 0.65], 74, 158, 7);
+    nextId += smallBullets.length;
+    const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, ...smallBullets, {
+      id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.65,
+      vx: direction.x * 86, vy: Math.max(146, direction.y * 186), radius: 13,
+    }];
+    boss = { ...boss, shotTimer: 1.4 };
+  }
+
+  if (boss.shotTimer <= 0 && boss.type === 'black-noise-roku') {
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 82, 176, 7);
+    nextId += newBullets.length;
+    bullets = [...bullets, ...newBullets];
+    boss = { ...boss, shotTimer: 1.15 };
   }
 
   if (boss.slamTimer <= 0 && boss.type === 'boar') {
@@ -590,7 +670,7 @@ function updateBoss(state: GameState, dt: number): GameState {
     boss = { ...boss, slamTimer: 3.6 };
   }
 
-  return { ...state, boss, bullets, nextId };
+  return { ...state, boss, bossClones, bullets, nextId };
 }
 
 function createBossSpreadBullets(

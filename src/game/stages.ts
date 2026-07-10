@@ -4,10 +4,22 @@ export type StageId =
   | 'astoria-grassland-3'
   | 'sandstorm-wilderness-1'
   | 'sandstorm-wilderness-2'
-  | 'sandstorm-wilderness-3';
-export type BossType = 'boar' | 'goblin' | 'bear' | 'giant-scorpion' | 'wyvern' | 'rock-golem';
+  | 'sandstorm-wilderness-3'
+  | 'delta-facility-1'
+  | 'delta-facility-2'
+  | 'delta-facility-3';
+export type BossType =
+  | 'boar'
+  | 'goblin'
+  | 'bear'
+  | 'giant-scorpion'
+  | 'wyvern'
+  | 'rock-golem'
+  | 'security-drone-chief'
+  | 'rampant-experiment'
+  | 'black-noise-roku';
 export type StageDifficulty = 'low' | 'medium' | 'high';
-export type StageAreaId = 'astoria-grassland' | 'sandstorm-wilderness';
+export type StageAreaId = 'astoria-grassland' | 'sandstorm-wilderness' | 'delta-facility';
 
 export type StageDefinition = {
   id: StageId;
@@ -114,6 +126,24 @@ export const SANDSTORM_WILDERNESS_STAGES: StageDefinition[] = [
   },
 ];
 
+export const DELTA_FACILITY_STAGES: StageDefinition[] = [
+  {
+    id: 'delta-facility-1', areaId: 'delta-facility', name: '研究施設デルタ 1',
+    bossName: '警備ドローン隊長', bossType: 'security-drone-chief', bossImage: '/assets/tcg/boss-security-drone-chief.png',
+    difficulty: 'high', difficultyLabel: '高', clearBonus: 50, bossHp: 60, bossRadius: 46,
+  },
+  {
+    id: 'delta-facility-2', areaId: 'delta-facility', name: '研究施設デルタ 2',
+    bossName: '暴走実験体', bossType: 'rampant-experiment', bossImage: '/assets/tcg/boss-rampant-experiment.png',
+    difficulty: 'high', difficultyLabel: '高', clearBonus: 60, bossHp: 68, bossRadius: 52,
+  },
+  {
+    id: 'delta-facility-3', areaId: 'delta-facility', name: '研究施設デルタ 3',
+    bossName: 'ブラックノイズ・ロク', bossType: 'black-noise-roku', bossImage: '/assets/tcg/boss-black-noise-roku.png',
+    difficulty: 'high', difficultyLabel: '極', clearBonus: 75, bossHp: 82, bossRadius: 48,
+  },
+];
+
 export const STAGE_AREAS: StageAreaDefinition[] = [
   {
     id: 'astoria-grassland',
@@ -126,6 +156,12 @@ export const STAGE_AREAS: StageAreaDefinition[] = [
     name: '\u7802\u5875\u306e\u8352\u91ce',
     description: '\u8349\u539f\u306e\u5148\u306b\u5e83\u304c\u308b\u7802\u5875\u3068\u5ca9\u5834\u306e\u7b2c2\u30a8\u30ea\u30a2\u3002',
     stages: SANDSTORM_WILDERNESS_STAGES,
+  },
+  {
+    id: 'delta-facility',
+    name: '研究施設デルタ',
+    description: '青緑の警報灯が揺れる、封鎖された研究施設エリア。',
+    stages: DELTA_FACILITY_STAGES,
   },
 ];
 
@@ -144,6 +180,9 @@ export function isStageId(value: unknown): value is StageId {
     value === 'astoria-grassland-3' ||
     value === 'sandstorm-wilderness-1' ||
     value === 'sandstorm-wilderness-2' ||
-    value === 'sandstorm-wilderness-3'
+    value === 'sandstorm-wilderness-3' ||
+    value === 'delta-facility-1' ||
+    value === 'delta-facility-2' ||
+    value === 'delta-facility-3'
   );
 }

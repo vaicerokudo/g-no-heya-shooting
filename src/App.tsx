@@ -206,7 +206,7 @@ const keyMap: Record<string, Vector> = {
   D: { x: 1, y: 0 },
 };
 
-const enemyLabels: Record<EnemyKind, string> = {
+const enemyLabels: Partial<Record<EnemyKind, string>> = {
   small: '小型敵',
   flying: '飛行敵',
   charger: '突進敵',
@@ -227,6 +227,8 @@ const assetPaths = {
     charger: '/assets/tcg/enemy-boar.png',
     scorpion: '/assets/tcg/enemy-scorpion.png',
     rockGolem: '/assets/tcg/enemy-rock-golem.png',
+    securityDrone: '',
+    experiment: '',
   },
 };
 
@@ -2213,7 +2215,7 @@ function App() {
                 className={`enemy enemy-${enemy.kind} ${(enemy.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
                 style={place(enemy.x, enemy.y, enemy.radius * 2)}
               >
-                <img src={assetPaths.enemies[enemy.kind]} alt={enemyLabels[enemy.kind]} />
+                {assetPaths.enemies[enemy.kind] ? <img src={assetPaths.enemies[enemy.kind]} alt={enemyLabels[enemy.kind] ?? enemy.kind} /> : <span aria-label={enemy.kind} />}
               </div>
             ))}
 
@@ -2278,7 +2280,7 @@ function App() {
 
             {game.boss && (
               <div
-                className={`boss ${(game.boss.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
+                className={`boss boss-${game.boss.type} ${(game.boss.hitTimer ?? 0) > 0 ? 'is-slashed' : ''}`}
                 style={{
                   ...place(game.boss.x, game.boss.y, game.boss.radius * 2),
                   backgroundImage: `url(${game.boss.image})`,
@@ -2287,6 +2289,18 @@ function App() {
                 {game.boss.name}
               </div>
             )}
+
+            {game.bossClones.map((clone) => (
+              <div
+                key={clone.id}
+                className="boss-clone"
+                style={{
+                  ...place(clone.x, clone.y, clone.radius * 2),
+                  backgroundImage: 'url(/assets/tcg/boss-black-noise-roku-clone.png)',
+                }}
+                aria-label="Black Noise Roku clone"
+              />
+            ))}
 
             {game.effects.map((effect) => (
               <div

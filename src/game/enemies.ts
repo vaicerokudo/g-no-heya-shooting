@@ -8,6 +8,8 @@ const enemyStats: Record<EnemyKind, Pick<Enemy, 'radius' | 'hp' | 'maxHp' | 'spe
   charger: { radius: 19, hp: 2, maxHp: 2, speed: 58 },
   scorpion: { radius: 17, hp: 2, maxHp: 2, speed: 74 },
   rockGolem: { radius: 24, hp: 5, maxHp: 5, speed: 34 },
+  securityDrone: { radius: 16, hp: 2, maxHp: 2, speed: 78 },
+  experiment: { radius: 21, hp: 4, maxHp: 4, speed: 48 },
 };
 
 export function chooseEnemyKind(elapsed: number, defeatedEnemies: number, areaId: StageAreaId = 'astoria-grassland'): EnemyKind {
@@ -15,6 +17,12 @@ export function chooseEnemyKind(elapsed: number, defeatedEnemies: number, areaId
     if (elapsed < 8) return 'scorpion';
     if (defeatedEnemies % 6 === 4 || defeatedEnemies % 9 === 6) return 'rockGolem';
     return 'scorpion';
+  }
+
+  if (areaId === 'delta-facility') {
+    if (elapsed < 8) return 'securityDrone';
+    if (defeatedEnemies % 5 === 3) return 'experiment';
+    return 'securityDrone';
   }
 
   if (elapsed < 10) return 'small';
@@ -35,6 +43,7 @@ export function createEnemy(id: number, kind: EnemyKind, elapsed: number): Enemy
     y: -36,
     spawnTime: elapsed,
     ...(kind === 'scorpion' ? { shotCooldown: 1.1 + (id % 3) * 0.32 } : {}),
+    ...(kind === 'securityDrone' ? { shotCooldown: 0.9 + (id % 3) * 0.28 } : {}),
     ...stats,
   };
 }
