@@ -3230,21 +3230,27 @@ body.game-touch-lock .field {
 .boss-dark-hibiki,
 .boss-dark-nanaichi,
 .boss-dark-rokudo,
-.boss-dark-myoo,
-.boss-author-rokudo {
-  filter: grayscale(0.5) saturate(1.55) hue-rotate(245deg) contrast(1.35) brightness(0.72) drop-shadow(0 0 17px rgba(183, 63, 255, 0.9));
-  outline: 1px solid rgba(216, 107, 255, 0.72);
+.boss-dark-myoo {
+  filter: saturate(1.06) contrast(1.08) drop-shadow(0 0 18px rgba(183, 63, 255, 0.96));
+  outline: 2px solid rgba(216, 107, 255, 0.82);
   outline-offset: 3px;
 }
 
-.boss-dark-myoo,
 .boss-author-rokudo {
-  filter: grayscale(0.42) saturate(1.8) hue-rotate(298deg) contrast(1.45) brightness(0.76) drop-shadow(0 0 20px rgba(255, 68, 122, 0.92));
+  filter: saturate(1.12) contrast(1.12) drop-shadow(0 0 18px rgba(255, 224, 157, 0.92));
+  outline: 2px solid rgba(255, 223, 165, 0.95);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 5px rgba(158, 28, 104, 0.42), 0 0 34px rgba(255, 59, 138, 0.78), 0 0 52px rgba(104, 126, 255, 0.48);
 }
 
-.boss-author-rokudo {
-  outline: 2px solid rgba(255, 223, 165, 0.95);
-  box-shadow: 0 0 0 4px rgba(158, 28, 104, 0.42), 0 0 28px rgba(255, 59, 138, 0.68);
+.boss-author-rokudo::before {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 240, 172, 0.42) 0 12%, rgba(136, 67, 255, 0.32) 36%, rgba(255, 53, 120, 0.18) 56%, transparent 74%);
+  animation: authorRokudoAura 1.8s ease-in-out infinite alternate;
 }
 
 .boss-black-noise-roku {
@@ -3267,6 +3273,11 @@ body.game-touch-lock .field {
   font-weight: 900;
   letter-spacing: 0.1em;
   box-shadow: 0 0 10px rgba(255, 216, 113, 0.9);
+}
+
+@keyframes authorRokudoAura {
+  from { transform: scale(0.88); opacity: 0.68; }
+  to { transform: scale(1.08); opacity: 1; }
 }
 
 @keyframes blackNoiseCloneFlicker {

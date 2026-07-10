@@ -536,10 +536,10 @@ function updateEnemyAttacks(state: GameState, dt: number): GameState {
 function updateBoss(state: GameState, dt: number): GameState {
   if (!state.boss) return state;
 
+  const bossPosition = getBossPosition(state.boss, state.player, state.elapsed);
   let boss: Boss = {
     ...state.boss,
-    x: FIELD_WIDTH / 2 + Math.sin(state.elapsed * 1.1) * 72,
-    y: BOSS_Y + Math.sin(state.elapsed * 0.8) * 12,
+    ...bossPosition,
     phaseTimer: state.boss.phaseTimer + dt,
     shotTimer: state.boss.shotTimer - dt,
     slamTimer: state.boss.slamTimer - dt,
@@ -668,72 +668,81 @@ function updateBoss(state: GameState, dt: number): GameState {
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-rockel') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 88, 174, 8);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1.2, -0.72, -0.28, 0.28, 0.72, 1.2], 96, 156, 9);
     nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 1.22 };
+    boss = { ...boss, shotTimer: 1.32 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-player') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, -0.35, 0.35, 0.7], 108, 202, 6);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.82, -0.48, 0.48, 0.82], 118, 210, 6);
     nextId += newBullets.length;
-    bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 0.86 };
+    const aimed = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
+    bullets = [...bullets, ...newBullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.65, vx: aimed.x * 86, vy: Math.max(176, aimed.y * 218), radius: 9 }];
+    boss = { ...boss, shotTimer: 0.94 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-deli') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-0.55, 0, 0.55], 74, 166, 7);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.66, 0, 0.66], 78, 160, 7);
     nextId += newBullets.length;
-    bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 1.05 };
+    const turretShots = [-72, 72].map((offset, index) => ({ id: nextId + index, x: clamp(boss.x + offset, 18, FIELD_WIDTH - 18), y: boss.y + boss.radius * 0.5, vx: offset * -0.14, vy: 138, radius: 5 }));
+    nextId += turretShots.length;
+    bullets = [...bullets, ...newBullets, ...turretShots];
+    boss = { ...boss, shotTimer: 1.18 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-yabuko') {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
-    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.6, vx: direction.x * 84, vy: Math.max(150, direction.y * 184), radius: 15 }];
-    boss = { ...boss, shotTimer: 1.5 };
+    const puddle = createBossSpreadBullets(boss, nextId, [-0.5, 0, 0.5], 44, 124, 12);
+    nextId += puddle.length;
+    bullets = [...bullets, ...puddle, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.6, vx: direction.x * 84, vy: Math.max(150, direction.y * 184), radius: 15 }];
+    boss = { ...boss, shotTimer: 1.58 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-ushimaru') {
     const direction = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
-    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: direction.x * 142, vy: Math.max(218, direction.y * 258), radius: 10 }];
-    boss = { ...boss, shotTimer: 1.45 };
+    bullets = [...bullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: direction.x * 158, vy: Math.max(240, direction.y * 278), radius: 8 }, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.66, vx: direction.x * 96 - 42, vy: Math.max(194, direction.y * 230), radius: 5 }, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.66, vx: direction.x * 96 + 42, vy: Math.max(194, direction.y * 230), radius: 5 }];
+    boss = { ...boss, shotTimer: 1.42 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-hibiki') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-0.7, 0, 0.7], 68, 154, 10);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.92, -0.46, 0, 0.46, 0.92], 64, 142, 10);
     nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 1.38 };
+    boss = { ...boss, shotTimer: 1.5 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-nanaichi') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 72, 172, 6);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1, -0.5, 0, 0.5, 1], 72, 164, 6);
     nextId += newBullets.length;
     bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 1.12 };
+    boss = { ...boss, shotTimer: 1.2 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-rokudo') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-0.82, -0.4, 0.4, 0.82], 92, 186, 6);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-0.82, -0.4, 0.4, 0.82], 92, 176, 6);
     nextId += newBullets.length;
-    bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 0.98 };
+    bullets = [...bullets, ...newBullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.62, vx: 0, vy: 116, radius: 13 }];
+    boss = { ...boss, shotTimer: 1.04 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'dark-myoo') {
-    const newBullets = createBossSpreadBullets(boss, nextId, [-1.15, -0.75, -0.38, 0, 0.38, 0.75, 1.15], 80, 178, 7);
+    const newBullets = createBossSpreadBullets(boss, nextId, [-1.15, -0.75, -0.38, 0, 0.38, 0.75, 1.15], 80, 170, 7);
     nextId += newBullets.length;
-    bullets = [...bullets, ...newBullets];
-    boss = { ...boss, shotTimer: 1.08 };
+    bullets = [...bullets, ...newBullets, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.66, vx: Math.sin(boss.phaseTimer * 2.2) * 64, vy: 148, radius: 16 }];
+    boss = { ...boss, shotTimer: 1.16 };
   }
 
   if (boss.shotTimer <= 0 && boss.type === 'author-rokudo') {
-    const ring = createBossSpreadBullets(boss, nextId, [-1.4, -1.05, -0.7, -0.35, 0, 0.35, 0.7, 1.05, 1.4], 80, 192, 6);
+    const phaseTwo = boss.hp < boss.maxHp * 0.48;
+    const sweepDirection = Math.sin(boss.phaseTimer * 1.35);
+    const ring = createBossSpreadBullets(boss, nextId, phaseTwo ? [-1.55, -1.15, -0.78, -0.4, 0, 0.4, 0.78, 1.15, 1.55] : [-1.3, -0.92, -0.55, -0.2, 0.2, 0.55, 0.92, 1.3], 86, 184, 6);
     nextId += ring.length;
     const aimed = normalize({ x: state.player.x - boss.x, y: state.player.y - boss.y });
-    bullets = [...bullets, ...ring, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: aimed.x * 104, vy: Math.max(198, aimed.y * 236), radius: 14 }];
-    boss = { ...boss, shotTimer: boss.hp < boss.maxHp * 0.48 ? 0.82 : 1.08 };
+    const sweep = [-0.7, -0.35, 0, 0.35, 0.7].map((offset, index) => ({ id: nextId + index, x: boss.x, y: boss.y + boss.radius * 0.68, vx: (offset + sweepDirection * 0.7) * 112, vy: 150, radius: 5 }));
+    nextId += sweep.length;
+    bullets = [...bullets, ...ring, ...sweep, { id: nextId++, x: boss.x, y: boss.y + boss.radius * 0.7, vx: aimed.x * 104, vy: Math.max(198, aimed.y * 236), radius: 14 }];
+    boss = { ...boss, shotTimer: phaseTwo ? 0.78 : 1.12 };
   }
 
   if (boss.slamTimer <= 0 && boss.type === 'boar') {
@@ -832,6 +841,52 @@ function createBossSpreadBullets(
     vy: verticalSpeed,
     radius,
   }));
+}
+
+function getBossPosition(boss: Boss, player: Player, elapsed: number): Vector {
+  const centerX = FIELD_WIDTH / 2;
+  const upperY = FIELD_HEIGHT * 0.24;
+  const phase = boss.phaseTimer;
+
+  if (boss.type === 'dark-rockel') {
+    const charge = Math.max(0, Math.sin(phase * 0.82));
+    return { x: centerX + Math.sin(phase * 0.72) * 58, y: upperY + charge * 44 };
+  }
+  if (boss.type === 'dark-player') {
+    return { x: centerX + Math.sign(Math.sin(phase * 2.15)) * 92 + Math.sin(phase * 4.3) * 14, y: upperY + 8 };
+  }
+  if (boss.type === 'dark-deli') {
+    return { x: centerX + Math.sin(Math.floor(phase / 1.45) * 2.4) * 72, y: upperY + Math.sin(phase * 0.55) * 8 };
+  }
+  if (boss.type === 'dark-yabuko') {
+    return { x: centerX + Math.sin(phase * 0.68) * 64, y: upperY + 28 + Math.sin(phase * 1.25) * 32 };
+  }
+  if (boss.type === 'dark-ushimaru') {
+    const targetX = clamp(player.x, 88, FIELD_WIDTH - 88);
+    const lunge = Math.max(0, Math.sin(phase * 0.95));
+    return { x: centerX + (targetX - centerX) * lunge, y: upperY + lunge * 62 };
+  }
+  if (boss.type === 'dark-hibiki') {
+    return { x: centerX + Math.sin(phase * 0.42) * 32, y: upperY + Math.max(0, Math.sin(phase * 0.7)) * 22 };
+  }
+  if (boss.type === 'dark-nanaichi') {
+    return { x: centerX + Math.sin(phase * 0.72) * 76, y: upperY + 18 + Math.cos(phase * 0.72) * 28 };
+  }
+  if (boss.type === 'dark-rokudo') {
+    return { x: centerX + Math.sign(Math.sin(phase * 1.75)) * 82 + Math.sin(phase * 3.5) * 10, y: upperY + 10 + Math.sin(phase * 2.1) * 20 };
+  }
+  if (boss.type === 'dark-myoo') {
+    return { x: centerX + Math.sin(phase * 0.38) * 44, y: upperY + 12 + Math.sin(phase * 1.15) * 30 };
+  }
+  if (boss.type === 'author-rokudo') {
+    const warp = Math.sign(Math.sin(phase * 0.62));
+    return { x: centerX + warp * 90 + Math.sin(phase * 2.4) * 16, y: upperY + 4 + Math.max(0, Math.sin(phase * 0.74)) * 30 };
+  }
+
+  return {
+    x: centerX + Math.sin(elapsed * 1.1) * 72,
+    y: BOSS_Y + Math.sin(elapsed * 0.8) * 12,
+  };
 }
 
 function updateBullets(state: GameState, dt: number): GameState {

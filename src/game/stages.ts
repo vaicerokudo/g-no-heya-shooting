@@ -50,28 +50,28 @@ export const BLACK_NOISE_BAY_STAGES: StageDefinition[] = [
 ];
 
 export const ISOLATION_ZONE_STAGES: StageDefinition[] = [
-  { id: 'isolation-zone-1', areaId: 'isolation-zone', name: '隔離地域 1', bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/rockel-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 150, bossHp: 86, bossRadius: 42,
+  { id: 'isolation-zone-1', areaId: 'isolation-zone', name: '隔離地域 1', bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/boss-dark-rockel.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 150, bossHp: 86, bossRadius: 54,
     bossRush: [
-      { bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/rockel-player.png', bossHp: 86, bossRadius: 42 },
-      { bossName: '闇Player', bossType: 'dark-player', bossImage: '/assets/tcg/player-player.png', bossHp: 76, bossRadius: 40 },
+      { bossName: '闇ROCKEL', bossType: 'dark-rockel', bossImage: '/assets/tcg/boss-dark-rockel.png', bossHp: 86, bossRadius: 54 },
+      { bossName: '闇Player', bossType: 'dark-player', bossImage: '/assets/tcg/boss-dark-player.png', bossHp: 76, bossRadius: 52 },
     ] },
-  { id: 'isolation-zone-2', areaId: 'isolation-zone', name: '隔離地域 2', bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/deli-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 175, bossHp: 90, bossRadius: 42,
+  { id: 'isolation-zone-2', areaId: 'isolation-zone', name: '隔離地域 2', bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/boss-dark-deli.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 175, bossHp: 90, bossRadius: 54,
     bossRush: [
-      { bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/deli-player.png', bossHp: 90, bossRadius: 42 },
-      { bossName: '闇やぶこ', bossType: 'dark-yabuko', bossImage: '/assets/tcg/yabuko-fm-player.png', bossHp: 96, bossRadius: 44 },
+      { bossName: '闇Deli', bossType: 'dark-deli', bossImage: '/assets/tcg/boss-dark-deli.png', bossHp: 90, bossRadius: 54 },
+      { bossName: '闇やぶこ', bossType: 'dark-yabuko', bossImage: '/assets/tcg/boss-dark-yabuko.png', bossHp: 96, bossRadius: 56 },
     ] },
-  { id: 'isolation-zone-3', areaId: 'isolation-zone', name: '隔離地域 3', bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/ushimaru-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 200, bossHp: 100, bossRadius: 42,
+  { id: 'isolation-zone-3', areaId: 'isolation-zone', name: '隔離地域 3', bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/boss-dark-ushimaru.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 200, bossHp: 100, bossRadius: 54,
     bossRush: [
-      { bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/ushimaru-player.png', bossHp: 100, bossRadius: 42 },
-      { bossName: '闇hibiki', bossType: 'dark-hibiki', bossImage: '/assets/tcg/hibiki-player.png', bossHp: 118, bossRadius: 44 },
+      { bossName: '闇うしまる', bossType: 'dark-ushimaru', bossImage: '/assets/tcg/boss-dark-ushimaru.png', bossHp: 100, bossRadius: 54 },
+      { bossName: '闇hibiki', bossType: 'dark-hibiki', bossImage: '/assets/tcg/boss-dark-hibiki.png', bossHp: 118, bossRadius: 56 },
     ] },
-  { id: 'isolation-zone-4', areaId: 'isolation-zone', name: '隔離地域 4', bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/nanaichi-player.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 240, bossHp: 96, bossRadius: 42,
+  { id: 'isolation-zone-4', areaId: 'isolation-zone', name: '隔離地域 4', bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/boss-dark-nanaichi.png', difficulty: 'high', difficultyLabel: '異常', clearBonus: 240, bossHp: 96, bossRadius: 54,
     bossRush: [
-      { bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/nanaichi-player.png', bossHp: 96, bossRadius: 42 },
-      { bossName: '闇ROKUDO', bossType: 'dark-rokudo', bossImage: '/assets/tcg/rokudo-player.png', bossHp: 108, bossRadius: 42 },
-      { bossName: '闇明王', bossType: 'dark-myoo', bossImage: '/assets/tcg/myoo-player.png', bossHp: 122, bossRadius: 44 },
+      { bossName: '闇7171', bossType: 'dark-nanaichi', bossImage: '/assets/tcg/boss-dark-nanaichi.png', bossHp: 96, bossRadius: 54 },
+      { bossName: '闇ROKUDO', bossType: 'dark-rokudo', bossImage: '/assets/tcg/boss-dark-rokudo.png', bossHp: 108, bossRadius: 54 },
+      { bossName: '闇明王', bossType: 'dark-myoo', bossImage: '/assets/tcg/boss-dark-myoo.png', bossHp: 122, bossRadius: 56 },
     ] },
-  { id: 'isolation-zone-5', areaId: 'isolation-zone', name: '隔離地域 5', bossName: '作者ロクド', bossType: 'author-rokudo', bossImage: '/assets/tcg/rokudo-player.png', difficulty: 'high', difficultyLabel: '最終', clearBonus: 300, bossHp: 210, bossRadius: 50 },
+  { id: 'isolation-zone-5', areaId: 'isolation-zone', name: '隔離地域 5', bossName: '作者ロクド', bossType: 'author-rokudo', bossImage: '/assets/tcg/boss-author-rokudo.png', difficulty: 'high', difficultyLabel: '最終', clearBonus: 300, bossHp: 210, bossRadius: 66 },
 ];
 
 export const STAGE_AREAS: StageAreaDefinition[] = [
