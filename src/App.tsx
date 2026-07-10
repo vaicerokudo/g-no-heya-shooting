@@ -1592,12 +1592,16 @@ function App() {
                 return (
                   <article className={`support-upgrade-card ${isUpgraded ? 'is-upgraded' : ''}`} key={support.id}>
                     <img src={support.image} alt={support.name} />
-                    {(support.id === 'hibiki' || support.id === '7171') && (
-                      <small className="support-upgrade-detail">
-                        {support.id === 'hibiki' ? 'Shield durability +1' : 'Coin pickup range up'}
-                      </small>
-                    )}
-                    <div><strong>{support.name}</strong><span>{isUpgraded ? '火力 +1 強化済み' : 'ダメージ系能力 +1'}</span></div>
+                    <div>
+                      <strong>{support.name}</strong>
+                      <span>
+                        {support.id === 'hibiki'
+                          ? (isUpgraded ? 'シールド耐性 強化済み' : 'シールド耐性 +1')
+                          : support.id === '7171'
+                            ? (isUpgraded ? 'コイン回収範囲 強化済み' : 'コイン回収範囲 UP')
+                            : (isUpgraded ? '火力 +1 強化済み' : 'ダメージ系能力 +1')}
+                      </span>
+                    </div>
                     {!isUpgraded && <button className="secondary-button compact-action" disabled={!canUpgrade} onClick={() => upgradeSupportDamage(support.id)}>強化 {SUPPORT_DAMAGE_UPGRADE_COST}</button>}
                   </article>
                 );
