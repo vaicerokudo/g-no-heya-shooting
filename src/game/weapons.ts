@@ -60,6 +60,7 @@ export type CharacterId = 'socho' | 'tsutsu' | 'rokudo' | 'player' | 'ushimaru' 
 export type EquippedWeaponsByCharacter = Partial<Record<CharacterId, string>>;
 
 export const WEAPON_MAX_LEVEL = 5;
+export const G_WEAPON_STAR_VEIN_STEEL_COST = 10;
 
 export type SochoWeaponEffect = 'standardSlash' | 'starSlashWave';
 

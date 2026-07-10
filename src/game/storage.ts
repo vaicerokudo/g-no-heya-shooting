@@ -16,6 +16,7 @@ const EQUIPPED_WEAPONS_KEY = 'g-no-heya-shooting:equipped-weapons';
 const OWNED_SUPPORTS_KEY = 'g-no-heya-shooting:owned-supports';
 const STAR_DUST_FRAGMENTS_KEY = 'g-no-heya-shooting:star-dust-fragments';
 const STAR_VEIN_STEEL_KEY = 'g-no-heya-shooting:star-vein-steel';
+const G_WEAPONS_KEY = 'g-no-heya-shooting:g-weapons';
 const OWNED_AURAS_KEY = 'g-no-heya-shooting:owned-auras';
 const SELECTED_AURA_KEY = 'g-no-heya-shooting:selected-aura';
 const FREE_SUPPORT_SUMMON_USED_KEY = 'g-no-heya-shooting:free-support-summon-used';
@@ -64,6 +65,31 @@ export function loadStarVeinSteel(): number {
 export function saveStarVeinSteel(steel: number) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(STAR_VEIN_STEEL_KEY, String(Math.max(0, Math.floor(steel))));
+}
+
+export function loadGWeapons(): string[] {
+  if (typeof window === 'undefined') return [];
+
+  const rawValue = window.localStorage.getItem(G_WEAPONS_KEY);
+  if (!rawValue) return [];
+
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(new Set(parsed.filter((weaponId): weaponId is string => typeof weaponId === 'string' && weaponId.length > 0)));
+  } catch {
+    return [];
+  }
+}
+
+export function saveGWeapons(weaponIds: string[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(G_WEAPONS_KEY, JSON.stringify(Array.from(new Set(weaponIds))));
+}
+
+export function resetGWeapons() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(G_WEAPONS_KEY);
 }
 
 export function loadOwnedAuras(): AuraId[] {

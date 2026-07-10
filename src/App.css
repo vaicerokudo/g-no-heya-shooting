@@ -1717,6 +1717,50 @@ body.game-touch-lock .app-shell {
     0 0 26px rgba(255, 209, 102, 0.22);
 }
 
+.weapon-card.is-g-weapon,
+.equipped-weapon-panel:has(.g-weapon-badge) {
+  border-color: rgba(255, 232, 153, 0.78);
+  background:
+    linear-gradient(135deg, rgba(255, 209, 102, 0.16), rgba(127, 227, 255, 0.08)),
+    rgba(8, 10, 12, 0.38);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 24px rgba(255, 209, 102, 0.2);
+}
+
+.g-weapon-badge,
+.weapon-g-lock {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.g-weapon-badge {
+  border: 1px solid rgba(255, 232, 153, 0.72);
+  color: #201508;
+  background: linear-gradient(135deg, #fff7bf, #ffd166 52%, #8be9ff);
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.3);
+}
+
+.weapon-g-lock {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(247, 251, 255, 0.66);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.g-upgrade-action {
+  border-color: rgba(255, 232, 153, 0.62);
+  color: #1f1707;
+  background: linear-gradient(135deg, #fff1a8, #ffd166);
+}
+
 .equipment-weapon-card .secondary-button {
   grid-column: 1 / -1;
 }
@@ -2997,6 +3041,25 @@ body.game-touch-lock .field {
   opacity: 0.82;
   pointer-events: none;
   animation: playerAuraPulse 1.4s ease-in-out infinite alternate;
+}
+
+.player-g-weapon-glow {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 54px;
+  height: 66px;
+  transform: translateX(-50%);
+  border-radius: 42% 42% 50% 50%;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255, 247, 191, 0.28), transparent 42%),
+    radial-gradient(circle at 50% 76%, rgba(139, 233, 255, 0.2), transparent 58%);
+  box-shadow:
+    0 0 20px rgba(255, 209, 102, 0.34),
+    0 0 32px rgba(139, 233, 255, 0.16);
+  opacity: 0.72;
+  pointer-events: none;
+  animation: gWeaponGlowPulse 1.7s ease-in-out infinite alternate;
 }
 
 .player img {
@@ -4495,6 +4558,34 @@ body.game-touch-lock .field {
   opacity: 0.68;
 }
 
+.combat-loadout-icon.is-g-weapon {
+  border-color: rgba(255, 232, 153, 0.72);
+  background:
+    radial-gradient(circle at 80% 20%, rgba(139, 233, 255, 0.18), transparent 42%),
+    linear-gradient(180deg, rgba(255, 209, 102, 0.18), rgba(9, 15, 17, 0.28)),
+    rgba(12, 22, 20, 0.72);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 0 18px rgba(255, 209, 102, 0.2);
+}
+
+.loadout-g-badge {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  color: #201508;
+  background: linear-gradient(135deg, #fff7bf, #ffd166 52%, #8be9ff);
+  font-size: 0.58rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
 .combat-loadout-icon.aura-icon {
   background:
     radial-gradient(circle at 50% 52%, var(--aura-glow, rgba(255, 255, 255, 0.12)), transparent 62%),
@@ -5111,6 +5202,17 @@ body.game-touch-lock .field {
   to {
     transform: translateX(-50%) scale(1.08);
     opacity: 0.9;
+  }
+}
+
+@keyframes gWeaponGlowPulse {
+  from {
+    transform: translateX(-50%) scale(0.94);
+    opacity: 0.46;
+  }
+  to {
+    transform: translateX(-50%) scale(1.04);
+    opacity: 0.78;
   }
 }
 
