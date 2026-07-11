@@ -111,17 +111,17 @@ const TRAVEL_SUPPORT_IMAGES: Record<SupportId, string> = {
 };
 
 const SOUND_COMIC_SUPPORT_IMAGES: Record<SupportId, string> = {
-  socho: '/assets/tcg/skin-sound-comic-socho.png',
-  tsutsu: '/assets/tcg/skin-sound-comic-tsutsu.png',
-  rokudo: '/assets/tcg/skin-sound-comic-rokudo.png',
-  player: '/assets/tcg/skin-sound-comic-player.png',
-  ushimaru: '/assets/tcg/skin-sound-comic-ushimaru.png',
-  deli: '/assets/tcg/skin-sound-comic-deli.png',
-  yabuko: '/assets/tcg/skin-sound-comic-yabuko-fm.png',
-  rockel: '/assets/tcg/skin-sound-comic-rockel.png',
-  '7171': '/assets/tcg/skin-sound-comic-nanaichi.png',
-  myouou: '/assets/tcg/skin-sound-comic-myoo.png',
-  hibiki: '/assets/tcg/skin-sound-comic-hibiki.png',
+  socho: '/assets/tcg/support-card-sound-comic-socho.webp',
+  tsutsu: '/assets/tcg/support-card-sound-comic-tsutsu.webp',
+  rokudo: '/assets/tcg/support-card-sound-comic-rokudo.webp',
+  player: '/assets/tcg/support-card-sound-comic-player.webp',
+  ushimaru: '/assets/tcg/support-card-sound-comic-ushimaru.webp',
+  deli: '/assets/tcg/support-card-sound-comic-deli.webp',
+  yabuko: '/assets/tcg/support-card-sound-comic-yabuko.webp',
+  rockel: '/assets/tcg/support-card-sound-comic-rockel.webp',
+  '7171': '/assets/tcg/support-card-sound-comic-7171.webp',
+  myouou: '/assets/tcg/support-card-sound-comic-myouou.webp',
+  hibiki: '/assets/tcg/support-card-sound-comic-hibiki.webp',
 };
 
 const DARK_SUPPORT_IMAGES: Record<SupportId, string> = {

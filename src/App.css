@@ -2745,8 +2745,8 @@ body.game-touch-lock .game-layout {
 
 @media (min-width: 721px) {
   .game-layout { width: min(760px, 100%); }
-  .hud { grid-template-columns: minmax(150px, 1.25fr) max-content max-content minmax(180px, 1fr) max-content; }
-  .hud-stage { min-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud { grid-template-columns: minmax(150px, 1fr) minmax(72px, max-content) minmax(82px, max-content) minmax(0, 1.25fr) max-content; }
+  .hud-stage { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hud .pause-button { justify-self: end; white-space: nowrap; }
 }
 
