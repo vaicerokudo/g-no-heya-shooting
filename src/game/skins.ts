@@ -54,6 +54,22 @@ const SUPPORT_CHARACTER_IDS: Record<SupportId, MainCharacterId> = {
   hibiki: 'hibiki',
 };
 
+// Keep support artwork entirely separate from playable-character skin artwork.
+// Support UI must always resolve to a framed card, including its fallback.
+const DEFAULT_SUPPORT_IMAGES: Record<SupportId, string> = {
+  socho: '/assets/tcg/support-card-socho.webp',
+  tsutsu: '/assets/tcg/support-card-tsutsu.webp',
+  rokudo: '/assets/tcg/support-card-rokudo.webp',
+  player: '/assets/tcg/support-card-player.png',
+  ushimaru: '/assets/tcg/support-card-ushimaru.webp',
+  deli: '/assets/tcg/support-card-deli.webp',
+  yabuko: '/assets/tcg/support-card-yabuko.png',
+  rockel: '/assets/tcg/support-card-rockel.webp',
+  '7171': '/assets/tcg/support-card-7171.png',
+  myouou: '/assets/tcg/support-card-myouou.png',
+  hibiki: '/assets/tcg/support-card-hibiki.png',
+};
+
 const SOUND_COMIC_SKIN_IMAGES: Record<MainCharacterId, string> = {
   socho: '/assets/tcg/skin-sound-comic-socho.png',
   tsutsu: '/assets/tcg/skin-sound-comic-tsutsu.png',
@@ -228,7 +244,6 @@ export function getCharacterWithSkin(
 
 export function getSupportCardImage(
   supportId: SupportId,
-  defaultImage: string,
   selectedSkins: SelectedSkinsByCharacter,
   ownedSupports: OwnedSupport[],
   unlockedDarkSkins: readonly MainCharacterId[],
@@ -236,10 +251,11 @@ export function getSupportCardImage(
 ): string {
   const characterId = SUPPORT_CHARACTER_IDS[supportId];
   const skinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
-  if (skinId === 'sound-comic') return SOUND_COMIC_SUPPORT_IMAGES[supportId] ?? defaultImage;
-  if (skinId === 'travel') return TRAVEL_SUPPORT_IMAGES[supportId] ?? defaultImage;
-  if (skinId === 'dark') return DARK_SUPPORT_IMAGES[supportId] ?? defaultImage;
-  return defaultImage;
+  const defaultCard = DEFAULT_SUPPORT_IMAGES[supportId];
+  if (skinId === 'sound-comic') return SOUND_COMIC_SUPPORT_IMAGES[supportId] ?? defaultCard;
+  if (skinId === 'travel') return TRAVEL_SUPPORT_IMAGES[supportId] ?? defaultCard;
+  if (skinId === 'dark') return DARK_SUPPORT_IMAGES[supportId] ?? defaultCard;
+  return defaultCard;
 }
 
 export function getCharacterSkinLabel(skinId: CharacterSkinId): string {

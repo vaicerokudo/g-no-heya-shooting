@@ -878,7 +878,7 @@ function App() {
   };
 
   const resolveSupportImage = (support: SupportCharacter) =>
-    getSupportCardImage(support.id, support.image, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
+    getSupportCardImage(support.id, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
 
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
     if (game.status !== 'playing' || !joystickBaseRef.current) return;
