@@ -55,6 +55,7 @@ import {
   loadSelectedSkinsByCharacter,
   loadUnlockedDarkSkins,
   loadUnlockedTravelSkins,
+  loadClearedStages,
   loadStarDustFragments,
   loadStarVeinSteel,
   loadSupportDamageUpgrades,
@@ -76,6 +77,7 @@ import {
   saveSelectedSkinsByCharacter,
   saveUnlockedDarkSkins,
   saveUnlockedTravelSkins,
+  saveClearedStages,
   saveStarDustFragments,
   saveStarVeinSteel,
   saveSupportDamageUpgrades,
@@ -107,6 +109,7 @@ import {
   isSoundComicSkinUnlocked,
   mergeUnlockedDarkSkins,
   mergeUnlockedTravelSkins,
+  SKIN_CHARACTER_IDS,
   SOUND_COMIC_SKIN_CHARACTER_IDS,
 } from './game/skins';
 import type { CharacterSkinId, SelectedSkinsByCharacter } from './game/skins';
@@ -278,6 +281,7 @@ function App() {
   const [selectedSkins, setSelectedSkins] = useState<SelectedSkinsByCharacter>(() => loadSelectedSkinsByCharacter());
   const [unlockedDarkSkins, setUnlockedDarkSkins] = useState<MainCharacterId[]>(() => loadUnlockedDarkSkins());
   const [unlockedTravelSkins, setUnlockedTravelSkins] = useState<MainCharacterId[]>(() => loadUnlockedTravelSkins());
+  const [clearedStages, setClearedStages] = useState<StageId[]>(() => loadClearedStages());
   const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
   const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
@@ -506,6 +510,16 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (unlockedTravelSkins.length > 0 || clearedStages.includes('isolation-zone-5')) return;
+    const legacyIsolationFiveClear = SKIN_CHARACTER_IDS.every((characterId) => unlockedDarkSkins.includes(characterId));
+    if (!legacyIsolationFiveClear) return;
+
+    const migratedTravelSkins = [...SKIN_CHARACTER_IDS];
+    setUnlockedTravelSkins(migratedTravelSkins);
+    saveUnlockedTravelSkins(migratedTravelSkins);
+  }, [clearedStages, unlockedDarkSkins, unlockedTravelSkins.length]);
+
+  useEffect(() => {
     if (!rewardSummary) return;
 
     const resultKey = `${rewardSummary.status}:${Math.floor(game.elapsed * 1000)}:${game.defeatedEnemies}:${rewardSummary.stageCoins}:${rewardSummary.addedCoins}:${rewardSummary.isNoDamageClear}`;
@@ -513,6 +527,12 @@ function App() {
     rewardedResultKey.current = resultKey;
 
     if (rewardSummary.status === 'clear') {
+      setClearedStages((current) => {
+        if (current.includes(game.stageId)) return current;
+        const next = [...current, game.stageId];
+        saveClearedStages(next);
+        return next;
+      });
       const stageUnlocks = getDarkSkinUnlocksForStage(game.stageId);
       if (stageUnlocks.length > 0) {
         setUnlockedDarkSkins((current) => {

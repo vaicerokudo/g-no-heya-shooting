@@ -8,6 +8,7 @@ import { normalizeCharacterSkinId, SKIN_CHARACTER_IDS } from './skins';
 import type { SelectedSkinsByCharacter, UnlockedDarkSkins, UnlockedTravelSkins } from './skins';
 import type { OwnedSupport } from './supports';
 import type { SupportId } from './types';
+import type { StageId } from './stages';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
 
 const OWNED_COINS_KEY = 'g-no-heya-shooting:owned-coins';
@@ -27,6 +28,7 @@ const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-i
 const SELECTED_SKINS_BY_CHARACTER_KEY = 'g-no-heya-shooting:selected-skins-by-character';
 const UNLOCKED_DARK_SKINS_KEY = 'g-no-heya-shooting:unlocked-dark-skins';
 const UNLOCKED_TRAVEL_SKINS_KEY = 'g-no-heya-shooting:unlocked-travel-skins';
+const CLEARED_STAGES_KEY = 'g-no-heya-shooting:cleared-stages';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -364,6 +366,25 @@ export function saveUnlockedTravelSkins(characterIds: readonly MainCharacterId[]
     (SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(value),
   )));
   window.localStorage.setItem(UNLOCKED_TRAVEL_SKINS_KEY, JSON.stringify(validIds));
+}
+
+export function loadClearedStages(): StageId[] {
+  if (typeof window === 'undefined') return [];
+  const rawValue = window.localStorage.getItem(CLEARED_STAGES_KEY);
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    return Array.isArray(parsed)
+      ? Array.from(new Set(parsed.filter((value): value is StageId => typeof value === 'string')))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveClearedStages(stageIds: readonly StageId[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(CLEARED_STAGES_KEY, JSON.stringify(Array.from(new Set(stageIds))));
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {

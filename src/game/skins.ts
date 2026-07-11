@@ -110,6 +110,20 @@ const TRAVEL_SUPPORT_IMAGES: Record<SupportId, string> = {
   hibiki: '/assets/tcg/support-card-travel-hibiki.webp',
 };
 
+const SOUND_COMIC_SUPPORT_IMAGES: Record<SupportId, string> = {
+  socho: '/assets/tcg/support-card-socho.webp',
+  tsutsu: '/assets/tcg/support-card-tsutsu.webp',
+  rokudo: '/assets/tcg/support-card-rokudo.webp',
+  player: '/assets/tcg/support-card-player.png',
+  ushimaru: '/assets/tcg/support-card-ushimaru.webp',
+  deli: '/assets/tcg/support-card-deli.webp',
+  yabuko: '/assets/tcg/support-card-yabuko.png',
+  rockel: '/assets/tcg/support-card-rockel.webp',
+  '7171': '/assets/tcg/support-card-7171.png',
+  myouou: '/assets/tcg/support-card-myouou.png',
+  hibiki: '/assets/tcg/support-card-hibiki.png',
+};
+
 const DARK_SUPPORT_IMAGES: Record<SupportId, string> = {
   socho: '/assets/tcg/support-card-dark-socho.webp',
   tsutsu: '/assets/tcg/support-card-dark-tsutsu.webp',
@@ -222,6 +236,7 @@ export function getSupportCardImage(
 ): string {
   const characterId = SUPPORT_CHARACTER_IDS[supportId];
   const skinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
+  if (skinId === 'sound-comic') return SOUND_COMIC_SUPPORT_IMAGES[supportId] ?? defaultImage;
   if (skinId === 'travel') return TRAVEL_SUPPORT_IMAGES[supportId] ?? defaultImage;
   if (skinId === 'dark') return DARK_SUPPORT_IMAGES[supportId] ?? defaultImage;
   return defaultImage;
