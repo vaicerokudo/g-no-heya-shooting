@@ -5,7 +5,7 @@ import type { MainCharacterId } from './characters';
 import { isAuraId } from './auras';
 import type { AuraId } from './auras';
 import { normalizeCharacterSkinId, SKIN_CHARACTER_IDS } from './skins';
-import type { SelectedSkinsByCharacter, UnlockedDarkSkins } from './skins';
+import type { SelectedSkinsByCharacter, UnlockedDarkSkins, UnlockedTravelSkins } from './skins';
 import type { OwnedSupport } from './supports';
 import type { SupportId } from './types';
 import type { EquippedWeaponsByCharacter, OwnedWeapon } from './weapons';
@@ -26,6 +26,7 @@ const ACTIVE_SUPPORT_ID_KEY = 'g-no-heya-shooting:active-support-id';
 const ACTIVE_MAIN_CHARACTER_ID_KEY = 'g-no-heya-shooting:active-main-character-id';
 const SELECTED_SKINS_BY_CHARACTER_KEY = 'g-no-heya-shooting:selected-skins-by-character';
 const UNLOCKED_DARK_SKINS_KEY = 'g-no-heya-shooting:unlocked-dark-skins';
+const UNLOCKED_TRAVEL_SKINS_KEY = 'g-no-heya-shooting:unlocked-travel-skins';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -340,6 +341,29 @@ export function saveUnlockedDarkSkins(characterIds: readonly MainCharacterId[]) 
     (SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(value),
   )));
   window.localStorage.setItem(UNLOCKED_DARK_SKINS_KEY, JSON.stringify(validIds));
+}
+
+export function loadUnlockedTravelSkins(): UnlockedTravelSkins {
+  if (typeof window === 'undefined') return [];
+  const rawValue = window.localStorage.getItem(UNLOCKED_TRAVEL_SKINS_KEY);
+  if (!rawValue) return [];
+  try {
+    const parsed = JSON.parse(rawValue);
+    if (!Array.isArray(parsed)) return [];
+    return Array.from(new Set(parsed.filter((value): value is MainCharacterId =>
+      typeof value === 'string' && (SKIN_CHARACTER_IDS as readonly string[]).includes(value),
+    )));
+  } catch {
+    return [];
+  }
+}
+
+export function saveUnlockedTravelSkins(characterIds: readonly MainCharacterId[]) {
+  if (typeof window === 'undefined') return;
+  const validIds = Array.from(new Set(characterIds.filter((value) =>
+    (SKIN_CHARACTER_IDS as readonly MainCharacterId[]).includes(value),
+  )));
+  window.localStorage.setItem(UNLOCKED_TRAVEL_SKINS_KEY, JSON.stringify(validIds));
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {

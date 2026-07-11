@@ -508,7 +508,7 @@ body.game-touch-lock .app-shell {
 
 .stage-select-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2286,6 +2286,13 @@ h1 {
   background:
     radial-gradient(circle at 85% 25%, rgba(143, 220, 255, 0.16), transparent 42%),
     rgba(17, 16, 13, 0.78);
+}
+
+.skin-option.travel {
+  border-color: rgba(97, 209, 168, 0.46);
+  background:
+    radial-gradient(circle at 85% 25%, rgba(97, 209, 168, 0.22), transparent 42%),
+    rgba(12, 35, 29, 0.82);
 }
 
 .skin-option.dark {

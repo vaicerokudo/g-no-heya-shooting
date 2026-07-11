@@ -54,6 +54,7 @@ import {
   loadSelectedAura,
   loadSelectedSkinsByCharacter,
   loadUnlockedDarkSkins,
+  loadUnlockedTravelSkins,
   loadStarDustFragments,
   loadStarVeinSteel,
   loadSupportDamageUpgrades,
@@ -74,6 +75,7 @@ import {
   saveOwnedWeapons,
   saveSelectedSkinsByCharacter,
   saveUnlockedDarkSkins,
+  saveUnlockedTravelSkins,
   saveStarDustFragments,
   saveStarVeinSteel,
   saveSupportDamageUpgrades,
@@ -96,12 +98,15 @@ import {
   getCharacterSkinLabel,
   getCharacterWithSkin,
   getDarkSkinUnlocksForStage,
+  getTravelSkinUnlocksForStage,
   getEffectiveCharacterSkinId,
   getSupportCardImage,
   getSoundComicSkinSupportId,
   isDarkSkinUnlocked,
+  isTravelSkinUnlocked,
   isSoundComicSkinUnlocked,
   mergeUnlockedDarkSkins,
+  mergeUnlockedTravelSkins,
   SOUND_COMIC_SKIN_CHARACTER_IDS,
 } from './game/skins';
 import type { CharacterSkinId, SelectedSkinsByCharacter } from './game/skins';
@@ -272,6 +277,7 @@ function App() {
   const [activeMainCharacterId, setActiveMainCharacterId] = useState<MainCharacterId>(() => loadActiveMainCharacterId());
   const [selectedSkins, setSelectedSkins] = useState<SelectedSkinsByCharacter>(() => loadSelectedSkinsByCharacter());
   const [unlockedDarkSkins, setUnlockedDarkSkins] = useState<MainCharacterId[]>(() => loadUnlockedDarkSkins());
+  const [unlockedTravelSkins, setUnlockedTravelSkins] = useState<MainCharacterId[]>(() => loadUnlockedTravelSkins());
   const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
   const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
@@ -394,12 +400,12 @@ function App() {
   const equippedSochoWeapon = useMemo(() => getEquippedSochoWeapon(equippedWeapons), [equippedWeapons]);
   const runtimeMainCharacterId = game.isTraining && trainingRunCharacterId ? trainingRunCharacterId : activeMainCharacterId;
   const mainCharacterSkinId = useMemo(
-    () => getEffectiveCharacterSkinId(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins),
-    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins],
+    () => getEffectiveCharacterSkinId(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins, unlockedTravelSkins],
   );
   const mainCharacter = useMemo(
-    () => getCharacterWithSkin(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins),
-    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins],
+    () => getCharacterWithSkin(runtimeMainCharacterId, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins),
+    [ownedSupports, runtimeMainCharacterId, selectedSkins, unlockedDarkSkins, unlockedTravelSkins],
   );
   const selectedStage = useMemo(() => getStageById(selectedStageId), [selectedStageId]);
   const activeWeaponCharacterId: CharacterId =
@@ -487,6 +493,10 @@ function App() {
     () => (game.status === 'clear' ? getDarkSkinUnlocksForStage(game.stageId) : []),
     [game.stageId, game.status],
   );
+  const travelSkinUnlocksForResult = useMemo(
+    () => (game.status === 'clear' ? getTravelSkinUnlocksForStage(game.stageId) : []),
+    [game.stageId, game.status],
+  );
   const shopSummonCost = freeSupportSummonUsed ? SHOP_SUPPORT_SUMMON_COST : 0;
   const canStartShopSummon =
     (summonPhase === 'idle' || summonPhase === 'done') && (shopSummonCost === 0 || ownedCoins >= shopSummonCost);
@@ -508,6 +518,14 @@ function App() {
         setUnlockedDarkSkins((current) => {
           const next = mergeUnlockedDarkSkins(current, stageUnlocks);
           saveUnlockedDarkSkins(next);
+          return next;
+        });
+      }
+      const travelUnlocks = getTravelSkinUnlocksForStage(game.stageId);
+      if (travelUnlocks.length > 0) {
+        setUnlockedTravelSkins((current) => {
+          const next = mergeUnlockedTravelSkins(current, travelUnlocks);
+          saveUnlockedTravelSkins(next);
           return next;
         });
       }
@@ -816,13 +834,14 @@ function App() {
   const chooseCharacterSkin = (characterId: MainCharacterId, skinId: CharacterSkinId) => {
     if (skinId === 'sound-comic' && !isSoundComicSkinUnlocked(characterId, ownedSupports)) return;
     if (skinId === 'dark' && !isDarkSkinUnlocked(characterId, unlockedDarkSkins)) return;
+    if (skinId === 'travel' && !isTravelSkinUnlocked(characterId, unlockedTravelSkins)) return;
     const nextSkins = { ...selectedSkins, [characterId]: skinId };
     setSelectedSkins(nextSkins);
     saveSelectedSkinsByCharacter(nextSkins);
   };
 
   const resolveSupportImage = (support: SupportCharacter) =>
-    getSupportCardImage(support.id, support.image, selectedSkins, ownedSupports, unlockedDarkSkins);
+    getSupportCardImage(support.id, support.image, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
 
   const updateJoystick = (event: React.PointerEvent<HTMLDivElement>) => {
     if (game.status !== 'playing' || !joystickBaseRef.current) return;
@@ -1092,7 +1111,7 @@ function App() {
 
           <div className="training-character-grid">
             {trainingCharacters.map((character) => {
-              const definition = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins);
+              const definition = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
               const isSelected = trainingSelectedCharacterId === character.id;
               return (
                 <button
@@ -1192,10 +1211,12 @@ function App() {
               const support = supportId ? getSupportById(supportId) : null;
               const supportLevel = getOwnedSupportLevel(ownedSupports, supportId);
               const isSoundComicUnlocked = isSoundComicSkinUnlocked(characterId, ownedSupports);
+              const isTravelUnlocked = isTravelSkinUnlocked(characterId, unlockedTravelSkins);
               const isDarkUnlocked = isDarkSkinUnlocked(characterId, unlockedDarkSkins);
-              const currentSkinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins);
+              const currentSkinId = getEffectiveCharacterSkinId(characterId, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
               const defaultImage = getCharacterSkinImage(characterId, 'default');
               const soundComicImage = getCharacterSkinImage(characterId, 'sound-comic');
+              const travelImage = getCharacterSkinImage(characterId, 'travel');
               const darkImage = getCharacterSkinImage(characterId, 'dark');
 
               return (
@@ -1237,7 +1258,18 @@ function App() {
                       <span>闇落ち</span>
                       <em>{isDarkUnlocked ? (currentSkinId === 'dark' ? '選択中' : '選択') : 'ロック中'}</em>
                     </button>
+                    <button
+                      className={`skin-option travel ${currentSkinId === 'travel' ? 'is-selected' : ''}`}
+                      type="button"
+                      onClick={() => chooseCharacterSkin(characterId, 'travel')}
+                      disabled={!isTravelUnlocked}
+                    >
+                      {travelImage && <img src={travelImage} alt="" />}
+                      <span>旅装</span>
+                      <em>{isTravelUnlocked ? (currentSkinId === 'travel' ? '選択中' : '選択') : 'ロック中'}</em>
+                    </button>
                   </div>
+                  {!isTravelUnlocked && <p className="skin-unlock-note travel-note">旅装：隔離地域5で作者ロクド撃破で解放</p>}
                   {!isSoundComicUnlocked && <p className="skin-unlock-note">サウンドコミック：対応サポートLv5で解放</p>}
                   {!isDarkUnlocked && <p className="skin-unlock-note dark-note">闇落ち：対応する隔離地域クリアで解放</p>}
                 </article>
@@ -1326,7 +1358,7 @@ function App() {
             </div>
             <div className="main-character-list">
               {mainCharacterList.map((character) => {
-                const characterView = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins);
+                const characterView = getCharacterWithSkin(character.id, selectedSkins, ownedSupports, unlockedDarkSkins, unlockedTravelSkins);
                 const isActive = activeMainCharacterId === character.id;
                 const isAvailable = character.status === 'available';
                 return (
@@ -2648,6 +2680,12 @@ function App() {
             <div className="dark-skin-unlock-result">
               <strong>闇落ちスキン解放</strong>
               <span>{darkSkinUnlocksForResult.map((characterId) => getMainCharacter(characterId).name).join(' / ')}</span>
+            </div>
+          )}
+          {travelSkinUnlocksForResult.length > 0 && (
+            <div className="dark-skin-unlock-result">
+              <strong>旅装スキン解放！</strong>
+              <span>全11キャラ</span>
             </div>
           )}
           <div className="result-actions">
