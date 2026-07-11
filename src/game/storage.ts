@@ -387,6 +387,17 @@ export function saveClearedStages(stageIds: readonly StageId[]) {
   window.localStorage.setItem(CLEARED_STAGES_KEY, JSON.stringify(Array.from(new Set(stageIds))));
 }
 
+export function resetClearedStages() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(CLEARED_STAGES_KEY);
+}
+
+export function hasSavedGameData(): boolean {
+  if (typeof window === 'undefined') return false;
+  return Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index))
+    .some((key) => key?.startsWith('g-no-heya-shooting:'));
+}
+
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {
   if (!value || typeof value !== 'object') return false;
   const weapon = value as Partial<OwnedWeapon>;

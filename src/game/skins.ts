@@ -58,14 +58,14 @@ const SOUND_COMIC_SKIN_IMAGES: Record<MainCharacterId, string> = {
   socho: '/assets/tcg/skin-sound-comic-socho.png',
   tsutsu: '/assets/tcg/skin-sound-comic-tsutsu.png',
   rokudo: '/assets/tcg/skin-sound-comic-rokudo.png',
-  player: '',
+  player: '/assets/tcg/skin-sound-comic-player.png',
   ushimaru: '/assets/tcg/skin-sound-comic-ushimaru.png',
   deli: '/assets/tcg/skin-sound-comic-deli.png',
-  'yabuko-fm': '',
+  'yabuko-fm': '/assets/tcg/skin-sound-comic-yabuko-fm.png',
   rockel: '/assets/tcg/skin-sound-comic-rockel.png',
   nanaichi: '/assets/tcg/skin-sound-comic-nanaichi.png',
   myoo: '/assets/tcg/skin-sound-comic-myoo.png',
-  hibiki: '',
+  hibiki: '/assets/tcg/skin-sound-comic-hibiki.png',
 };
 
 const TRAVEL_SKIN_IMAGES: Record<MainCharacterId, string> = {
@@ -111,17 +111,17 @@ const TRAVEL_SUPPORT_IMAGES: Record<SupportId, string> = {
 };
 
 const SOUND_COMIC_SUPPORT_IMAGES: Record<SupportId, string> = {
-  socho: '/assets/tcg/support-card-socho.webp',
-  tsutsu: '/assets/tcg/support-card-tsutsu.webp',
-  rokudo: '/assets/tcg/support-card-rokudo.webp',
-  player: '/assets/tcg/support-card-player.png',
-  ushimaru: '/assets/tcg/support-card-ushimaru.webp',
-  deli: '/assets/tcg/support-card-deli.webp',
-  yabuko: '/assets/tcg/support-card-yabuko.png',
-  rockel: '/assets/tcg/support-card-rockel.webp',
-  '7171': '/assets/tcg/support-card-7171.png',
-  myouou: '/assets/tcg/support-card-myouou.png',
-  hibiki: '/assets/tcg/support-card-hibiki.png',
+  socho: '/assets/tcg/skin-sound-comic-socho.png',
+  tsutsu: '/assets/tcg/skin-sound-comic-tsutsu.png',
+  rokudo: '/assets/tcg/skin-sound-comic-rokudo.png',
+  player: '/assets/tcg/skin-sound-comic-player.png',
+  ushimaru: '/assets/tcg/skin-sound-comic-ushimaru.png',
+  deli: '/assets/tcg/skin-sound-comic-deli.png',
+  yabuko: '/assets/tcg/skin-sound-comic-yabuko-fm.png',
+  rockel: '/assets/tcg/skin-sound-comic-rockel.png',
+  '7171': '/assets/tcg/skin-sound-comic-nanaichi.png',
+  myouou: '/assets/tcg/skin-sound-comic-myoo.png',
+  hibiki: '/assets/tcg/skin-sound-comic-hibiki.png',
 };
 
 const DARK_SUPPORT_IMAGES: Record<SupportId, string> = {

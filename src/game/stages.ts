@@ -107,3 +107,11 @@ export const ALL_STAGES: StageDefinition[] = STAGE_AREAS.flatMap((area) => area.
 export const DEFAULT_STAGE_ID: StageId = 'astoria-grassland-1';
 export function getStageById(stageId: StageId): StageDefinition { return ALL_STAGES.find((stage) => stage.id === stageId) ?? ALL_STAGES[0]; }
 export function isStageId(value: unknown): value is StageId { return ALL_STAGES.some((stage) => stage.id === value); }
+export function isStageUnlocked(stageId: StageId, clearedStages: readonly StageId[]): boolean {
+  const index = ALL_STAGES.findIndex((stage) => stage.id === stageId);
+  return index <= 0 || clearedStages.includes(ALL_STAGES[index - 1].id);
+}
+export function getStageUnlockRequirement(stageId: StageId): StageDefinition | null {
+  const index = ALL_STAGES.findIndex((stage) => stage.id === stageId);
+  return index > 0 ? ALL_STAGES[index - 1] : null;
+}

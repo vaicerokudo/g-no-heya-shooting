@@ -2743,6 +2743,19 @@ body.game-touch-lock .game-layout {
   padding: 10px;
 }
 
+@media (min-width: 721px) {
+  .game-layout { width: min(760px, 100%); }
+  .hud { grid-template-columns: minmax(150px, 1.25fr) max-content max-content minmax(180px, 1fr) max-content; }
+  .hud-stage { min-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hud .pause-button { justify-self: end; white-space: nowrap; }
+}
+
+.title-start-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.title-continue-button { font-size: 0; }
+.title-continue-button::after { content: '続きから'; font-size: 1rem; }
+.stage-select-card.is-locked { filter: grayscale(0.7); opacity: 0.58; cursor: not-allowed; }
+.stage-lock-note { color: #ffd166; font-weight: 800; }
+
 .hud span,
 .boss-hud span {
   display: block;

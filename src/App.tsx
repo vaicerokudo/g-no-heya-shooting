@@ -38,7 +38,7 @@ import type { MainCharacterDefinition, MainCharacterId } from './game/characters
 import { createInitialGameState, startGame, updateGame } from './game/logic';
 import { preloadStageAssets } from './game/preload';
 import { calculateCoinReward } from './game/rewards';
-import { DEFAULT_STAGE_ID, STAGE_AREAS, getStageById } from './game/stages';
+import { DEFAULT_STAGE_ID, STAGE_AREAS, getStageById, getStageUnlockRequirement, isStageUnlocked } from './game/stages';
 import type { StageId } from './game/stages';
 import {
   loadOwnedCoins,
@@ -59,10 +59,12 @@ import {
   loadStarDustFragments,
   loadStarVeinSteel,
   loadSupportDamageUpgrades,
+  hasSavedGameData,
   resetOwnedCoins,
   resetGWeapons,
   resetGWeaponEffects,
   resetOwnedWeapons,
+  resetClearedStages,
   saveOwnedCoins,
   saveActiveMainCharacterId,
   saveActiveSupportId,
@@ -282,6 +284,7 @@ function App() {
   const [unlockedDarkSkins, setUnlockedDarkSkins] = useState<MainCharacterId[]>(() => loadUnlockedDarkSkins());
   const [unlockedTravelSkins, setUnlockedTravelSkins] = useState<MainCharacterId[]>(() => loadUnlockedTravelSkins());
   const [clearedStages, setClearedStages] = useState<StageId[]>(() => loadClearedStages());
+  const [hasContinueData, setHasContinueData] = useState(() => hasSavedGameData());
   const [trainingSelectedCharacterId, setTrainingSelectedCharacterId] = useState<MainCharacterId | null>(null);
   const [trainingRunCharacterId, setTrainingRunCharacterId] = useState<MainCharacterId | null>(null);
   const [selectedStageId, setSelectedStageId] = useState<StageId>(DEFAULT_STAGE_ID);
@@ -577,7 +580,7 @@ function App() {
   }, [runtimeMainCharacterId]);
 
   const begin = () => {
-    if (!selectedSupport) return;
+    if (!selectedSupport || !isStageUnlocked(selectedStageId, clearedStages)) return;
     setTrainingRunCharacterId(null);
     pressedKeys.current.clear();
     dragTarget.current = null;
@@ -586,6 +589,18 @@ function App() {
     lastFrame.current = null;
     preloadStageAssets(selectedStageId);
     setGame(startGame(selectedStageId));
+  };
+
+  const startNewProgress = () => {
+    resetClearedStages();
+    setClearedStages([]);
+    setSelectedStageId(DEFAULT_STAGE_ID);
+    setHasContinueData(true);
+    goToAstoriaMap();
+  };
+
+  const continueProgress = () => {
+    if (hasContinueData) goToAstoriaMap();
   };
 
   const beginTraining = () => {
@@ -1029,9 +1044,12 @@ function App() {
             <span>所持コイン</span>
             <strong>{ownedCoins}</strong>
           </div>
-          <button className="primary-button" onClick={goToAstoriaMap}>
+          <div className="title-start-actions">
+          <button className="primary-button" onClick={startNewProgress}>{'最初から'}</button>
+          <button className="secondary-button title-continue-button" onClick={continueProgress} disabled={!hasContinueData}>
             アストリアMAPへ
           </button>
+          </div>
           <button className="reset-coins-button" onClick={resetSavedCoins}>
             所持コインリセット
           </button>
@@ -2014,18 +2032,22 @@ function App() {
                 <div className="stage-select-list">
                   {area.stages.map((stage, index) => {
                     const isSelected = selectedStageId === stage.id;
+                    const isUnlocked = isStageUnlocked(stage.id, clearedStages);
+                    const requirement = getStageUnlockRequirement(stage.id);
                     return (
                       <button
-                        className={`stage-select-card area-${stage.areaId} ${isSelected ? 'is-selected' : ''}`}
+                        className={`stage-select-card area-${stage.areaId} ${isSelected ? 'is-selected' : ''} ${isUnlocked ? '' : 'is-locked'}`}
                         key={stage.id}
                         type="button"
-                        onClick={() => setSelectedStageId(stage.id)}
+                        onClick={() => isUnlocked && setSelectedStageId(stage.id)}
+                        disabled={!isUnlocked}
                       >
                         <span>{`Stage ${index + 1}`}</span>
                         <h2>{stage.name}</h2>
                         <p>{`\u96e3\u6613\u5ea6\uff1a${stage.difficultyLabel}`}</p>
                         <p>{`BOSS\uff1a${stage.bossName}`}</p>
                         <p>{`\u30af\u30ea\u30a2\u30dc\u30fc\u30ca\u30b9\uff1a+${stage.clearBonus}`}</p>
+                        {!isUnlocked && <p className="stage-lock-note">{`🔒 ${requirement?.name}クリアで解放`}</p>}
                       </button>
                     );
                   })}
@@ -2051,7 +2073,7 @@ function App() {
             <p>{selectedAura ? `オーラ：${selectedAura.name}（${getSupportById(selectedAura.supportId).name} Lv ${selectedAuraSupportLevel}）` : 'オーラ：なし'}</p>
             <p className="equipped-weapon-label">{`\u6b66\u5668\uff1a${mainWeaponLabel}`}</p>
             <p className="equipped-weapon-label">{`\u653b\u6483\uff1a${mainCharacter.attackLabel}`}</p>
-            <button className="primary-button" onClick={begin} disabled={!selectedSupport}>
+            <button className="primary-button" onClick={begin} disabled={!selectedSupport || !isStageUnlocked(selectedStageId, clearedStages)}>
               {`${selectedStage.name}\u3078\u51fa\u6483`}
             </button>
           </article>
