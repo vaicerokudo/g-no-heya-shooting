@@ -60,6 +60,7 @@ import {
   loadStarVeinSteel,
   loadSupportDamageUpgrades,
   hasSavedGameData,
+  markGameStarted,
   resetOwnedCoins,
   resetGWeapons,
   resetGWeaponEffects,
@@ -593,6 +594,7 @@ function App() {
 
   const startNewProgress = () => {
     resetClearedStages();
+    markGameStarted();
     setClearedStages([]);
     setSelectedStageId(DEFAULT_STAGE_ID);
     setHasContinueData(true);

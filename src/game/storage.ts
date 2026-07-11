@@ -29,6 +29,7 @@ const SELECTED_SKINS_BY_CHARACTER_KEY = 'g-no-heya-shooting:selected-skins-by-ch
 const UNLOCKED_DARK_SKINS_KEY = 'g-no-heya-shooting:unlocked-dark-skins';
 const UNLOCKED_TRAVEL_SKINS_KEY = 'g-no-heya-shooting:unlocked-travel-skins';
 const CLEARED_STAGES_KEY = 'g-no-heya-shooting:cleared-stages';
+const GAME_STARTED_KEY = 'g-no-heya-shooting:game-started';
 
 export function loadOwnedCoins(): number {
   if (typeof window === 'undefined') return 0;
@@ -396,6 +397,11 @@ export function hasSavedGameData(): boolean {
   if (typeof window === 'undefined') return false;
   return Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index))
     .some((key) => key?.startsWith('g-no-heya-shooting:'));
+}
+
+export function markGameStarted() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(GAME_STARTED_KEY, '1');
 }
 
 function isOwnedWeapon(value: unknown): value is OwnedWeapon {
