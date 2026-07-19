@@ -2028,6 +2028,17 @@ h1 {
   background: rgba(54, 42, 24, 0.92);
 }
 
+.astria-return-button {
+  justify-self: start;
+  border-color: rgba(126, 197, 255, 0.52);
+  color: #e8f6ff;
+  background: linear-gradient(180deg, rgba(42, 82, 112, 0.9), rgba(19, 42, 62, 0.94));
+}
+
+.astria-return-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, rgba(57, 109, 147, 0.94), rgba(25, 55, 80, 0.98));
+}
+
 .control-note {
   margin: 0;
   color: rgba(247, 251, 255, 0.7);

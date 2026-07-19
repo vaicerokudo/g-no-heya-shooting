@@ -259,7 +259,19 @@ const assetPaths = {
   },
 };
 
+function getAstriaReturnUrl() {
+  const value = new URLSearchParams(window.location.search).get('returnTo');
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 function App() {
+  const astriaReturnUrl = getAstriaReturnUrl();
   const [game, setGame] = useState<GameState>(() => createInitialGameState());
   const [selectedSupport, setSelectedSupport] = useState<SupportCharacter | null>(() => {
     const activeSupportId = loadActiveSupportId();
@@ -1055,6 +1067,11 @@ function App() {
           <button className="reset-coins-button" onClick={resetSavedCoins}>
             所持コインリセット
           </button>
+          {astriaReturnUrl && (
+            <button className="secondary-button astria-return-button" onClick={() => { window.location.href = astriaReturnUrl; }}>
+              アストリアへ戻る
+            </button>
+          )}
           <p className="control-note">PC: WASD / 矢印キー　スマホ: 画面ドラッグ　攻撃: 自動</p>
         </section>
       )}
