@@ -2028,15 +2028,25 @@ h1 {
   background: rgba(54, 42, 24, 0.92);
 }
 
-.astria-return-button {
-  justify-self: start;
-  border-color: rgba(126, 197, 255, 0.52);
+.global-astria-return {
+  position: fixed;
+  z-index: 2147483000;
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid rgba(126, 197, 255, 0.58);
+  border-radius: 999px;
   color: #e8f6ff;
-  background: linear-gradient(180deg, rgba(42, 82, 112, 0.9), rgba(19, 42, 62, 0.94));
+  background: linear-gradient(180deg, rgba(42, 82, 112, 0.95), rgba(19, 42, 62, 0.98));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
-.astria-return-button:hover:not(:disabled) {
-  background: linear-gradient(180deg, rgba(57, 109, 147, 0.94), rgba(25, 55, 80, 0.98));
+.global-astria-return:hover {
+  background: linear-gradient(180deg, rgba(57, 109, 147, 0.98), rgba(25, 55, 80, 1));
 }
 
 .control-note {
